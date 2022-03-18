@@ -4,11 +4,12 @@
   "description": "Extremely simple frontend for a poker tracker Google Sheet",
   "main": "index.ts",
   "scripts": {
-    "start": "python -m SimpleHTTPServer 8000",
+    "start": "cd build/ && python -m SimpleHTTPServer 8000",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc --esModuleInterop true --lib dom,es2015 --outDir build src/*.ts",
+    "postbuild": "./scripts/postbuild.sh",
     "postinstall": "./scripts/postinstall.sh",
-    "deploy": "rsync -rta postbuild/ build && gh-pages --dotfiles -d build",
+    "deploy": "gh-pages --dotfiles -d build",
     "lint:fix": "eslint --fix"
   },
   "repository": {
