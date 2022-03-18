@@ -456,7 +456,7 @@
     }
   };
 
-  const handleKeyUp = (event: Event) => {
+  const handleInput = (event: Event) => {
     if (!Utils.objectIsHtmlInputElement(event.target)) {
       return;
     }
@@ -499,7 +499,7 @@
 
   document.body.addEventListener('click', handleClick);
   document.body.addEventListener('submit', handleSubmit);
-  document.body.addEventListener('keyup', handleKeyUp);
+  document.body.addEventListener('input', handleInput);
 
   render(appState);
 })();
