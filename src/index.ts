@@ -398,10 +398,14 @@
     appState.isSavingSession = true;
     render(appState);
 
-    const response = await apiService.saveSession(session, appState.currentSessionAdminPassword);
+    let response;
 
-    appState.isSavingSession = false;
-    render(appState);
+    try {
+      response = await apiService.saveSession(session, appState.currentSessionAdminPassword);
+    } finally {
+      appState.isSavingSession = false;
+      render(appState);
+    }
 
     if (response.ok) {
       alert('Success!');
