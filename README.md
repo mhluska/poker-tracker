@@ -43,6 +43,7 @@ after authenticating.
 
 ### Todo
 
+- Auto render on appState change
 - Dropdown for selecting casinos
 - Rerender on route change
 - Input focus

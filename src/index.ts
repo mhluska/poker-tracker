@@ -13,11 +13,15 @@
   type AppState = {
     screen: Screens,
     currentSession?: Session;
+    currentSessionRebuyAmount?: string;
+    currentSessionCashoutAmount?: string;
+    currentSessionAdminPassword?: string;
     newSessionCasinoName?: string;
     newSessionSmallBlind?: string;
     newSessionBigBlind?: string;
     newSessionMaxBuyin?: string;
     newSessionMaxPlayers?: string;
+    isSavingSession: boolean;
   };
 
   type SessionBuyin = {
@@ -46,6 +50,10 @@
 
     static objectIsHtmlElement(object: unknown): object is HTMLElement {
       return !!(object as HTMLElement).tagName;
+    }
+
+    static objectIsHtmlInputElement(object: unknown): object is HTMLInputElement {
+      return !!(object as HTMLInputElement).type;
     }
 
     static localStorageSessionKey(sessionId: string) {
@@ -192,6 +200,10 @@
         throw new Error('Session already started');
       }
 
+      if (this.endTime) {
+        throw new Error('Session already ended');
+      }
+
       this.startTime = new Date();
       this.buyins.push({ amount: this.maxBuyin, time: this.startTime });
     }
@@ -201,10 +213,6 @@
     }
 
     end(cashoutAmount: number) {
-      if (this.endTime) {
-        throw new Error('Session already ended');
-      }
-
       this.cashoutAmount = cashoutAmount;
       this.endTime = new Date();
     }
@@ -283,16 +291,14 @@
     return {
       screen: sessionIdToScreen(sessionId),
       currentSession: sessionIdToCurrentSession(sessionId),
-      newSessionSmallBlind: null,
-      newSessionBigBlind: null,
-      newSessionMaxBuyin: null,
       newSessionMaxPlayers: '8',
+      isSavingSession: false,
     }
   }
 
   const renderNewSessionScreen = (state: AppState) => {
     // Update new session screen data.
-    if (state.newSessionSmallBlind) {
+    if (state.newSessionCasinoName) {
       (<HTMLInputElement>document.getElementById('casino-name-input')).value = state.newSessionCasinoName;
     }
 
@@ -316,7 +322,7 @@
   const renderShowSessionScreen = (state: AppState) => {
     const session = new SessionDecorator(state.currentSession);
 
-    document.getElementById('rebuy-amount-field').setAttribute(
+    document.getElementById('rebuy-amount-input').setAttribute(
       'max',
       state.currentSession.maxBuyin.toString()
     );
@@ -324,6 +330,12 @@
     document.getElementById('session-title').innerText = session.title();
     document.getElementById('session-profit').innerText = session.profit();
     document.getElementById('session-start-time').innerText = session.startTime();
+
+    if (appState.isSavingSession) {
+      document.getElementById('end-session-submit-button').setAttribute('disabled', 'disabled');
+    } else {
+      document.getElementById('end-session-submit-button').removeAttribute('disabled');
+    }
   };
 
   const render = (state: AppState) => {
@@ -360,8 +372,7 @@
   };
 
   const rebuy = (session: Session) => {
-    const rebuyAmount = (<HTMLInputElement>document.getElementById('rebuy-amount-field')).value;
-    session.rebuy(parseFloat(rebuyAmount));
+    session.rebuy(parseFloat(appState.currentSessionRebuyAmount));
     render(appState);
   };
 
@@ -381,13 +392,16 @@
   };
 
   const saveToGoogleSheet = async (session: Session) => {
-    const cashoutAmount = (<HTMLInputElement>document.getElementById('cashout-amount-field')).value;
-    const adminPassword = (<HTMLInputElement>document.getElementById('admin-password-field')).value;
-
-    session.end(parseFloat(cashoutAmount));
+    session.end(parseFloat(appState.currentSessionCashoutAmount));
     session.save();
 
-    const response = await apiService.saveSession(session, adminPassword);
+    appState.isSavingSession = true;
+    render(appState);
+
+    const response = await apiService.saveSession(session, appState.currentSessionAdminPassword);
+
+    appState.isSavingSession = false;
+    render(appState);
 
     if (response.ok) {
       alert('Success!');
@@ -438,6 +452,30 @@
     }
   };
 
+  const handleKeyUp = (event: Event) => {
+    if (!Utils.objectIsHtmlInputElement(event.target)) {
+      return;
+    }
+
+    const idToStateKey = {
+      'casino-name-input': 'newSessionCasinoName',
+      'small-blind-input': 'newSessionSmallBlind',
+      'big-blind-input': 'newSessionBigBlind',
+      'max-buyin-input': 'newSessionMaxBuyin',
+      'max-players-input': 'newSessionMaxPlayers',
+      'rebuy-amount-input': 'currentSessionRebuyAmount',
+      'cashout-amount-input': 'currentSessionCashoutAmount',
+      'admin-password-input': 'currentSessionAdminPassword'
+    };
+
+    const appStateKey = idToStateKey[event.target.id];
+    if (!appStateKey) {
+      return;
+    }
+
+    appState[appStateKey] = event.target.value;
+  }
+
   const __prefillNewSessionScreen = () => {
     appState.newSessionCasinoName = 'Bellagio';
     appState.newSessionSmallBlind = '2';
@@ -457,6 +495,7 @@
 
   document.body.addEventListener('click', handleClick);
   document.body.addEventListener('submit', handleSubmit);
+  document.body.addEventListener('keyup', handleKeyUp);
 
   render(appState);
 })();
