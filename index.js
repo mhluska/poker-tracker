@@ -333,11 +333,18 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                     session.save();
                     appState.isSavingSession = true;
                     render(appState);
-                    return [4 /*yield*/, apiService.saveSession(session, appState.currentSessionAdminPassword)];
+                    _a.label = 1;
                 case 1:
+                    _a.trys.push([1, , 3, 4]);
+                    return [4 /*yield*/, apiService.saveSession(session, appState.currentSessionAdminPassword)];
+                case 2:
                     response = _a.sent();
+                    return [3 /*break*/, 4];
+                case 3:
                     appState.isSavingSession = false;
                     render(appState);
+                    return [7 /*endfinally*/];
+                case 4:
                     if (response.ok) {
                         alert('Success!');
                         navigateToIntroScreen();
