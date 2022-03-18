@@ -387,7 +387,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 return saveToGoogleSheet(appState.currentSession);
         }
     };
-    var handleKeyUp = function (event) {
+    var handleInput = function (event) {
         if (!Utils.objectIsHtmlInputElement(event.target)) {
             return;
         }
@@ -422,6 +422,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     window.__prefillNewSessionScreen = __prefillNewSessionScreen;
     document.body.addEventListener('click', handleClick);
     document.body.addEventListener('submit', handleSubmit);
-    document.body.addEventListener('keyup', handleKeyUp);
+    document.body.addEventListener('input', handleInput);
     render(appState);
 })();
