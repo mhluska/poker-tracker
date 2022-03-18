@@ -1,5 +1,5 @@
 {
-  "name": "poker-tracker-frontend",
+  "name": "poker-tracker",
   "version": "0.0.1",
   "description": "Extremely simple frontend for a poker tracker Google Sheet",
   "main": "index.ts",
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mhluska/poker-tracker-frontend.git"
+    "url": "git+https://github.com/mhluska/poker-tracker.git"
   },
   "keywords": [
     "poker",
@@ -24,9 +24,9 @@
   "author": "Maros Hluska <mhluska@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mhluska/poker-tracker-frontend/issues"
+    "url": "https://github.com/mhluska/poker-tracker/issues"
   },
-  "homepage": "https://github.com/mhluska/poker-tracker-frontend#readme",
+  "homepage": "https://github.com/mhluska/poker-tracker#readme",
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.15.0",
     "@typescript-eslint/parser": "^5.15.0",

@@ -1,4 +1,4 @@
-## Poker Tracker Frontend
+## Poker Tracker
 
 Extremely simple frontend for a Google Sheet I use to track my poker sessions.
 
