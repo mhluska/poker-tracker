@@ -69,6 +69,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         Utils.objectIsHtmlElement = function (object) {
             return !!object.tagName;
         };
+        Utils.objectIsHtmlInputElement = function (object) {
+            return !!object.type;
+        };
         Utils.localStorageSessionKey = function (sessionId) {
             return "pokerTracker:session:".concat(sessionId);
         };
@@ -171,6 +174,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             if (this.startTime) {
                 throw new Error('Session already started');
             }
+            if (this.endTime) {
+                throw new Error('Session already ended');
+            }
             this.startTime = new Date();
             this.buyins.push({ amount: this.maxBuyin, time: this.startTime });
         };
@@ -178,9 +184,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             this.buyins.push({ amount: amount, time: new Date() });
         };
         Session.prototype.end = function (cashoutAmount) {
-            if (this.endTime) {
-                throw new Error('Session already ended');
-            }
             this.cashoutAmount = cashoutAmount;
             this.endTime = new Date();
         };
@@ -248,15 +251,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         return {
             screen: sessionIdToScreen(sessionId),
             currentSession: sessionIdToCurrentSession(sessionId),
-            newSessionSmallBlind: null,
-            newSessionBigBlind: null,
-            newSessionMaxBuyin: null,
-            newSessionMaxPlayers: '8'
+            newSessionMaxPlayers: '8',
+            isSavingSession: false
         };
     };
     var renderNewSessionScreen = function (state) {
         // Update new session screen data.
-        if (state.newSessionSmallBlind) {
+        if (state.newSessionCasinoName) {
             document.getElementById('casino-name-input').value = state.newSessionCasinoName;
         }
         if (state.newSessionSmallBlind) {
@@ -274,10 +275,16 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     };
     var renderShowSessionScreen = function (state) {
         var session = new SessionDecorator(state.currentSession);
-        document.getElementById('rebuy-amount-field').setAttribute('max', state.currentSession.maxBuyin.toString());
+        document.getElementById('rebuy-amount-input').setAttribute('max', state.currentSession.maxBuyin.toString());
         document.getElementById('session-title').innerText = session.title();
         document.getElementById('session-profit').innerText = session.profit();
         document.getElementById('session-start-time').innerText = session.startTime();
+        if (appState.isSavingSession) {
+            document.getElementById('end-session-submit-button').setAttribute('disabled', 'disabled');
+        }
+        else {
+            document.getElementById('end-session-submit-button').removeAttribute('disabled');
+        }
     };
     var render = function (state) {
         // Update visible screen.
@@ -308,8 +315,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         render(appState);
     };
     var rebuy = function (session) {
-        var rebuyAmount = document.getElementById('rebuy-amount-field').value;
-        session.rebuy(parseFloat(rebuyAmount));
+        session.rebuy(parseFloat(appState.currentSessionRebuyAmount));
         render(appState);
     };
     var createSession = function () {
@@ -319,17 +325,19 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         navigateToShowSessionScreen(session);
     };
     var saveToGoogleSheet = function (session) { return __awaiter(_this, void 0, void 0, function () {
-        var cashoutAmount, adminPassword, response;
+        var response;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    cashoutAmount = document.getElementById('cashout-amount-field').value;
-                    adminPassword = document.getElementById('admin-password-field').value;
-                    session.end(parseFloat(cashoutAmount));
+                    session.end(parseFloat(appState.currentSessionCashoutAmount));
                     session.save();
-                    return [4 /*yield*/, apiService.saveSession(session, adminPassword)];
+                    appState.isSavingSession = true;
+                    render(appState);
+                    return [4 /*yield*/, apiService.saveSession(session, appState.currentSessionAdminPassword)];
                 case 1:
                     response = _a.sent();
+                    appState.isSavingSession = false;
+                    render(appState);
                     if (response.ok) {
                         alert('Success!');
                         navigateToIntroScreen();
@@ -372,6 +380,26 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 return saveToGoogleSheet(appState.currentSession);
         }
     };
+    var handleKeyUp = function (event) {
+        if (!Utils.objectIsHtmlInputElement(event.target)) {
+            return;
+        }
+        var idToStateKey = {
+            'casino-name-input': 'newSessionCasinoName',
+            'small-blind-input': 'newSessionSmallBlind',
+            'big-blind-input': 'newSessionBigBlind',
+            'max-buyin-input': 'newSessionMaxBuyin',
+            'max-players-input': 'newSessionMaxPlayers',
+            'rebuy-amount-input': 'currentSessionRebuyAmount',
+            'cashout-amount-input': 'currentSessionCashoutAmount',
+            'admin-password-input': 'currentSessionAdminPassword'
+        };
+        var appStateKey = idToStateKey[event.target.id];
+        if (!appStateKey) {
+            return;
+        }
+        appState[appStateKey] = event.target.value;
+    };
     var __prefillNewSessionScreen = function () {
         appState.newSessionCasinoName = 'Bellagio';
         appState.newSessionSmallBlind = '2';
@@ -387,5 +415,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     window.__prefillNewSessionScreen = __prefillNewSessionScreen;
     document.body.addEventListener('click', handleClick);
     document.body.addEventListener('submit', handleSubmit);
+    document.body.addEventListener('keyup', handleKeyUp);
     render(appState);
 })();
