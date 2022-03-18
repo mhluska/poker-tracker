@@ -1,0 +1,33 @@
+{
+  "name": "poker-tracker-frontend",
+  "version": "0.0.1",
+  "description": "Extremely simple frontend for a poker tracker Google Sheet",
+  "main": "index.ts",
+  "scripts": {
+    "start": "python -m SimpleHTTPServer 8000",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc --outDir build index.ts",
+    "postinstall": "./scripts/postinstall.sh",
+    "deploy": "rsync -rta postbuild/ build && gh-pages --dotfiles -d build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mhluska/poker-tracker-frontend.git"
+  },
+  "keywords": [
+    "poker",
+    "tracker",
+    "frontend"
+  ],
+  "author": "Maros Hluska <mhluska@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mhluska/poker-tracker-frontend/issues"
+  },
+  "homepage": "https://github.com/mhluska/poker-tracker-frontend#readme",
+  "devDependencies": {
+    "gh-pages": "^3.2.3",
+    "modern-normalize": "^1.1.0",
+    "typescript": "^4.6.2"
+  }
+}
