@@ -6,9 +6,10 @@
   "scripts": {
     "start": "python -m SimpleHTTPServer 8000",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc --outDir build index.ts",
+    "build": "tsc --esModuleInterop true --lib dom,es2015 --outDir build src/*.ts",
     "postinstall": "./scripts/postinstall.sh",
-    "deploy": "rsync -rta postbuild/ build && gh-pages --dotfiles -d build"
+    "deploy": "rsync -rta postbuild/ build && gh-pages --dotfiles -d build",
+    "lint:fix": "eslint --fix"
   },
   "repository": {
     "type": "git",
@@ -26,6 +27,9 @@
   },
   "homepage": "https://github.com/mhluska/poker-tracker-frontend#readme",
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.15.0",
+    "@typescript-eslint/parser": "^5.15.0",
+    "eslint": "^8.11.0",
     "gh-pages": "^3.2.3",
     "modern-normalize": "^1.1.0",
     "typescript": "^4.6.2"

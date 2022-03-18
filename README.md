@@ -22,26 +22,32 @@ npm run deploy
 
 ### Commands
 
-- Start Session
+#### Start Session
 
 Creates a poker session with the current time prefilled. Asks for the casino
 name, stake, max buyin and max players. Max buyin and max players are prefilled
 if entered previously. The URL is updated and session data is stored in
 localStorage so the page can be refreshed.
 
-- Rebuy
+#### Rebuy
 
 Asks for the amount to rebuy. Has a button for rebuying the maximum
 automatically.
 
-- End Session
+#### End Session
 
 Asks for cash out amount and prefills the end time with the current time. Asks
 for the admin password which can be saved in a cookie for reuse later. A simple
-form submit request is sent to simple backend service which adds a row to the
-sheet after authenticating.
+form submit request is sent to a backend service which adds a row to the sheet
+after authenticating.
 
-### TODO
+### Todo
 
+- Dropdown for selecting casinos
+- Rerender on route change
+- Input focus
+- Password cookie
+- TypeScript config file with strict mode
+- Modules?
 - Add assets (og:image, favicon.icom, icon.svg, site.webmanifest, icon.png)
 - Add opt-in notifications for when the session should be ended (x hours later)
