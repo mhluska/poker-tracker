@@ -24,6 +24,11 @@
 
     <style>
       .hidden { display: none; }
+      .section { margin: 1em 0;  }
+      .screen { padding: 1em;  }
+      .tip-button { margin: 0.5em 0; width: 3em; height: 3em; }
+
+      #session-title { margin-top: 0; }
     </style>
   </head>
 
@@ -83,13 +88,35 @@
         <span>Start time: </span>
         <span id="session-start-time"></span>
       </div>
+      <div>
+        <span>Time elapsed: </span>
+        <span id="session-time-elapsed"></span>
+      </div>
 
-      <form id="rebuy-form">
+      <form class="section" id="rebuy-form">
         <input id="rebuy-amount-input" type="number" min="0" placeholder="500" required />
         <input type="submit" value="Rebuy" />
       </form>
 
-      <form id="end-session-form">
+      <div class="section">
+        <span>Dealer tips: </span>
+        <span id="session-dealer-tips-display"></span>
+        <div>
+          <button class="tip-button" id="decrement-dealer-tip-button">-</button>
+          <button class="tip-button" id="increment-dealer-tip-button">+</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <span>Drink tips: </span>
+        <span id="session-drink-tips-display"></span>
+        <div>
+          <button class="tip-button" id="decrement-drink-tip-button">-</button>
+          <button class="tip-button" id="increment-drink-tip-button">+</button>
+        </div>
+      </div>
+
+      <form class="section" id="end-session-form">
         <input class="hidden" type="text" autocomplete="username" />
 
         <div>

@@ -75,6 +75,30 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         Utils.localStorageSessionKey = function (sessionId) {
             return "pokerTracker:session:".concat(sessionId);
         };
+        Utils.timeSince = function (date) {
+            var seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+            var interval = seconds / 31536000;
+            if (interval > 1) {
+                return Math.floor(interval) + ' years';
+            }
+            interval = seconds / 2592000;
+            if (interval > 1) {
+                return Math.floor(interval) + ' months';
+            }
+            interval = seconds / 86400;
+            if (interval > 1) {
+                return Math.floor(interval) + ' days';
+            }
+            interval = seconds / 3600;
+            if (interval > 1) {
+                return Math.floor(interval) + ' hours';
+            }
+            interval = seconds / 60;
+            if (interval > 1) {
+                return Math.floor(interval) + ' minutes';
+            }
+            return Math.floor(seconds) + ' seconds';
+        };
         return Utils;
     }());
     var ApiService = /** @class */ (function () {
@@ -117,6 +141,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         function SessionDecorator(session) {
             this.session = session;
         }
+        SessionDecorator.prototype.drinkTips = function () {
+            var _a;
+            return "$".concat((_a = this.session.drinkTips) !== null && _a !== void 0 ? _a : 0);
+        };
+        SessionDecorator.prototype.dealerTips = function () {
+            var _a;
+            return "$".concat((_a = this.session.dealerTips) !== null && _a !== void 0 ? _a : 0);
+        };
         SessionDecorator.prototype.blinds = function () {
             return "".concat(this.session.smallBlind, "/").concat(this.session.bigBlind);
         };
@@ -130,14 +162,16 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 this.maxBuyin(),
             ].join(' ');
         };
-        // TODO: Format time.
         SessionDecorator.prototype.startTime = function () {
-            return this.session.startTime.toISOString();
+            return this.session.startTime.toLocaleString();
         };
         SessionDecorator.prototype.profit = function () {
             var _a;
             var cashoutAmount = (_a = this.session.cashoutAmount) !== null && _a !== void 0 ? _a : 0;
             return (cashoutAmount - this.session.buyinsTotal()).toString();
+        };
+        SessionDecorator.prototype.timeElapsed = function () {
+            return Utils.timeSince(this.session.startTime);
         };
         return SessionDecorator;
     }());
@@ -151,6 +185,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             this.bigBlind = bigBlind;
             this.maxBuyin = maxBuyin;
             this.maxPlayers = maxPlayers;
+            this.dealerTips = 0;
+            this.drinkTips = 0;
             this.buyins = [];
         }
         Session.load = function (attributesString) {
@@ -164,6 +200,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 session.endTime = new Date(attributes.endTime);
             }
             session.cashoutAmount = attributes.cashoutAmount;
+            session.drinkTips = attributes.drinkTips;
+            session.dealerTips = attributes.dealerTips;
             session.buyins = attributes.buyins.map(function (buyin) { return ({
                 amount: buyin.amount,
                 time: new Date(buyin.time)
@@ -205,6 +243,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 maxBuyin: this.maxBuyin,
                 maxPlayers: this.maxPlayers,
                 cashoutAmount: this.cashoutAmount,
+                drinkTips: this.drinkTips,
+                dealerTips: this.dealerTips,
                 buyins: this.buyins.map(function (rebuy) { return ({
                     amount: rebuy.amount,
                     time: rebuy.time.toISOString()
@@ -279,6 +319,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         document.getElementById('session-title').innerText = session.title();
         document.getElementById('session-profit').innerText = session.profit();
         document.getElementById('session-start-time').innerText = session.startTime();
+        document.getElementById('session-time-elapsed').innerText = session.timeElapsed();
+        document.getElementById('session-dealer-tips-display').innerText = session.dealerTips();
+        document.getElementById('session-drink-tips-display').innerText = session.drinkTips();
         if (appState.isSavingSession) {
             document.getElementById('end-session-submit-button').setAttribute('disabled', 'disabled');
         }
@@ -312,6 +355,22 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         window.history.pushState({}, '', "#/sessions/".concat(session.uuid));
         appState.currentSession = session;
         appState.screen = Screens.ShowSession;
+        render(appState);
+    };
+    var updateDealerTip = function (session, change) {
+        if (change === -1 && session.dealerTips === 0) {
+            return;
+        }
+        session.dealerTips += change;
+        session.save();
+        render(appState);
+    };
+    var updateDrinkTip = function (session, change) {
+        if (change === -1 && session.drinkTips === 0) {
+            return;
+        }
+        session.drinkTips += change;
+        session.save();
         render(appState);
     };
     var rebuy = function (session) {
@@ -361,6 +420,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         appState.newSessionBigBlind = bigBlind;
         render(appState);
     };
+    var prefillMaxBuyin = function (maxBuyin) {
+        appState.newSessionMaxBuyin = maxBuyin;
+        render(appState);
+    };
     var handleClick = function (event) {
         if (!Utils.objectIsHtmlElement(event.target)) {
             return;
@@ -368,9 +431,19 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         switch (event.target.id) {
             case 'new-session-button':
                 return navigateToNewSessionScreen();
+            case 'decrement-dealer-tip-button':
+                return updateDealerTip(appState.currentSession, -1);
+            case 'increment-dealer-tip-button':
+                return updateDealerTip(appState.currentSession, 1);
+            case 'decrement-drink-tip-button':
+                return updateDrinkTip(appState.currentSession, -1);
+            case 'increment-drink-tip-button':
+                return updateDrinkTip(appState.currentSession, 1);
         }
         if (event.target.classList.contains('prefill-blinds')) {
-            return prefillBlinds(event.target.dataset.smallBlind, event.target.dataset.bigBlind);
+            prefillBlinds(event.target.dataset.smallBlind, event.target.dataset.bigBlind);
+            prefillMaxBuyin((parseInt(event.target.dataset.bigBlind) * 100).toString());
+            return;
         }
     };
     var handleSubmit = function (event) {
