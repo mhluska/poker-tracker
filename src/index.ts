@@ -62,35 +62,19 @@
       return `pokerTracker:session:${sessionId}`;
     }
 
-    static timeSince(date: Date) {
-      const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-      let interval = seconds / 31536000;
+    static formatDuration(ms: number) {
+      let seconds = ms / 1000;
 
-      if (interval > 1) {
-        return Math.floor(interval) + ' years';
-      }
+      const hours   = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds - (hours * 3600)) / 60);
 
-      interval = seconds / 2592000;
-      if (interval > 1) {
-        return Math.floor(interval) + ' months';
-      }
+      seconds = Math.round(seconds - (hours * 3600) - (minutes * 60));
 
-      interval = seconds / 86400;
-      if (interval > 1) {
-        return Math.floor(interval) + ' days';
-      }
+      const hoursFormatted = hours < 10 ? `0${hours}` : hours.toString();
+      const minutesFormatted = minutes < 10 ? `0${minutes}` : minutes.toString();
+      const secondsFormatted = seconds < 10 ? `0${seconds}` : seconds.toString();
 
-      interval = seconds / 3600;
-      if (interval > 1) {
-        return Math.floor(interval) + ' hours';
-      }
-
-      interval = seconds / 60;
-      if (interval > 1) {
-        return Math.floor(interval) + ' minutes';
-      }
-
-      return Math.floor(seconds) + ' seconds';
+      return `${hoursFormatted}:${minutesFormatted}:${secondsFormatted}`;
     }
   }
 
@@ -175,7 +159,7 @@
     }
 
     timeElapsed() {
-      return Utils.timeSince(this.session.startTime);
+      return Utils.formatDuration(Date.now() - this.session.startTime.getTime());
     }
   }
 
