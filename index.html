@@ -23,6 +23,11 @@
     <meta name="theme-color" content="#fafafa">
 
     <style>
+      /* Fixes iOS zoom when quickly tapping a button. */
+      button {
+        touch-action: manipulation;
+      }
+
       .hidden { display: none; }
       .section { margin: 1em 0;  }
       .screen { padding: 1em;  }
