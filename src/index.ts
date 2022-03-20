@@ -359,7 +359,8 @@
   const renderShowSessionScreen = (state: AppState) => {
     const session = new SessionDecorator(state.currentSession);
 
-    document.getElementById('rebuy-amount-input').setAttribute(
+    (<HTMLInputElement>document.getElementById('rebuy-amount-input')).value = appState.currentSessionRebuyAmount;
+    (<HTMLInputElement>document.getElementById('rebuy-amount-input')).setAttribute(
       'max',
       state.currentSession.maxBuyin.toString()
     );
@@ -433,6 +434,7 @@
 
   const rebuy = (session: Session) => {
     session.rebuy(parseFloat(appState.currentSessionRebuyAmount));
+    appState.currentSessionRebuyAmount = null;
     render(appState);
   };
 
