@@ -39,6 +39,8 @@
     maxBuyin: number;
     maxPlayers: number;
     cashoutAmount: number;
+    drinkTips: number;
+    dealerTips: number;
     buyins: { amount: number, time: string }[];
   };
 
@@ -58,6 +60,37 @@
 
     static localStorageSessionKey(sessionId: string) {
       return `pokerTracker:session:${sessionId}`;
+    }
+
+    static timeSince(date: Date) {
+      const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+      let interval = seconds / 31536000;
+
+      if (interval > 1) {
+        return Math.floor(interval) + ' years';
+      }
+
+      interval = seconds / 2592000;
+      if (interval > 1) {
+        return Math.floor(interval) + ' months';
+      }
+
+      interval = seconds / 86400;
+      if (interval > 1) {
+        return Math.floor(interval) + ' days';
+      }
+
+      interval = seconds / 3600;
+      if (interval > 1) {
+        return Math.floor(interval) + ' hours';
+      }
+
+      interval = seconds / 60;
+      if (interval > 1) {
+        return Math.floor(interval) + ' minutes';
+      }
+
+      return Math.floor(seconds) + ' seconds';
     }
   }
 
@@ -108,6 +141,14 @@
       this.session = session;
     }
 
+    drinkTips() {
+      return `$${this.session.drinkTips ?? 0}`;
+    }
+
+    dealerTips() {
+      return `$${this.session.dealerTips ?? 0}`;
+    }
+
     blinds() {
       return `${this.session.smallBlind}/${this.session.bigBlind}`;
     }
@@ -124,14 +165,17 @@
       ].join(' ');
     }
 
-    // TODO: Format time.
     startTime() {
-      return this.session.startTime.toISOString();
+      return this.session.startTime.toLocaleString();
     }
 
     profit() {
       const cashoutAmount = this.session.cashoutAmount ?? 0;
       return (cashoutAmount - this.session.buyinsTotal()).toString();
+    }
+
+    timeElapsed() {
+      return Utils.timeSince(this.session.startTime);
     }
   }
 
@@ -145,6 +189,8 @@
     maxBuyin: number;
     maxPlayers: number;
     cashoutAmount: number;
+    drinkTips: number;
+    dealerTips: number;
     buyins: SessionBuyin[];
 
     static load(attributesString: string) {
@@ -169,6 +215,9 @@
 
       session.cashoutAmount = attributes.cashoutAmount;
 
+      session.drinkTips = attributes.drinkTips;
+      session.dealerTips = attributes.dealerTips;
+
       session.buyins = attributes.buyins.map(buyin => ({
         amount: buyin.amount,
         time: new Date(buyin.time)
@@ -192,6 +241,8 @@
       this.bigBlind = bigBlind;
       this.maxBuyin = maxBuyin;
       this.maxPlayers = maxPlayers;
+      this.dealerTips = 0;
+      this.drinkTips = 0;
       this.buyins = [];
     }
 
@@ -236,6 +287,8 @@
         maxBuyin: this.maxBuyin,
         maxPlayers: this.maxPlayers,
         cashoutAmount: this.cashoutAmount,
+        drinkTips: this.drinkTips,
+        dealerTips: this.dealerTips,
         buyins: this.buyins.map(rebuy => ({
           amount: rebuy.amount,
           time: rebuy.time.toISOString(),
@@ -330,6 +383,9 @@
     document.getElementById('session-title').innerText = session.title();
     document.getElementById('session-profit').innerText = session.profit();
     document.getElementById('session-start-time').innerText = session.startTime();
+    document.getElementById('session-time-elapsed').innerText = session.timeElapsed();
+    document.getElementById('session-dealer-tips-display').innerText = session.dealerTips();
+    document.getElementById('session-drink-tips-display').innerText = session.drinkTips();
 
     if (appState.isSavingSession) {
       document.getElementById('end-session-submit-button').setAttribute('disabled', 'disabled');
@@ -370,6 +426,26 @@
     appState.screen = Screens.ShowSession;
     render(appState);
   };
+
+  const updateDealerTip = (session: Session, change: number) => {
+    if (change === -1 && session.dealerTips === 0) {
+      return;
+    }
+
+    session.dealerTips += change;
+    session.save();
+    render(appState);
+  };
+
+  const updateDrinkTip = (session: Session, change: number) => {
+    if (change === -1 && session.drinkTips === 0) {
+      return;
+    }
+
+    session.drinkTips += change;
+    session.save();
+    render(appState);
+  }
 
   const rebuy = (session: Session) => {
     session.rebuy(parseFloat(appState.currentSessionRebuyAmount));
@@ -421,6 +497,11 @@
     render(appState);
   };
 
+  const prefillMaxBuyin = (maxBuyin: string) => {
+    appState.newSessionMaxBuyin = maxBuyin;
+    render(appState);
+  };
+
   const handleClick = (event: Event) => {
     if (!Utils.objectIsHtmlElement(event.target)) {
       return;
@@ -429,13 +510,27 @@
     switch (event.target.id) {
       case 'new-session-button':
         return navigateToNewSessionScreen();
+      case 'decrement-dealer-tip-button':
+        return updateDealerTip(appState.currentSession, -1);
+      case 'increment-dealer-tip-button':
+        return updateDealerTip(appState.currentSession, 1);
+      case 'decrement-drink-tip-button':
+        return updateDrinkTip(appState.currentSession, -1);
+      case 'increment-drink-tip-button':
+        return updateDrinkTip(appState.currentSession, 1);
     }
 
     if (event.target.classList.contains('prefill-blinds')) {
-      return prefillBlinds(
+      prefillBlinds(
         event.target.dataset.smallBlind,
         event.target.dataset.bigBlind
       );
+
+      prefillMaxBuyin(
+        (parseInt(event.target.dataset.bigBlind) * 100).toString()
+      )
+
+      return;
     }
   };
 
