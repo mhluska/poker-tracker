@@ -75,29 +75,15 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         Utils.localStorageSessionKey = function (sessionId) {
             return "pokerTracker:session:".concat(sessionId);
         };
-        Utils.timeSince = function (date) {
-            var seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-            var interval = seconds / 31536000;
-            if (interval > 1) {
-                return Math.floor(interval) + ' years';
-            }
-            interval = seconds / 2592000;
-            if (interval > 1) {
-                return Math.floor(interval) + ' months';
-            }
-            interval = seconds / 86400;
-            if (interval > 1) {
-                return Math.floor(interval) + ' days';
-            }
-            interval = seconds / 3600;
-            if (interval > 1) {
-                return Math.floor(interval) + ' hours';
-            }
-            interval = seconds / 60;
-            if (interval > 1) {
-                return Math.floor(interval) + ' minutes';
-            }
-            return Math.floor(seconds) + ' seconds';
+        Utils.formatDuration = function (ms) {
+            var seconds = ms / 1000;
+            var hours = Math.floor(seconds / 3600);
+            var minutes = Math.floor((seconds - (hours * 3600)) / 60);
+            seconds = Math.round(seconds - (hours * 3600) - (minutes * 60));
+            var hoursFormatted = hours < 10 ? "0".concat(hours) : hours.toString();
+            var minutesFormatted = minutes < 10 ? "0".concat(minutes) : minutes.toString();
+            var secondsFormatted = seconds < 10 ? "0".concat(seconds) : seconds.toString();
+            return "".concat(hoursFormatted, ":").concat(minutesFormatted, ":").concat(secondsFormatted);
         };
         return Utils;
     }());
@@ -171,7 +157,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             return (cashoutAmount - this.session.buyinsTotal()).toString();
         };
         SessionDecorator.prototype.timeElapsed = function () {
-            return Utils.timeSince(this.session.startTime);
+            return Utils.formatDuration(Date.now() - this.session.startTime.getTime());
         };
         return SessionDecorator;
     }());
