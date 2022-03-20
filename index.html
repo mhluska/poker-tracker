@@ -54,8 +54,8 @@
         <div>
           <label>
             <span>Blinds</span>
-            <input id="small-blind-input" type="text" placeholder="2" required /> /
-            <input id="big-blind-input" type="text" placeholder="5" required />
+            <input id="small-blind-input" type="number" placeholder="2" pattern="\d*" min="1" max="100" required /> /
+            <input id="big-blind-input" type="number" placeholder="5" pattern="\d*" min="1" max="200" required />
           </label>
 
           <button type="button" class="prefill-blinds" data-small-blind="1" data-big-blind="2">1/2</button>
