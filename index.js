@@ -301,6 +301,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     };
     var renderShowSessionScreen = function (state) {
         var session = new SessionDecorator(state.currentSession);
+        document.getElementById('rebuy-amount-input').value = appState.currentSessionRebuyAmount;
         document.getElementById('rebuy-amount-input').setAttribute('max', state.currentSession.maxBuyin.toString());
         document.getElementById('session-title').innerText = session.title();
         document.getElementById('session-profit').innerText = session.profit();
@@ -361,6 +362,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     };
     var rebuy = function (session) {
         session.rebuy(parseFloat(appState.currentSessionRebuyAmount));
+        appState.currentSessionRebuyAmount = null;
         render(appState);
     };
     var createSession = function () {
