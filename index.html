@@ -54,8 +54,8 @@
         <div>
           <label>
             <span>Blinds</span>
-            <input id="small-blind-input" type="text" placeholder="2" required /> /
-            <input id="big-blind-input" type="text" placeholder="5" required />
+            <input id="small-blind-input" type="number" placeholder="2" pattern="\d*" min="1" max="100" required /> /
+            <input id="big-blind-input" type="number" placeholder="5" pattern="\d*" min="1" max="200" required />
           </label>
 
           <button type="button" class="prefill-blinds" data-small-blind="1" data-big-blind="2">1/2</button>
@@ -67,14 +67,14 @@
         <div>
           <label>
             <span>Max Buyin</span>
-            <input id="max-buyin-input" type="number" placeholder="500" min="0" required />
+            <input id="max-buyin-input" type="number" placeholder="500" min="0" pattern="\d*" required />
           </label>
         </div>
 
         <div>
           <label>
             <span>Max Players</span>
-            <input id="max-players-input" type="number" placeholder="8" min="2" max="10" required />
+            <input id="max-players-input" type="number" placeholder="8" min="2" max="10" pattern="\d*" required />
           </label>
         </div>
 
@@ -99,7 +99,7 @@
       </div>
 
       <form class="section" id="rebuy-form">
-        <input id="rebuy-amount-input" type="number" min="0" placeholder="500" required />
+        <input id="rebuy-amount-input" type="number" min="0" placeholder="500" pattern="\d*" required />
         <input type="submit" value="Rebuy" />
       </form>
 
@@ -127,7 +127,7 @@
         <div>
           <label>
             <span>Cashout Amount</span>
-            <input id="cashout-amount-input" type="number" min="0" required />
+            <input id="cashout-amount-input" type="number" min="0" pattern="\d*" required />
           </label>
         </div>
 
