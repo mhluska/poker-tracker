@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["dom","es2017"],
+    "target": "es2015",
+    "strict": true,
+    "outDir": "build"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
