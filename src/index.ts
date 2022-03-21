@@ -339,9 +339,18 @@
       });
     }
 
+    rebuyMax() {
+      this.rebuy(this.attributes.maxBuyin);
+    }
+
     end(cashoutAmount: number) {
       this.attributes.cashoutAmount = cashoutAmount;
       this.attributes.endTime = new Date().toISOString();
+    }
+
+    undoEnd() {
+      this.attributes.cashoutAmount = 0;
+      delete this.attributes.endTime;
     }
 
     buyinsTotal() {
@@ -614,6 +623,9 @@
       navigateToIntroScreen();
     } else {
       alert('Something went wrong.');
+
+      // TODO: Use changesets so we don't have to do this.
+      selectors.currentSession.undoEnd();
     }
   };
 
@@ -647,6 +659,9 @@
       case 'increment-drink-tip-button':
         selectors.currentSession?.updateDrinkTip(1);
         return true;
+      case 'rebuy-max-button':
+        selectors.currentSession?.rebuyMax();
+        return true;
     }
 
     if (
@@ -675,7 +690,7 @@
     }
   };
 
-  const handleSubmit = (event: Event) => {
+  const handleSubmit = async (event: Event) => {
     if (!Utils.objectIsHtmlElement(event.target)) {
       return false;
     }
@@ -690,15 +705,15 @@
         rebuy();
         return true;
       case 'end-session-form':
-        saveToGoogleSheet();
+        await saveToGoogleSheet();
         return true;
     }
 
     return false;
   };
 
-  const handleAppSubmit = (event: Event) => {
-    if (handleSubmit(event)) {
+  const handleAppSubmit = async (event: Event) => {
+    if (await handleSubmit(event)) {
       render(appState);
     }
   };
