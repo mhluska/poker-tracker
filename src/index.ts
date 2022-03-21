@@ -1,5 +1,6 @@
 (function () {
   const LOCAL_STORAGE_KEY = 'pokerTracker';
+  const SAVE_APP_STATE_INTERVAL_MS = 10 * 1000;
 
   enum Environments {
     Development = 'development',
@@ -517,9 +518,7 @@
     }
 
     if (state.cachedAdminPassword) {
-      document
-        .getElementById('admin-password-area')
-        ?.classList.add('hidden');
+      document.getElementById('admin-password-area')?.classList.add('hidden');
       document
         .getElementById('admin-password-input')
         ?.removeAttribute('required');
@@ -766,6 +765,10 @@
   document.body.addEventListener('click', handleAppClick);
   document.body.addEventListener('submit', handleAppSubmit);
   document.body.addEventListener('input', handleAppInput);
+
+  // HACK: onbeforeunload doesn't seem to work on iOS so we save periodically.
+  setInterval(saveAppState, SAVE_APP_STATE_INTERVAL_MS);
+  document.addEventListener('visibilitychange', saveAppState);
 
   window.onbeforeunload = saveAppState;
 
