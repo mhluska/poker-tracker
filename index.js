@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 (function () {
     const LOCAL_STORAGE_KEY = 'pokerTracker';
+    const SAVE_APP_STATE_INTERVAL_MS = 10 * 1000;
     let Environments;
     (function (Environments) {
         Environments["Development"] = "development";
@@ -323,8 +324,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 .getElementById('end-session-submit-button')) === null || _b === void 0 ? void 0 : _b.removeAttribute('disabled');
         }
         if (state.cachedAdminPassword) {
-            (_c = document
-                .getElementById('admin-password-area')) === null || _c === void 0 ? void 0 : _c.classList.add('hidden');
+            (_c = document.getElementById('admin-password-area')) === null || _c === void 0 ? void 0 : _c.classList.add('hidden');
             (_d = document
                 .getElementById('admin-password-input')) === null || _d === void 0 ? void 0 : _d.removeAttribute('required');
         }
@@ -514,6 +514,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     document.body.addEventListener('click', handleAppClick);
     document.body.addEventListener('submit', handleAppSubmit);
     document.body.addEventListener('input', handleAppInput);
+    // HACK: onbeforeunload doesn't seem to work on iOS so we save periodically.
+    setInterval(saveAppState, SAVE_APP_STATE_INTERVAL_MS);
+    document.addEventListener('visibilitychange', saveAppState);
     window.onbeforeunload = saveAppState;
     render(appState);
 })();
