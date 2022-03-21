@@ -218,9 +218,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 time: new Date().toISOString(),
             });
         }
+        rebuyMax() {
+            this.rebuy(this.attributes.maxBuyin);
+        }
         end(cashoutAmount) {
             this.attributes.cashoutAmount = cashoutAmount;
             this.attributes.endTime = new Date().toISOString();
+        }
+        undoEnd() {
+            this.attributes.cashoutAmount = 0;
+            delete this.attributes.endTime;
         }
         buyinsTotal() {
             return this.attributes.buyins.reduce((prev, current) => prev + current.amount, 0);
@@ -392,6 +399,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         }
         else {
             alert('Something went wrong.');
+            // TODO: Use changesets so we don't have to do this.
+            selectors.currentSession.undoEnd();
         }
     });
     const prefillBlinds = (smallBlind, bigBlind) => {
@@ -402,7 +411,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         appState.newSessionScreen.maxBuyin = maxBuyin;
     };
     const handleClick = (event) => {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e;
         if (!Utils.objectIsHtmlElement(event.target)) {
             return false;
         }
@@ -422,6 +431,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             case 'increment-drink-tip-button':
                 (_d = selectors.currentSession) === null || _d === void 0 ? void 0 : _d.updateDrinkTip(1);
                 return true;
+            case 'rebuy-max-button':
+                (_e = selectors.currentSession) === null || _e === void 0 ? void 0 : _e.rebuyMax();
+                return true;
         }
         if (event.target.classList.contains('prefill-blinds') &&
             event.target.dataset.smallBlind &&
@@ -437,7 +449,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             render(appState);
         }
     };
-    const handleSubmit = (event) => {
+    const handleSubmit = (event) => __awaiter(this, void 0, void 0, function* () {
         if (!Utils.objectIsHtmlElement(event.target)) {
             return false;
         }
@@ -450,16 +462,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 rebuy();
                 return true;
             case 'end-session-form':
-                saveToGoogleSheet();
+                yield saveToGoogleSheet();
                 return true;
         }
         return false;
-    };
-    const handleAppSubmit = (event) => {
-        if (handleSubmit(event)) {
+    });
+    const handleAppSubmit = (event) => __awaiter(this, void 0, void 0, function* () {
+        if (yield handleSubmit(event)) {
             render(appState);
         }
-    };
+    });
     const handleInput = (event) => {
         if (!Utils.objectIsHtmlInputElement(event.target)) {
             return false;
