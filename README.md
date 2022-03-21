@@ -37,9 +37,8 @@ automatically.
 #### End Session
 
 Asks for cash out amount and prefills the end time with the current time. Asks
-for the admin password which can be saved in a cookie for reuse later. A simple
-form submit request is sent to a backend service which adds a row to the sheet
-after authenticating.
+for an admin password which can be saved for reuse later. A request is sent to a
+backend service which adds a row to the sheet after authenticating.
 
 ### Todo
 
@@ -47,8 +46,6 @@ after authenticating.
 - Dropdown for selecting casinos
 - Rerender on route change
 - Input focus
-- Password cookie
-- TypeScript config file with strict mode
 - Modules?
 - Add assets (og:image, favicon.icom, icon.svg, site.webmanifest, icon.png)
 - Add opt-in notifications for when the session should be ended (x hours later)
