@@ -1,14 +1,4 @@
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
+"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -18,234 +8,243 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 (function () {
-    var _this = this;
-    var Environments;
+    const LOCAL_STORAGE_KEY = 'pokerTracker';
+    let Environments;
     (function (Environments) {
         Environments["Development"] = "development";
         Environments["Production"] = "production";
     })(Environments || (Environments = {}));
-    var Screens;
+    let Screens;
     (function (Screens) {
         Screens["Intro"] = "intro";
         Screens["NewSession"] = "new-session";
         Screens["ShowSession"] = "show-session";
     })(Screens || (Screens = {}));
-    ;
-    var Utils = /** @class */ (function () {
-        function Utils() {
+    class Selectors {
+        constructor(appState) {
+            this.appState = appState;
         }
+        get currentSession() {
+            if (this.appState.currentSessionId &&
+                this._cachedCurrentSessionId !== this.appState.currentSessionId) {
+                this._cachedCurrentSessionId = this.appState.currentSessionId;
+                this._cachedCurrentSession = new Session(this.appState.currentSessionId);
+            }
+            return this._cachedCurrentSession;
+        }
+    }
+    class Utils {
         // See https://stackoverflow.com/a/44078785/659910
-        Utils.uuid = function () {
+        static uuid() {
             return Date.now().toString(36) + Math.random().toString(36).substring(2);
-        };
-        Utils.objectIsHtmlElement = function (object) {
-            return !!object.tagName;
-        };
-        Utils.objectIsHtmlInputElement = function (object) {
-            return !!object.type;
-        };
-        Utils.localStorageSessionKey = function (sessionId) {
-            return "pokerTracker:session:".concat(sessionId);
-        };
-        Utils.formatDuration = function (ms) {
-            var seconds = ms / 1000;
-            var hours = Math.floor(seconds / 3600);
-            var minutes = Math.floor((seconds - (hours * 3600)) / 60);
-            seconds = Math.round(seconds - (hours * 3600) - (minutes * 60));
-            var hoursFormatted = hours < 10 ? "0".concat(hours) : hours.toString();
-            var minutesFormatted = minutes < 10 ? "0".concat(minutes) : minutes.toString();
-            var secondsFormatted = seconds < 10 ? "0".concat(seconds) : seconds.toString();
-            return "".concat(hoursFormatted, ":").concat(minutesFormatted, ":").concat(secondsFormatted);
-        };
-        return Utils;
-    }());
-    var ApiService = /** @class */ (function () {
-        function ApiService() {
         }
-        ApiService.prototype.origin = function () {
+        static objectIsHtmlElement(object) {
+            return !!object.tagName;
+        }
+        static objectIsHtmlInputElement(object) {
+            return !!object.type;
+        }
+        static formatDuration(ms) {
+            let seconds = ms / 1000;
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds - hours * 3600) / 60);
+            seconds = Math.round(seconds - hours * 3600 - minutes * 60);
+            const hoursFormatted = hours < 10 ? `0${hours}` : hours.toString();
+            const minutesFormatted = minutes < 10 ? `0${minutes}` : minutes.toString();
+            const secondsFormatted = seconds < 10 ? `0${seconds}` : seconds.toString();
+            return `${hoursFormatted}:${minutesFormatted}:${secondsFormatted}`;
+        }
+    }
+    Utils.isPlainObject = (object) => {
+        return typeof object === 'object' && !Array.isArray(object);
+    };
+    Utils.objectSet = (object, key, value) => {
+        if (!key) {
+            return;
+        }
+        const subKeys = key.split('.');
+        const lastKey = subKeys.pop();
+        if (!lastKey) {
+            return;
+        }
+        for (const key of subKeys) {
+            const next = object[key];
+            if (!Utils.isPlainObject(next)) {
+                return;
+            }
+            object = next;
+        }
+        object[lastKey] = value;
+    };
+    Utils.nodeSet = (id, property, value) => {
+        const node = document.getElementById(id);
+        if (!node) {
+            return;
+        }
+        node[property] = value;
+    };
+    Utils.nodeInputSet = (id, property, value) => {
+        const node = document.getElementById(id);
+        if (!node) {
+            return;
+        }
+        node[property] = value;
+    };
+    class ApiService {
+        origin() {
             if (environment === Environments.Development) {
                 return 'http://localhost:3000';
             }
             else {
                 return 'https://blackjack-trainer-api.herokuapp.com';
             }
-        };
-        ApiService.prototype.request = function (path, body, requestOptions) {
-            var url = "".concat(this.origin(), "/api/v1").concat(path);
+        }
+        request(path, body, requestOptions) {
+            const url = `${this.origin()}/api/v1${path}`;
             return window.fetch(url, {
                 method: requestOptions.method,
-                headers: __assign(__assign({}, requestOptions.headers), { 'Content-Type': 'application/json' }),
-                body: JSON.stringify(body)
+                headers: Object.assign(Object.assign({}, requestOptions.headers), { 'Content-Type': 'application/json' }),
+                body: JSON.stringify(body),
             });
-        };
-        ApiService.prototype.post = function (path, body, requestOptions) {
-            return this.request(path, body, __assign({ method: 'POST' }, requestOptions));
-        };
-        ApiService.prototype.saveSession = function (session, adminPassword) {
+        }
+        post(path, body, requestOptions) {
+            return this.request(path, body, Object.assign({ method: 'POST' }, requestOptions));
+        }
+        saveSession(session, adminPassword) {
             return this.post('/poker_sessions', {
                 data: {
                     type: 'poker_session',
-                    attributes: session.attributes()
-                }
+                    attributes: session.attributes,
+                },
             }, {
                 headers: {
-                    'Poker-Sessions-Admin-Password': adminPassword
-                }
+                    'Poker-Sessions-Admin-Password': adminPassword,
+                },
             });
-        };
-        return ApiService;
-    }());
-    var SessionDecorator = /** @class */ (function () {
-        function SessionDecorator(session) {
+        }
+    }
+    class SessionDecorator {
+        constructor(session) {
             this.session = session;
         }
-        SessionDecorator.prototype.drinkTips = function () {
+        drinkTips() {
             var _a;
-            return "$".concat((_a = this.session.drinkTips) !== null && _a !== void 0 ? _a : 0);
-        };
-        SessionDecorator.prototype.dealerTips = function () {
+            return `$${(_a = this.session.attributes.drinkTips) !== null && _a !== void 0 ? _a : 0}`;
+        }
+        dealerTips() {
             var _a;
-            return "$".concat((_a = this.session.dealerTips) !== null && _a !== void 0 ? _a : 0);
-        };
-        SessionDecorator.prototype.blinds = function () {
-            return "".concat(this.session.smallBlind, "/").concat(this.session.bigBlind);
-        };
-        SessionDecorator.prototype.maxBuyin = function () {
-            return "$".concat(this.session.maxBuyin, " max");
-        };
-        SessionDecorator.prototype.title = function () {
+            return `$${(_a = this.session.attributes.dealerTips) !== null && _a !== void 0 ? _a : 0}`;
+        }
+        blinds() {
+            return `${this.session.attributes.smallBlind}/${this.session.attributes.bigBlind}`;
+        }
+        maxBuyin() {
+            return `$${this.session.attributes.maxBuyin} max`;
+        }
+        title() {
             return [
-                this.session.casinoName,
+                this.session.attributes.casinoName,
                 this.blinds(),
                 this.maxBuyin(),
             ].join(' ');
-        };
-        SessionDecorator.prototype.startTime = function () {
-            return this.session.startTime.toLocaleString();
-        };
-        SessionDecorator.prototype.profit = function () {
-            var _a;
-            var cashoutAmount = (_a = this.session.cashoutAmount) !== null && _a !== void 0 ? _a : 0;
-            return (cashoutAmount - this.session.buyinsTotal()).toString();
-        };
-        SessionDecorator.prototype.timeElapsed = function () {
-            return Utils.formatDuration(Date.now() - this.session.startTime.getTime());
-        };
-        return SessionDecorator;
-    }());
-    var Session = /** @class */ (function () {
-        function Session(casinoName, smallBlind, bigBlind, maxBuyin, maxPlayers) {
-            this.startTime = null;
-            this.endTime = null;
-            this.uuid = Utils.uuid();
-            this.casinoName = casinoName;
-            this.smallBlind = smallBlind;
-            this.bigBlind = bigBlind;
-            this.maxBuyin = maxBuyin;
-            this.maxPlayers = maxPlayers;
-            this.dealerTips = 0;
-            this.drinkTips = 0;
-            this.buyins = [];
         }
-        Session.load = function (attributesString) {
-            var attributes = JSON.parse(attributesString);
-            var session = new this(attributes.casinoName, attributes.smallBlind, attributes.bigBlind, attributes.maxBuyin, attributes.maxPlayers);
-            session.uuid = attributes.uuid;
-            if (attributes.startTime) {
-                session.startTime = new Date(attributes.startTime);
+        startTime() {
+            var _a, _b;
+            return (_b = (_a = this.session.startTime) === null || _a === void 0 ? void 0 : _a.toLocaleString()) !== null && _b !== void 0 ? _b : '';
+        }
+        profit() {
+            var _a;
+            const cashoutAmount = (_a = this.session.attributes.cashoutAmount) !== null && _a !== void 0 ? _a : 0;
+            return (cashoutAmount - this.session.buyinsTotal()).toString();
+        }
+        timeElapsed() {
+            if (!this.session.startTime) {
+                return '';
             }
-            if (attributes.endTime) {
-                session.endTime = new Date(attributes.endTime);
+            return Utils.formatDuration(Date.now() - this.session.startTime.getTime());
+        }
+    }
+    class Session {
+        constructor(id) {
+            this.id = id;
+            if (!this.attributes) {
+                throw new Error(`Session ${id} does not exist`);
             }
-            session.cashoutAmount = attributes.cashoutAmount;
-            session.drinkTips = attributes.drinkTips;
-            session.dealerTips = attributes.dealerTips;
-            session.buyins = attributes.buyins.map(function (buyin) { return ({
-                amount: buyin.amount,
-                time: new Date(buyin.time)
-            }); });
-            return session;
-        };
-        Session.prototype.start = function () {
+        }
+        static create(casinoName, smallBlind, bigBlind, maxBuyin, maxPlayers) {
+            const id = Utils.uuid();
+            appState.sessions[id] = {
+                id: Utils.uuid(),
+                casinoName,
+                smallBlind,
+                bigBlind,
+                maxBuyin,
+                maxPlayers,
+                cashoutAmount: 0,
+                dealerTips: 0,
+                drinkTips: 0,
+                buyins: [],
+            };
+            return new this(id);
+        }
+        get attributes() {
+            return appState.sessions[this.id];
+        }
+        get startTime() {
+            return this.attributes.startTime
+                ? new Date(this.attributes.startTime)
+                : null;
+        }
+        get endTime() {
+            return this.attributes.endTime ? new Date(this.attributes.endTime) : null;
+        }
+        start() {
             if (this.startTime) {
                 throw new Error('Session already started');
             }
             if (this.endTime) {
                 throw new Error('Session already ended');
             }
-            this.startTime = new Date();
-            this.buyins.push({ amount: this.maxBuyin, time: this.startTime });
-        };
-        Session.prototype.rebuy = function (amount) {
-            this.buyins.push({ amount: amount, time: new Date() });
-        };
-        Session.prototype.end = function (cashoutAmount) {
-            this.cashoutAmount = cashoutAmount;
-            this.endTime = new Date();
-        };
-        Session.prototype.save = function () {
-            window.localStorage.setItem(Utils.localStorageSessionKey(this.uuid), JSON.stringify(this.attributes()));
-        };
-        Session.prototype.buyinsTotal = function () {
-            return this.buyins.reduce(function (prev, current) { return (prev + current.amount); }, 0);
-        };
-        Session.prototype.attributes = function () {
-            var _a, _b;
-            return {
-                uuid: this.uuid,
-                startTime: (_a = this.startTime) === null || _a === void 0 ? void 0 : _a.toISOString(),
-                endTime: (_b = this.endTime) === null || _b === void 0 ? void 0 : _b.toISOString(),
-                casinoName: this.casinoName,
-                smallBlind: this.smallBlind,
-                bigBlind: this.bigBlind,
-                maxBuyin: this.maxBuyin,
-                maxPlayers: this.maxPlayers,
-                cashoutAmount: this.cashoutAmount,
-                drinkTips: this.drinkTips,
-                dealerTips: this.dealerTips,
-                buyins: this.buyins.map(function (rebuy) { return ({
-                    amount: rebuy.amount,
-                    time: rebuy.time.toISOString()
-                }); })
-            };
-        };
-        return Session;
-    }());
-    var locationToSessionId = function () {
-        var sessionPath = window.location.hash.match(/#\/sessions\/(.+)/);
+            this.attributes.startTime = new Date().toISOString();
+            this.attributes.buyins.push({
+                amount: this.attributes.maxBuyin,
+                time: this.attributes.startTime,
+            });
+        }
+        rebuy(amount) {
+            this.attributes.buyins.push({
+                amount,
+                time: new Date().toISOString(),
+            });
+        }
+        end(cashoutAmount) {
+            this.attributes.cashoutAmount = cashoutAmount;
+            this.attributes.endTime = new Date().toISOString();
+        }
+        buyinsTotal() {
+            return this.attributes.buyins.reduce((prev, current) => prev + current.amount, 0);
+        }
+        updateTip(type, change) {
+            if (this.attributes[type] + change < 0) {
+                return;
+            }
+            this.attributes[type] += change;
+        }
+        updateDealerTip(change) {
+            this.updateTip('dealerTips', change);
+        }
+        updateDrinkTip(change) {
+            this.updateTip('drinkTips', change);
+        }
+    }
+    const locationToSessionId = () => {
+        const sessionPath = window.location.hash.match(/#\/sessions\/(.+)/);
         if (sessionPath) {
             return sessionPath[1];
         }
     };
-    var sessionIdToScreen = function (sessionId) {
+    const sessionIdToScreen = (sessionId) => {
         if (!sessionId) {
             return Screens.Intro;
         }
@@ -254,17 +253,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         }
         return Screens.ShowSession;
     };
-    var sessionIdToCurrentSession = function (sessionId) {
-        if (!sessionId) {
-            return null;
-        }
-        var item = window.localStorage.getItem(Utils.localStorageSessionKey(sessionId));
-        if (!item) {
-            return null;
-        }
-        return Session.load(item);
-    };
-    var getEnvironment = function () {
+    const getEnvironment = () => {
         if (window.location.hostname === 'localhost') {
             return Environments.Development;
         }
@@ -272,55 +261,80 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             return Environments.Production;
         }
     };
-    var initAppState = function () {
-        var sessionId = locationToSessionId();
-        return {
-            screen: sessionIdToScreen(sessionId),
-            currentSession: sessionIdToCurrentSession(sessionId),
-            newSessionMaxPlayers: '8',
-            isSavingSession: false
-        };
+    const saveAppState = () => {
+        window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
+            sessions: appState.sessions,
+            // This is not very secure but I'm the only user of this hacky app.
+            // Long-term we would want JWT.
+            cachedAdminPassword: appState.cachedAdminPassword,
+        }));
     };
-    var renderNewSessionScreen = function (state) {
-        // Update new session screen data.
-        if (state.newSessionCasinoName) {
-            document.getElementById('casino-name-input').value = state.newSessionCasinoName;
-        }
-        if (state.newSessionSmallBlind) {
-            document.getElementById('small-blind-input').value = state.newSessionSmallBlind;
-        }
-        if (state.newSessionBigBlind) {
-            document.getElementById('big-blind-input').value = state.newSessionBigBlind;
-        }
-        if (state.newSessionMaxBuyin) {
-            document.getElementById('max-buyin-input').value = state.newSessionMaxBuyin;
-        }
-        if (state.newSessionMaxPlayers) {
-            document.getElementById('max-players-input').value = state.newSessionMaxPlayers;
-        }
+    const loadAppState = () => {
+        const stateItem = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+        const state = stateItem ? JSON.parse(stateItem) : {};
+        const sessionId = locationToSessionId();
+        return Object.assign({ screen: sessionIdToScreen(sessionId), sessions: {}, currentSessionId: sessionId, showSessionScreen: {
+                rebuyAmount: '',
+                cashoutAmount: '',
+                adminPassword: '',
+                isSavingSession: '',
+            }, newSessionScreen: {
+                casinoName: '',
+                smallBlind: '',
+                bigBlind: '',
+                maxBuyin: '',
+                maxPlayers: '8',
+            } }, state);
     };
-    var renderShowSessionScreen = function (state) {
-        var session = new SessionDecorator(state.currentSession);
-        document.getElementById('rebuy-amount-input').value = appState.currentSessionRebuyAmount;
-        document.getElementById('rebuy-amount-input').setAttribute('max', state.currentSession.maxBuyin.toString());
-        document.getElementById('session-title').innerText = session.title();
-        document.getElementById('session-profit').innerText = session.profit();
-        document.getElementById('session-start-time').innerText = session.startTime();
-        document.getElementById('session-time-elapsed').innerText = session.timeElapsed();
-        document.getElementById('session-dealer-tips-display').innerText = session.dealerTips();
-        document.getElementById('session-drink-tips-display').innerText = session.drinkTips();
-        if (appState.isSavingSession) {
-            document.getElementById('end-session-submit-button').setAttribute('disabled', 'disabled');
+    const renderNewSessionScreen = (state) => {
+        Utils.nodeInputSet('casino-name-input', 'value', state.newSessionScreen.casinoName);
+        Utils.nodeInputSet('small-blind-input', 'value', state.newSessionScreen.smallBlind);
+        Utils.nodeInputSet('big-blind-input', 'value', state.newSessionScreen.bigBlind);
+        Utils.nodeInputSet('max-buyin-input', 'value', state.newSessionScreen.maxBuyin);
+        Utils.nodeInputSet('max-players-input', 'value', state.newSessionScreen.maxPlayers);
+    };
+    const renderShowSessionScreen = (state) => {
+        var _a, _b, _c, _d, _e, _f;
+        if (!selectors.currentSession) {
+            return;
+        }
+        const session = new SessionDecorator(selectors.currentSession);
+        Utils.nodeInputSet('rebuy-amount-input', 'value', appState.showSessionScreen.rebuyAmount);
+        (document.getElementById('rebuy-amount-input')).setAttribute('max', selectors.currentSession.attributes.maxBuyin.toString());
+        Utils.nodeSet('session-title', 'innerText', session.title());
+        Utils.nodeSet('session-profit', 'innerText', session.profit());
+        Utils.nodeSet('session-start-time', 'innerText', session.startTime());
+        Utils.nodeSet('session-time-elapsed', 'innerText', session.timeElapsed());
+        Utils.nodeSet('session-dealer-tips-display', 'innerText', session.dealerTips());
+        Utils.nodeSet('session-drink-tips-display', 'innerText', session.drinkTips());
+        if (state.showSessionScreen.isSavingSession) {
+            (_a = document
+                .getElementById('end-session-submit-button')) === null || _a === void 0 ? void 0 : _a.setAttribute('disabled', 'disabled');
         }
         else {
-            document.getElementById('end-session-submit-button').removeAttribute('disabled');
+            (_b = document
+                .getElementById('end-session-submit-button')) === null || _b === void 0 ? void 0 : _b.removeAttribute('disabled');
+        }
+        if (state.cachedAdminPassword) {
+            (_c = document
+                .getElementById('admin-password-area')) === null || _c === void 0 ? void 0 : _c.classList.add('hidden');
+            (_d = document
+                .getElementById('admin-password-input')) === null || _d === void 0 ? void 0 : _d.removeAttribute('required');
+        }
+        else {
+            (_e = document
+                .getElementById('admin-password-area')) === null || _e === void 0 ? void 0 : _e.classList.remove('hidden');
+            (_f = document
+                .getElementById('admin-password-input')) === null || _f === void 0 ? void 0 : _f.setAttribute('required', 'required');
         }
     };
-    var render = function (state) {
+    const render = (state) => {
         // Update visible screen.
-        document.querySelectorAll('.screen').forEach(function (node) { return node.classList.add('hidden'); });
-        var activeScreenNode = document.getElementById("".concat(state.screen, "-screen"));
-        activeScreenNode.classList.remove('hidden');
+        document
+            .querySelectorAll('.screen')
+            .forEach((node) => node.classList.add('hidden'));
+        const activeScreenNode = document.getElementById(`${state.screen}-screen`);
+        activeScreenNode === null || activeScreenNode === void 0 ? void 0 : activeScreenNode.classList.remove('hidden');
         switch (appState.screen) {
             case Screens.NewSession:
                 return renderNewSessionScreen(state);
@@ -328,161 +342,166 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                 return renderShowSessionScreen(state);
         }
     };
-    var navigateToIntroScreen = function () {
+    const navigateToIntroScreen = () => {
         window.history.pushState({}, '', '#');
         appState.screen = Screens.Intro;
-        render(appState);
     };
-    var navigateToNewSessionScreen = function () {
+    const navigateToNewSessionScreen = () => {
         window.history.pushState({}, '', '#/sessions/new');
         appState.screen = Screens.NewSession;
-        render(appState);
     };
-    var navigateToShowSessionScreen = function (session) {
-        window.history.pushState({}, '', "#/sessions/".concat(session.uuid));
-        appState.currentSession = session;
+    const navigateToShowSessionScreen = (session) => {
+        window.history.pushState({}, '', `#/sessions/${session.id}`);
+        appState.currentSessionId = session.id;
         appState.screen = Screens.ShowSession;
-        render(appState);
     };
-    var updateDealerTip = function (session, change) {
-        if (change === -1 && session.dealerTips === 0) {
+    const rebuy = () => {
+        if (!selectors.currentSession) {
             return;
         }
-        session.dealerTips += change;
-        session.save();
-        render(appState);
+        selectors.currentSession.rebuy(parseFloat(appState.showSessionScreen.rebuyAmount));
+        appState.showSessionScreen.rebuyAmount = '';
     };
-    var updateDrinkTip = function (session, change) {
-        if (change === -1 && session.drinkTips === 0) {
-            return;
-        }
-        session.drinkTips += change;
-        session.save();
-        render(appState);
-    };
-    var rebuy = function (session) {
-        session.rebuy(parseFloat(appState.currentSessionRebuyAmount));
-        appState.currentSessionRebuyAmount = null;
-        render(appState);
-    };
-    var createSession = function () {
-        var session = new Session(appState.newSessionCasinoName, parseInt(appState.newSessionSmallBlind), parseInt(appState.newSessionBigBlind), parseInt(appState.newSessionMaxBuyin), parseInt(appState.newSessionMaxPlayers));
+    const createSession = () => {
+        const session = Session.create(appState.newSessionScreen.casinoName, parseInt(appState.newSessionScreen.smallBlind), parseInt(appState.newSessionScreen.bigBlind), parseInt(appState.newSessionScreen.maxBuyin), parseInt(appState.newSessionScreen.maxPlayers));
         session.start();
-        session.save();
         navigateToShowSessionScreen(session);
     };
-    var saveToGoogleSheet = function (session) { return __awaiter(_this, void 0, void 0, function () {
-        var response;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    session.end(parseFloat(appState.currentSessionCashoutAmount));
-                    session.save();
-                    appState.isSavingSession = true;
-                    render(appState);
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, , 3, 4]);
-                    return [4 /*yield*/, apiService.saveSession(session, appState.currentSessionAdminPassword)];
-                case 2:
-                    response = _a.sent();
-                    return [3 /*break*/, 4];
-                case 3:
-                    appState.isSavingSession = false;
-                    render(appState);
-                    return [7 /*endfinally*/];
-                case 4:
-                    if (response.ok) {
-                        alert('Success!');
-                        navigateToIntroScreen();
-                    }
-                    else {
-                        alert('Something went wrong.');
-                    }
-                    return [2 /*return*/];
-            }
-        });
-    }); };
-    var prefillBlinds = function (smallBlind, bigBlind) {
-        appState.newSessionSmallBlind = smallBlind;
-        appState.newSessionBigBlind = bigBlind;
-        render(appState);
-    };
-    var prefillMaxBuyin = function (maxBuyin) {
-        appState.newSessionMaxBuyin = maxBuyin;
-        render(appState);
-    };
-    var handleClick = function (event) {
-        if (!Utils.objectIsHtmlElement(event.target)) {
+    const saveToGoogleSheet = () => __awaiter(this, void 0, void 0, function* () {
+        var _a;
+        if (!selectors.currentSession) {
             return;
+        }
+        selectors.currentSession.end(parseFloat(appState.showSessionScreen.cashoutAmount));
+        appState.showSessionScreen.isSavingSession = true;
+        render(appState);
+        let response;
+        try {
+            response = yield apiService.saveSession(selectors.currentSession, (_a = appState.cachedAdminPassword) !== null && _a !== void 0 ? _a : appState.showSessionScreen.adminPassword);
+        }
+        finally {
+            appState.showSessionScreen.isSavingSession = false;
+            render(appState);
+        }
+        if (response.ok) {
+            if (!appState.cachedAdminPassword) {
+                appState.cachedAdminPassword = appState.showSessionScreen.adminPassword;
+            }
+            alert('Success!');
+            navigateToIntroScreen();
+        }
+        else {
+            alert('Something went wrong.');
+        }
+    });
+    const prefillBlinds = (smallBlind, bigBlind) => {
+        appState.newSessionScreen.smallBlind = smallBlind;
+        appState.newSessionScreen.bigBlind = bigBlind;
+    };
+    const prefillMaxBuyin = (maxBuyin) => {
+        appState.newSessionScreen.maxBuyin = maxBuyin;
+    };
+    const handleClick = (event) => {
+        var _a, _b, _c, _d;
+        if (!Utils.objectIsHtmlElement(event.target)) {
+            return false;
         }
         switch (event.target.id) {
             case 'new-session-button':
-                return navigateToNewSessionScreen();
+                navigateToNewSessionScreen();
+                return true;
             case 'decrement-dealer-tip-button':
-                return updateDealerTip(appState.currentSession, -1);
+                (_a = selectors.currentSession) === null || _a === void 0 ? void 0 : _a.updateDealerTip(-1);
+                return true;
             case 'increment-dealer-tip-button':
-                return updateDealerTip(appState.currentSession, 1);
+                (_b = selectors.currentSession) === null || _b === void 0 ? void 0 : _b.updateDealerTip(1);
+                return true;
             case 'decrement-drink-tip-button':
-                return updateDrinkTip(appState.currentSession, -1);
+                (_c = selectors.currentSession) === null || _c === void 0 ? void 0 : _c.updateDrinkTip(-1);
+                return true;
             case 'increment-drink-tip-button':
-                return updateDrinkTip(appState.currentSession, 1);
+                (_d = selectors.currentSession) === null || _d === void 0 ? void 0 : _d.updateDrinkTip(1);
+                return true;
         }
-        if (event.target.classList.contains('prefill-blinds')) {
+        if (event.target.classList.contains('prefill-blinds') &&
+            event.target.dataset.smallBlind &&
+            event.target.dataset.bigBlind) {
             prefillBlinds(event.target.dataset.smallBlind, event.target.dataset.bigBlind);
             prefillMaxBuyin((parseInt(event.target.dataset.bigBlind) * 100).toString());
-            return;
+            return true;
+        }
+        return false;
+    };
+    const handleAppClick = (event) => {
+        if (handleClick(event)) {
+            render(appState);
         }
     };
-    var handleSubmit = function (event) {
+    const handleSubmit = (event) => {
         if (!Utils.objectIsHtmlElement(event.target)) {
-            return;
+            return false;
         }
         event.preventDefault();
         switch (event.target.id) {
             case 'new-session-form':
-                return createSession();
+                createSession();
+                return true;
             case 'rebuy-form':
-                return rebuy(appState.currentSession);
+                rebuy();
+                return true;
             case 'end-session-form':
-                return saveToGoogleSheet(appState.currentSession);
+                saveToGoogleSheet();
+                return true;
+        }
+        return false;
+    };
+    const handleAppSubmit = (event) => {
+        if (handleSubmit(event)) {
+            render(appState);
         }
     };
-    var handleInput = function (event) {
+    const handleInput = (event) => {
         if (!Utils.objectIsHtmlInputElement(event.target)) {
-            return;
+            return false;
         }
-        var idToStateKey = {
-            'casino-name-input': 'newSessionCasinoName',
-            'small-blind-input': 'newSessionSmallBlind',
-            'big-blind-input': 'newSessionBigBlind',
-            'max-buyin-input': 'newSessionMaxBuyin',
-            'max-players-input': 'newSessionMaxPlayers',
-            'rebuy-amount-input': 'currentSessionRebuyAmount',
-            'cashout-amount-input': 'currentSessionCashoutAmount',
-            'admin-password-input': 'currentSessionAdminPassword'
+        const idToStateKey = (id) => {
+            switch (id) {
+                case 'casino-name-input':
+                    return 'newSessionScreen.casinoName';
+                case 'small-blind-input':
+                    return 'newSessionScreen.smallBlind';
+                case 'big-blind-input':
+                    return 'newSessionScreen.bigBlind';
+                case 'max-buyin-input':
+                    return 'newSessionScreen.maxBuyin';
+                case 'max-players-input':
+                    return 'newSessionScreen.maxPlayers';
+                case 'rebuy-amount-input':
+                    return 'showSessionScreen.rebuyAmount';
+                case 'cashout-amount-input':
+                    return 'showSessionScreen.cashoutAmount';
+                case 'admin-password-input':
+                    return 'showSessionScreen.adminPassword';
+            }
         };
-        var appStateKey = idToStateKey[event.target.id];
-        if (!appStateKey) {
-            return;
+        const key = idToStateKey(event.target.id);
+        if (!key) {
+            return false;
         }
-        appState[appStateKey] = event.target.value;
+        return Utils.objectSet(appState, key, event.target.value);
     };
-    var __prefillNewSessionScreen = function () {
-        appState.newSessionCasinoName = 'Bellagio';
-        appState.newSessionSmallBlind = '2';
-        appState.newSessionBigBlind = '5';
-        appState.newSessionMaxBuyin = '500';
-        appState.newSessionMaxPlayers = '8';
-        render(appState);
+    const handleAppInput = (event) => {
+        if (handleInput(event)) {
+            render(appState);
+        }
     };
-    var environment = getEnvironment();
-    var apiService = new ApiService();
-    var appState = initAppState();
-    // @ts-ignore
-    window.__prefillNewSessionScreen = __prefillNewSessionScreen;
-    document.body.addEventListener('click', handleClick);
-    document.body.addEventListener('submit', handleSubmit);
-    document.body.addEventListener('input', handleInput);
+    const environment = getEnvironment();
+    const apiService = new ApiService();
+    const appState = loadAppState();
+    const selectors = new Selectors(appState);
+    document.body.addEventListener('click', handleAppClick);
+    document.body.addEventListener('submit', handleAppSubmit);
+    document.body.addEventListener('input', handleAppInput);
+    window.onbeforeunload = saveAppState;
     render(appState);
 })();
