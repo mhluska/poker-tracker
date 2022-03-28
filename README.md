@@ -1,9 +1,12 @@
 ## Poker Tracker
 
-Extremely simple frontend for a Google Sheet I use to track my poker sessions.
+A frontend for a Google Sheet that I use to track my poker sessions. To better
+understand how React works under the hood, I built my own basic React-like
+library to power this.
 
-I used to type session data into a note on my phone and then transfer it to
-the sheet later on my laptop. This was error-prone and got tiring quickly.
+Motivation: I used to type session data into a note on my phone and then
+transfer it to the sheet later on my laptop. This was error-prone and got tiring
+quickly.
 
 ### Develop
 
@@ -20,7 +23,7 @@ npm start
 npm run deploy
 ```
 
-### Commands
+### Features
 
 #### Start Session
 
@@ -42,6 +45,8 @@ backend service which adds a row to the sheet after authenticating.
 
 ### Todo
 
+- Add event binding
+- Add virtual DOM reconciliation
 - Auto render on appState change
 - Dropdown for selecting casinos
 - Rerender on route change

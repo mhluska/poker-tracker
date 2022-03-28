@@ -7,14 +7,14 @@
     Production = 'production',
   }
 
-  enum Screens {
+  enum Screen {
     Intro = 'intro',
     NewSession = 'new-session',
     ShowSession = 'show-session',
   }
 
   type AppState = {
-    screen: Screens;
+    screen: Screen;
     currentSessionId?: string;
     sessions: { [id: string]: SessionAttributes };
     showSessionScreen: {
@@ -54,11 +54,11 @@
     [key: string]: Primitive | PlainObject | PlainObject[];
   };
 
-  // Is there a standard way to get these?
-  type HTMLElementProperty = 'innerText';
+  type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 
-  // Is there a standard way to get these?
-  type HTMLInputElementProperty = HTMLElementProperty | 'value';
+  type ElementProperties = Writeable<
+    HTMLElementTagNameMap[keyof HTMLElementTagNameMap]
+  >;
 
   class Selectors {
     appState: AppState;
@@ -145,31 +145,9 @@
       object[lastKey] = value;
     };
 
-    static nodeSet = (
-      id: string,
-      property: HTMLElementProperty,
-      value: string
-    ) => {
-      const node = document.getElementById(id);
-      if (!node) {
-        return;
-      }
-
-      node[property] = value;
-    };
-
-    static nodeInputSet = (
-      id: string,
-      property: HTMLInputElementProperty,
-      value: string
-    ) => {
-      const node = <HTMLInputElement>document.getElementById(id);
-      if (!node) {
-        return;
-      }
-
-      node[property] = value;
-    };
+    static capitalize(str: string) {
+      return `${str[0].toUpperCase()}${str.slice(1)}`;
+    }
   }
 
   class ApiService {
@@ -388,14 +366,14 @@
 
   const sessionIdToScreen = (sessionId?: string) => {
     if (!sessionId) {
-      return Screens.Intro;
+      return Screen.Intro;
     }
 
     if (sessionId === 'new') {
-      return Screens.NewSession;
+      return Screen.NewSession;
     }
 
-    return Screens.ShowSession;
+    return Screen.ShowSession;
   };
 
   const getEnvironment = () => {
@@ -444,124 +422,319 @@
     };
   };
 
-  const renderNewSessionScreen = (state: AppState) => {
-    Utils.nodeInputSet(
-      'casino-name-input',
-      'value',
-      state.newSessionScreen.casinoName
+  // See https://github.com/microsoft/TypeScript/pull/12253#issuecomment-353494273
+  const keys = Object.keys as <T>(o: T) => (keyof T)[];
+
+  // See https://github.com/microsoft/TypeScript/pull/12253#issuecomment-479851685
+  const entries = Object.entries as <T>(o: T) => [keyof T, T[keyof T]][];
+
+  const createElement = (
+    tagName: keyof HTMLElementTagNameMap,
+    props: Partial<ElementProperties> | null = null,
+    ...children: (Element | string | null)[]
+  ) => {
+    const element = document.createElement(tagName);
+
+    if (props) {
+      for (const name of keys(props)) {
+        const value = props[name];
+
+        if (name.startsWith('data-')) {
+          element.setAttribute(name, String(value));
+        } else {
+          // TODO: Figure out why an error related to readonly properties is
+          // happening despite using `Writeable`.
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          element[name] = value;
+        }
+      }
+    }
+
+    for (const child of children) {
+      if (child === null) {
+        continue;
+      }
+
+      element.appendChild(
+        typeof child === 'string' ? document.createTextNode(child) : child
+      );
+    }
+
+    return element;
+  };
+
+  const e = createElement;
+
+  const NumberInput = ({
+    id,
+    placeholder,
+    value,
+    max,
+  }: {
+    id: string;
+    placeholder: string;
+    value?: string;
+    max?: number;
+  }) =>
+    e('input', {
+      id,
+      type: 'number',
+      placeholder,
+      pattern: '\\d*',
+      value,
+      min: '1',
+      max,
+      required: 'required',
+    });
+
+  const BlindsButton = ({
+    smallBlind,
+    bigBlind,
+  }: {
+    smallBlind: number;
+    bigBlind: number;
+  }) =>
+    e(
+      'button',
+      {
+        type: 'button',
+        className: 'prefill-blinds',
+        'data-small-blind': smallBlind,
+        'data-big-blind': bigBlind,
+      },
+      `${smallBlind}/${bigBlind}`
     );
-    Utils.nodeInputSet(
-      'small-blind-input',
-      'value',
-      state.newSessionScreen.smallBlind
+
+  const TipsSection = ({
+    type,
+    value,
+  }: {
+    type: 'dealer' | 'drink';
+    value: string;
+  }) =>
+    e(
+      'div',
+      { className: 'section' },
+      e('span', null, `${Utils.capitalize(type)} tips: ${value}`),
+      e(
+        'div',
+        null,
+        e(
+          'button',
+          { className: 'tip-button', id: `decrement-${type}-tip-button` },
+          '-'
+        ),
+        e(
+          'button',
+          { className: 'tip-button', id: `increment-${type}-tip-button` },
+          '+'
+        )
+      )
     );
-    Utils.nodeInputSet(
-      'big-blind-input',
-      'value',
-      state.newSessionScreen.bigBlind
-    );
-    Utils.nodeInputSet(
-      'max-buyin-input',
-      'value',
-      state.newSessionScreen.maxBuyin
-    );
-    Utils.nodeInputSet(
-      'max-players-input',
-      'value',
-      state.newSessionScreen.maxPlayers
+
+  const IntroScreen = () => {
+    return e(
+      'div',
+      { id: 'intro-screen', className: 'screen' },
+      e('button', { id: 'new-session-button' }, 'Start Session')
     );
   };
 
-  const renderShowSessionScreen = (state: AppState) => {
+  const NewSessionScreen = () => {
+    return e(
+      'div',
+      { id: 'new-session-screen', className: 'screen' },
+      e(
+        'form',
+        { id: 'new-session-form' },
+        e(
+          'div',
+          null,
+          e(
+            'label',
+            null,
+            e('span', null, 'Casino Name'),
+            e('input', {
+              id: 'casino-name-input',
+              type: 'text',
+              placeholder: 'Bellagio',
+              required: 'required',
+              value: appState.newSessionScreen.casinoName,
+            })
+          )
+        ),
+        e(
+          'div',
+          null,
+          e(
+            'label',
+            null,
+            e('span', null, 'Blinds'),
+            NumberInput({
+              id: 'small-blind-input',
+              placeholder: '2',
+              value: appState.newSessionScreen.smallBlind,
+              max: 100,
+            }),
+            NumberInput({
+              id: 'big-blind-input',
+              placeholder: '5',
+              value: appState.newSessionScreen.bigBlind,
+              max: 200,
+            })
+          ),
+          BlindsButton({ smallBlind: 1, bigBlind: 2 }),
+          BlindsButton({ smallBlind: 1, bigBlind: 3 }),
+          BlindsButton({ smallBlind: 2, bigBlind: 5 }),
+          BlindsButton({ smallBlind: 5, bigBlind: 10 })
+        ),
+        e(
+          'div',
+          null,
+          e(
+            'label',
+            null,
+            e('span', null, 'Max Buyin'),
+            NumberInput({
+              id: 'max-buyin-input',
+              placeholder: '500',
+              value: appState.newSessionScreen.maxBuyin,
+            })
+          )
+        ),
+        e(
+          'div',
+          null,
+          e(
+            'label',
+            null,
+            e('span', null, 'Max Players'),
+            NumberInput({
+              id: 'max-players-input',
+              placeholder: '8',
+              max: 10,
+              value: appState.newSessionScreen.maxPlayers,
+            })
+          )
+        ),
+        e('div', null, e('input', { type: 'submit', value: 'Start Session' }))
+      )
+    );
+  };
+
+  const ShowSessionScreen = () => {
     if (!selectors.currentSession) {
-      return;
+      return null;
     }
 
     const session = new SessionDecorator(selectors.currentSession);
 
-    Utils.nodeInputSet(
-      'rebuy-amount-input',
-      'value',
-      appState.showSessionScreen.rebuyAmount
-    );
+    return e(
+      'div',
+      { id: 'show-session-screen', className: 'screen' },
+      e('h1', { id: 'session-title' }, session.title()),
+      e('div', null, e('span', null, `Profit: $${session.profit()}`)),
+      e('div', null, e('span', null, `Start time: $${session.startTime()}`)),
+      e('div', null, e('span', null, `Time elapsed: $${session.timeElapsed()}`)),
 
-    (<HTMLInputElement>(
-      document.getElementById('rebuy-amount-input')
-    )).setAttribute(
-      'max',
-      selectors.currentSession.attributes.maxBuyin.toString()
-    );
+      e(
+        'form',
+        { id: 'rebuy-form', className: 'section' },
+        NumberInput({
+          id: 'rebuy-amount-input',
+          placeholder: selectors.currentSession.attributes.maxBuyin.toString(),
+          max: selectors.currentSession.attributes.maxBuyin,
+          value: appState.showSessionScreen.rebuyAmount,
+        }),
+        e('input', { type: 'submit', value: 'Rebuy' }),
+        e('input', { id: 'rebuy-max-button', type: 'button', value: 'Max' })
+      ),
 
-    Utils.nodeSet('session-title', 'innerText', session.title());
-    Utils.nodeSet('session-profit', 'innerText', session.profit());
-    Utils.nodeSet('session-start-time', 'innerText', session.startTime());
-    Utils.nodeSet('session-time-elapsed', 'innerText', session.timeElapsed());
-    Utils.nodeSet(
-      'session-dealer-tips-display',
-      'innerText',
-      session.dealerTips()
-    );
-    Utils.nodeSet(
-      'session-drink-tips-display',
-      'innerText',
-      session.drinkTips()
-    );
+      TipsSection({ type: 'dealer', value: session.dealerTips() }),
+      TipsSection({ type: 'drink', value: session.drinkTips() }),
 
-    if (state.showSessionScreen.isSavingSession) {
-      document
-        .getElementById('end-session-submit-button')
-        ?.setAttribute('disabled', 'disabled');
-    } else {
-      document
-        .getElementById('end-session-submit-button')
-        ?.removeAttribute('disabled');
-    }
+      e(
+        'form',
+        { id: 'end-session-form', className: 'section' },
+        e('input', {
+          className: 'hidden',
+          type: 'text',
+          autocomplete: 'username',
+        }),
 
-    if (state.cachedAdminPassword) {
-      document.getElementById('admin-password-area')?.classList.add('hidden');
-      document
-        .getElementById('admin-password-input')
-        ?.removeAttribute('required');
-    } else {
-      document
-        .getElementById('admin-password-area')
-        ?.classList.remove('hidden');
-      document
-        .getElementById('admin-password-input')
-        ?.setAttribute('required', 'required');
+        e(
+          'div',
+          null,
+          e(
+            'label',
+            null,
+            e('span', null, 'Cashout Amount'),
+            NumberInput({
+              id: 'cashout-amount-input',
+              placeholder: (
+                selectors.currentSession.attributes.maxBuyin * 3
+              ).toString(),
+            })
+          )
+        ),
+
+        appState.cachedAdminPassword
+          ? null
+          : e(
+              'div',
+              { id: 'admin-password-area' },
+              e('label', null, e('span', null, 'Password')),
+              e('input', {
+                id: 'admin-password-input',
+                type: 'password',
+                autocomplete: 'current-password',
+                required: 'required',
+              })
+            ),
+
+        e('input', {
+          id: 'end-session-submit-button',
+          type: 'submit',
+          value: 'End Session',
+          disabled: appState.showSessionScreen.isSavingSession,
+        })
+      )
+    );
+  };
+
+  const renderScreen = () => {
+    switch (appState.screen) {
+      case Screen.Intro:
+        return IntroScreen();
+      case Screen.NewSession:
+        return NewSessionScreen();
+      case Screen.ShowSession:
+        return ShowSessionScreen();
+      default:
+        throw new Error(`Unexpected screen ${screen}`);
     }
   };
 
-  const render = (state: AppState) => {
-    // Update visible screen.
-    document
-      .querySelectorAll('.screen')
-      .forEach((node) => node.classList.add('hidden'));
-    const activeScreenNode = document.getElementById(`${state.screen}-screen`);
-    activeScreenNode?.classList.remove('hidden');
-
-    switch (appState.screen) {
-      case Screens.NewSession:
-        return renderNewSessionScreen(state);
-      case Screens.ShowSession:
-        return renderShowSessionScreen(state);
-    }
+  const render = () => {
+    // TODO: Do reconciliation.
+    appRoot?.replaceChildren(renderScreen() || '');
   };
 
   const navigateToIntroScreen = () => {
     window.history.pushState({}, '', '#');
-    appState.screen = Screens.Intro;
+    appState.screen = Screen.Intro;
   };
 
   const navigateToNewSessionScreen = () => {
     window.history.pushState({}, '', '#/sessions/new');
-    appState.screen = Screens.NewSession;
+    appState.screen = Screen.NewSession;
   };
 
   const navigateToShowSessionScreen = (session: Session) => {
     window.history.pushState({}, '', `#/sessions/${session.id}`);
     appState.currentSessionId = session.id;
-    appState.screen = Screens.ShowSession;
+    appState.screen = Screen.ShowSession;
   };
 
   const rebuy = () => {
@@ -599,7 +772,7 @@
     );
 
     appState.showSessionScreen.isSavingSession = true;
-    render(appState);
+    render();
 
     let response;
 
@@ -610,7 +783,7 @@
       );
     } finally {
       appState.showSessionScreen.isSavingSession = false;
-      render(appState);
+      render();
     }
 
     if (response.ok) {
@@ -685,7 +858,7 @@
 
   const handleAppClick = (event: Event) => {
     if (handleClick(event)) {
-      render(appState);
+      render();
     }
   };
 
@@ -713,7 +886,7 @@
 
   const handleAppSubmit = async (event: Event) => {
     if (await handleSubmit(event)) {
-      render(appState);
+      render();
     }
   };
 
@@ -753,7 +926,7 @@
 
   const handleAppInput = (event: Event) => {
     if (handleInput(event)) {
-      render(appState);
+      render();
     }
   };
 
@@ -761,10 +934,13 @@
   const apiService = new ApiService();
   const appState = loadAppState();
   const selectors = new Selectors(appState);
+  const appRoot = document.getElementById('root');
 
-  document.body.addEventListener('click', handleAppClick);
-  document.body.addEventListener('submit', handleAppSubmit);
-  document.body.addEventListener('input', handleAppInput);
+  if (appRoot) {
+    appRoot.addEventListener('click', handleAppClick);
+    appRoot.addEventListener('submit', handleAppSubmit);
+    appRoot.addEventListener('input', handleAppInput);
+  }
 
   // HACK: onbeforeunload doesn't seem to work on iOS so we save periodically.
   setInterval(saveAppState, SAVE_APP_STATE_INTERVAL_MS);
@@ -772,5 +948,5 @@
 
   window.onbeforeunload = saveAppState;
 
-  render(appState);
+  render();
 })();
