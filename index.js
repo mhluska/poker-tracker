@@ -13,7 +13,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     const SAVE_APP_STATE_INTERVAL_MS = 10 * 1000;
     const ELEMENT_NODE_TYPE = 1;
     const TEXT_NODE_TYPE = 3;
-    const RECONCILEABLE_NPUT_PROPERTIES = ['value', 'disabled'];
+    const ELEMENT_PROPERTIES = new Set(['value', 'className']);
     let Environments;
     (function (Environments) {
         Environments["Development"] = "development";
@@ -61,6 +61,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         }
         static capitalize(str) {
             return `${str[0].toUpperCase()}${str.slice(1)}`;
+        }
+        static isCapitalized(str) {
+            return str[0].toUpperCase() === str[0];
         }
     }
     Utils.isPlainObject = (object) => {
@@ -277,7 +280,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 rebuyAmount: '',
                 cashoutAmount: '',
                 adminPassword: '',
-                isSavingSession: '',
+                isSavingSession: false,
             }, newSessionScreen: {
                 casinoName: '',
                 smallBlind: '',
@@ -288,33 +291,54 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     };
     // See https://github.com/microsoft/TypeScript/pull/12253#issuecomment-353494273
     const keys = Object.keys;
-    const createElement = (tagName, props = null, ...children) => {
+    const isNativeElementType = (type) => !Utils.isCapitalized(type);
+    const createVirtualElement = (type, props = null, ...children) => ({
+        type,
+        tagName: isNativeElementType(type)
+            ? type
+            : props === null || props === void 0 ? void 0 : props.tagName,
+        props: props || {},
+        children,
+    });
+    const createDomNode = (virtualNode) => {
+        if (typeof virtualNode === 'string') {
+            return document.createTextNode(virtualNode);
+        }
+        const { tagName, props, children } = virtualNode;
         const element = document.createElement(tagName);
         if (props) {
             for (const name of keys(props)) {
-                const value = props[name];
-                if (name.startsWith('data-')) {
-                    element.setAttribute(name, String(value));
+                if (name === 'tagName') {
+                    continue;
                 }
-                else {
+                const value = props[name];
+                if (ELEMENT_PROPERTIES.has(name)) {
                     // TODO: Figure out why an error related to readonly properties is
                     // happening despite using `Writeable`.
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
                     element[name] = value;
                 }
+                else {
+                    if (typeof value === 'boolean' && value === false) {
+                        continue;
+                    }
+                    element.setAttribute(name, String(value));
+                }
             }
         }
         for (const child of children) {
-            if (child === null) {
+            const childDomElement = createDomNode(child);
+            if (!childDomElement) {
                 continue;
             }
-            element.appendChild(typeof child === 'string' ? document.createTextNode(child) : child);
+            element.appendChild(childDomElement);
         }
         return element;
     };
-    const e = createElement;
-    const NumberInput = ({ id, placeholder, value, max, }) => e('input', {
+    const e = createVirtualElement;
+    const NumberInput = ({ id, placeholder, value, max, }) => e('NumberInput', {
+        tagName: 'input',
         id,
         type: 'number',
         placeholder,
@@ -324,18 +348,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         max,
         required: 'required',
     });
-    const BlindsButton = ({ smallBlind, bigBlind, }) => e('button', {
+    const BlindsButton = ({ smallBlind, bigBlind, }) => e('BlindsButton', {
+        tagName: 'button',
         type: 'button',
         className: 'prefill-blinds',
         'data-small-blind': smallBlind,
         'data-big-blind': bigBlind,
     }, `${smallBlind}/${bigBlind}`);
-    const TipsSection = ({ type, value, }) => e('div', { className: 'section' }, e('span', null, `${Utils.capitalize(type)} tips: ${value}`), e('div', null, e('button', { className: 'tip-button', id: `decrement-${type}-tip-button` }, '-'), e('button', { className: 'tip-button', id: `increment-${type}-tip-button` }, '+')));
+    const TipsSection = ({ type, value, }) => e('TipsSection', { tagName: 'div', className: 'section' }, e('span', null, `${Utils.capitalize(type)} tips: ${value}`), e('div', null, e('button', { className: 'tip-button', id: `decrement-${type}-tip-button` }, '-'), e('button', { className: 'tip-button', id: `increment-${type}-tip-button` }, '+')));
     const IntroScreen = () => {
-        return e('div', { id: 'intro-screen', className: 'screen' }, e('button', { id: 'new-session-button' }, 'Start Session'));
+        return e('IntroScreen', { tagName: 'div', id: 'intro-screen', className: 'screen' }, e('button', { id: 'new-session-button' }, 'Start Session'));
     };
     const NewSessionScreen = () => {
-        return e('div', { id: 'new-session-screen', className: 'screen' }, e('form', { id: 'new-session-form' }, e('div', null, e('label', null, e('span', null, 'Casino Name'), e('input', {
+        return e('NewSessionScreen', { tagName: 'div', id: 'new-session-screen', className: 'screen' }, e('form', { id: 'new-session-form' }, e('div', null, e('label', null, e('span', null, 'Casino Name'), e('input', {
             id: 'casino-name-input',
             type: 'text',
             placeholder: 'Bellagio',
@@ -364,10 +389,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     };
     const ShowSessionScreen = () => {
         if (!selectors.currentSession) {
-            return null;
+            return '';
         }
         const session = new SessionDecorator(selectors.currentSession);
-        return e('div', { id: 'show-session-screen', className: 'screen' }, e('h1', { id: 'session-title' }, session.title()), e('div', null, e('span', null, `Profit: $${session.profit()}`)), e('div', null, e('span', null, `Start time: $${session.startTime()}`)), e('div', null, e('span', null, `Time elapsed: $${session.timeElapsed()}`)), e('form', { id: 'rebuy-form', className: 'section' }, NumberInput({
+        return e('ShowSessionScreen', { tagName: 'div', id: 'show-session-screen', className: 'screen' }, e('h1', { id: 'session-title' }, session.title()), e('div', null, e('span', null, `Profit: $${session.profit()}`)), e('div', null, e('span', null, `Start time: $${session.startTime()}`)), e('div', null, e('span', null, `Time elapsed: $${session.timeElapsed()}`)), e('form', { id: 'rebuy-form', className: 'section' }, NumberInput({
             id: 'rebuy-amount-input',
             placeholder: selectors.currentSession.attributes.maxBuyin.toString(),
             max: selectors.currentSession.attributes.maxBuyin,
@@ -380,7 +405,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             id: 'cashout-amount-input',
             placeholder: (selectors.currentSession.attributes.maxBuyin * 3).toString(),
         }))), appState.cachedAdminPassword
-            ? null
+            ? ''
             : e('div', { id: 'admin-password-area' }, e('label', null, e('span', null, 'Password')), e('input', {
                 id: 'admin-password-input',
                 type: 'password',
@@ -405,65 +430,91 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 throw new Error(`Unexpected screen ${screen}`);
         }
     };
-    const reconcileAttributes = (domNode, newNode) => {
-        for (const attr of Array.from(domNode.attributes)) {
-            const attribute = domNode.getAttribute(attr.nodeName);
-            const newAttribute = newNode.getAttribute(attr.nodeName);
-            if (attribute === newAttribute) {
-                continue;
+    const reconcileProps = (domNode, prevNode, newNode) => {
+        for (const name of keys(newNode.props)) {
+            // HACK: With properties, our crappy virtal DOM can get out of sync after
+            // user input so we just always write.
+            if (ELEMENT_PROPERTIES.has(name) && newNode.props[name] !== undefined) {
+                // TODO: Fix type `Element` being too generic here.
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                domNode[name] = newNode.props[name];
             }
-            if (newAttribute === null) {
-                domNode.removeAttribute(attr.nodeName);
-            }
-            else {
-                domNode.setAttribute(attr.nodeName, newAttribute);
+            else if (newNode.props[name] !== prevNode.props[name]) {
+                if (typeof newNode.props[name] === 'boolean') {
+                    if (newNode.props[name]) {
+                        domNode.setAttribute(name, name);
+                    }
+                    else {
+                        domNode.removeAttribute(name);
+                    }
+                }
+                else {
+                    domNode.setAttribute(name, String(newNode.props[name]));
+                }
             }
         }
-    };
-    const reconcileProperties = (domNode, newNode) => {
-        if (Utils.objectIsHtmlInputElement(domNode) &&
-            Utils.objectIsHtmlInputElement(newNode)) {
-            // TODO: How do we do this in general for all properties?
-            RECONCILEABLE_NPUT_PROPERTIES.forEach((prop) => {
-                if (domNode[prop] !== newNode[prop]) {
-                    // TODO: Figure out why an error related to readonly properties is
-                    // happening despite using `Writeable`.
+        for (const name of keys(prevNode.props)) {
+            if (newNode.props[name] === undefined) {
+                if (ELEMENT_PROPERTIES.has(name)) {
+                    // TODO: Fix type `Element` being too generic here.
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
-                    domNode[prop] = newNode[prop];
+                    domNode[name] = '';
                 }
-            });
+                else {
+                    domNode.removeAttribute(name);
+                }
+            }
         }
     };
-    const reconcile = (domNode, newNode, parentNode) => {
-        var _a;
-        if (domNode && newNode) {
-            if (domNode.tagName !== newNode.tagName ||
-                domNode.nodeType !== newNode.nodeType ||
-                domNode.nodeType === TEXT_NODE_TYPE) {
-                (_a = domNode.parentNode) === null || _a === void 0 ? void 0 : _a.replaceChild(newNode, domNode);
+    const elementType = (element) => {
+        return typeof element === 'string' ? 'string' : element.type;
+    };
+    const reconcile = (domNode, prevNode, newNode, parentElement) => {
+        var _a, _b, _c;
+        if (!domNode) {
+            parentElement.appendChild(createDomNode(newNode));
+            return;
+        }
+        if (prevNode && newNode) {
+            if (elementType(prevNode) !== elementType(newNode)) {
+                (_a = domNode.parentElement) === null || _a === void 0 ? void 0 : _a.replaceChild(createDomNode(newNode), domNode);
                 return;
             }
-            if (domNode.nodeType === ELEMENT_NODE_TYPE) {
-                reconcileAttributes(domNode, newNode);
-                reconcileProperties(domNode, newNode);
-            }
-            else {
+            if (typeof prevNode === 'string') {
+                (_b = domNode.parentElement) === null || _b === void 0 ? void 0 : _b.replaceChild(createDomNode(newNode), domNode);
                 return;
             }
-            Array.from(newNode.childNodes).forEach((newNodeChild, index) => {
-                reconcile(domNode.childNodes[index], newNodeChild, domNode);
+            // This is certain because we check that both types are the same above but
+            // TypeScript is not smart enough to know that.
+            if (typeof newNode === 'string') {
+                return;
+            }
+            reconcileProps(domNode, prevNode, newNode);
+            newNode.children.forEach((newNodeChild, index) => {
+                reconcile(Array.from(domNode.childNodes).filter((node) => node.nodeType === ELEMENT_NODE_TYPE ||
+                    node.nodeType === TEXT_NODE_TYPE)[index], prevNode.children[index], newNodeChild, domNode);
             });
         }
         else if (newNode) {
-            parentNode.appendChild(newNode);
+            (_c = domNode.parentElement) === null || _c === void 0 ? void 0 : _c.replaceChild(createDomNode(newNode), domNode);
         }
-        else if (domNode) {
+        else if (prevNode) {
             domNode.remove();
         }
     };
+    let prevVirtualNode = e('div');
     const render = () => {
-        reconcile(appRoot, e('div', null, renderScreen()), document.body);
+        if (!appRoot) {
+            throw new Error('appRoot is not set');
+        }
+        if (!appRoot.parentElement) {
+            throw new Error('appRoot not attached to DOM');
+        }
+        const virtualNode = e('div', null, renderScreen());
+        reconcile(appRoot, prevVirtualNode, virtualNode, appRoot.parentElement);
+        prevVirtualNode = virtualNode;
     };
     const navigateToIntroScreen = () => {
         window.history.pushState({}, '', '#');
