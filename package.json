@@ -1,7 +1,7 @@
 {
   "name": "poker-tracker",
   "version": "0.0.1",
-  "description": "Extremely simple frontend for a poker tracker Google Sheet",
+  "description": "Frontend for a poker tracker Google Sheet",
   "main": "index.ts",
   "scripts": {
     "start": "cd build/ && python -m SimpleHTTPServer 8000",
