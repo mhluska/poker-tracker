@@ -46,7 +46,6 @@ backend service which adds a row to the sheet after authenticating.
 ### Todo
 
 - Add event binding
-- Add virtual DOM reconciliation
 - Auto render on appState change
 - Dropdown for selecting casinos
 - Rerender on route change

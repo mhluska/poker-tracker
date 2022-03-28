@@ -1,6 +1,11 @@
 (function () {
   const LOCAL_STORAGE_KEY = 'pokerTracker';
   const SAVE_APP_STATE_INTERVAL_MS = 10 * 1000;
+  const ELEMENT_NODE_TYPE = 1;
+  const TEXT_NODE_TYPE = 3;
+  const RECONCILEABLE_NPUT_PROPERTIES: Partial<
+    keyof Writeable<HTMLInputElement>
+  >[] = ['value', 'disabled'];
 
   enum Environments {
     Development = 'development',
@@ -425,9 +430,6 @@
   // See https://github.com/microsoft/TypeScript/pull/12253#issuecomment-353494273
   const keys = Object.keys as <T>(o: T) => (keyof T)[];
 
-  // See https://github.com/microsoft/TypeScript/pull/12253#issuecomment-479851685
-  const entries = Object.entries as <T>(o: T) => [keyof T, T[keyof T]][];
-
   const createElement = (
     tagName: keyof HTMLElementTagNameMap,
     props: Partial<ElementProperties> | null = null,
@@ -636,7 +638,11 @@
       e('h1', { id: 'session-title' }, session.title()),
       e('div', null, e('span', null, `Profit: $${session.profit()}`)),
       e('div', null, e('span', null, `Start time: $${session.startTime()}`)),
-      e('div', null, e('span', null, `Time elapsed: $${session.timeElapsed()}`)),
+      e(
+        'div',
+        null,
+        e('span', null, `Time elapsed: $${session.timeElapsed()}`)
+      ),
 
       e(
         'form',
@@ -716,9 +722,79 @@
     }
   };
 
+  const reconcileAttributes = (domNode: Element, newNode: Element) => {
+    for (const attr of Array.from(domNode.attributes)) {
+      const attribute = domNode.getAttribute(attr.nodeName);
+      const newAttribute = newNode.getAttribute(attr.nodeName);
+
+      if (attribute === newAttribute) {
+        continue;
+      }
+
+      if (newAttribute === null) {
+        domNode.removeAttribute(attr.nodeName);
+      } else {
+        domNode.setAttribute(attr.nodeName, newAttribute);
+      }
+    }
+  };
+
+  const reconcileProperties = (domNode: Element, newNode: Element) => {
+    if (
+      Utils.objectIsHtmlInputElement(domNode) &&
+      Utils.objectIsHtmlInputElement(newNode)
+    ) {
+      // TODO: How do we do this in general for all properties?
+      RECONCILEABLE_NPUT_PROPERTIES.forEach((prop) => {
+        if (domNode[prop] !== newNode[prop]) {
+          // TODO: Figure out why an error related to readonly properties is
+          // happening despite using `Writeable`.
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          domNode[prop] = newNode[prop];
+        }
+      });
+    }
+  };
+
+  const reconcile = (
+    domNode: Element | null,
+    newNode: Element | null,
+    parentNode: Element
+  ) => {
+    if (domNode && newNode) {
+      if (
+        domNode.tagName !== newNode.tagName ||
+        domNode.nodeType !== newNode.nodeType ||
+        domNode.nodeType === TEXT_NODE_TYPE
+      ) {
+        domNode.parentNode?.replaceChild(newNode, domNode);
+        return;
+      }
+
+      if (domNode.nodeType === ELEMENT_NODE_TYPE) {
+        reconcileAttributes(domNode, newNode);
+        reconcileProperties(domNode, newNode);
+      } else {
+        return;
+      }
+
+      Array.from(newNode.childNodes).forEach((newNodeChild, index) => {
+        reconcile(
+          domNode.childNodes[index] as Element,
+          newNodeChild as Element,
+          domNode
+        );
+      });
+    } else if (newNode) {
+      parentNode.appendChild(newNode);
+    } else if (domNode) {
+      domNode.remove();
+    }
+  };
+
   const render = () => {
-    // TODO: Do reconciliation.
-    appRoot?.replaceChildren(renderScreen() || '');
+    reconcile(appRoot, e('div', null, renderScreen()), document.body);
   };
 
   const navigateToIntroScreen = () => {
