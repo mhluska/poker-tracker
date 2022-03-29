@@ -337,14 +337,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         return element;
     };
     const e = createVirtualElement;
-    const NumberInput = ({ id, placeholder, value, max, }) => e('NumberInput', {
+    const NumberInput = ({ id, placeholder, value, min = 1, max, }) => e('NumberInput', {
         tagName: 'input',
         id,
         type: 'number',
         placeholder,
         pattern: '\\d*',
         value,
-        min: '1',
+        min,
         max,
         required: 'required',
     });
@@ -392,7 +392,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             return '';
         }
         const session = new SessionDecorator(selectors.currentSession);
-        return e('ShowSessionScreen', { tagName: 'div', id: 'show-session-screen', className: 'screen' }, e('h1', { id: 'session-title' }, session.title()), e('div', null, e('span', null, `Profit: $${session.profit()}`)), e('div', null, e('span', null, `Start time: $${session.startTime()}`)), e('div', null, e('span', null, `Time elapsed: $${session.timeElapsed()}`)), e('form', { id: 'rebuy-form', className: 'section' }, NumberInput({
+        return e('ShowSessionScreen', { tagName: 'div', id: 'show-session-screen', className: 'screen' }, e('h1', { id: 'session-title' }, session.title()), e('div', null, e('span', null, `Profit: $${session.profit()}`)), e('div', null, e('span', null, `Start time: $${session.startTime()}`)), e('div', null, e('span', null, `Time elapsed: ${session.timeElapsed()}`)), e('form', { id: 'rebuy-form', className: 'section' }, NumberInput({
             id: 'rebuy-amount-input',
             placeholder: selectors.currentSession.attributes.maxBuyin.toString(),
             max: selectors.currentSession.attributes.maxBuyin,
@@ -402,6 +402,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             type: 'text',
             autocomplete: 'username',
         }), e('div', null, e('label', null, e('span', null, 'Cashout Amount'), NumberInput({
+            min: 0,
             id: 'cashout-amount-input',
             placeholder: (selectors.currentSession.attributes.maxBuyin * 3).toString(),
         }))), appState.cachedAdminPassword
