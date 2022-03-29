@@ -13,13 +13,13 @@ quickly.
 ```sh
 nvm use $(cat .nvmrc)
 npm install
-npm run build
 npm start
 ```
 
 ### Deploy
 
 ```sh
+npm run build
 npm run deploy
 ```
 
@@ -50,6 +50,5 @@ backend service which adds a row to the sheet after authenticating.
 - Dropdown for selecting casinos
 - Rerender on route change
 - Input focus
-- Modules?
 - Add assets (og:image, favicon.icom, icon.svg, site.webmanifest, icon.png)
 - Add opt-in notifications for when the session should be ended (x hours later)

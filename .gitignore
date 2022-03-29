@@ -1,2 +1,2 @@
-build/
-postbuild/modern-normalize.css
+dist/
+.parcel-cache

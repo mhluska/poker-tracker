@@ -7,5 +7,4 @@ ROOT=$(git rev-parse --show-toplevel)
 
 cd "${ROOT}"
 
-rsync -rta postbuild/ build
-cp index.html build/
+rsync -rta postbuild/ dist

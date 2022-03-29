@@ -2,14 +2,12 @@
   "name": "poker-tracker",
   "version": "0.0.1",
   "description": "Frontend for a poker tracker Google Sheet",
-  "main": "index.ts",
   "scripts": {
-    "start": "cd build/ && python -m SimpleHTTPServer 8000",
+    "start": "parcel src/index.html",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
+    "build": "parcel build src/index.html",
     "postbuild": "./scripts/postbuild.sh",
-    "postinstall": "./scripts/postinstall.sh",
-    "deploy": "gh-pages --dotfiles -d build",
+    "deploy": "gh-pages --dotfiles -d dist",
     "lint:fix": "eslint --fix"
   },
   "repository": {
@@ -33,6 +31,7 @@
     "eslint": "^8.11.0",
     "gh-pages": "^3.2.3",
     "modern-normalize": "^1.1.0",
+    "parcel": "^2.4.0",
     "typescript": "^4.6.2"
   }
 }
