@@ -1,6 +1,6 @@
 ## Poker Tracker
 
-A frontend for a Google Sheet that I use to track my poker sessions. To better
+Frontend for a Google Sheet that I use to track my poker sessions. To better
 understand how React works under the hood, I built my own basic React-like
 library to power this.
 

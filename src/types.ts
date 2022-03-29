@@ -9,3 +9,14 @@ export type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 export type ElementProperties = Writeable<
   HTMLElementTagNameMap[keyof HTMLElementTagNameMap]
 >;
+
+export enum Environments {
+  Development = 'development',
+  Production = 'production',
+}
+
+export enum Screen {
+  Intro = 'intro',
+  NewSession = 'new-session',
+  ShowSession = 'show-session',
+}
