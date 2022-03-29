@@ -509,11 +509,13 @@
     id,
     placeholder,
     value,
+    min = 1,
     max,
   }: {
     id: string;
     placeholder: string;
     value?: string;
+    min?: number;
     max?: number;
   }) =>
     e('NumberInput', {
@@ -523,7 +525,7 @@
       placeholder,
       pattern: '\\d*',
       value,
-      min: '1',
+      min,
       max,
       required: 'required',
     });
@@ -680,7 +682,7 @@
       e(
         'div',
         null,
-        e('span', null, `Time elapsed: $${session.timeElapsed()}`)
+        e('span', null, `Time elapsed: ${session.timeElapsed()}`)
       ),
 
       e(
@@ -716,6 +718,7 @@
             null,
             e('span', null, 'Cashout Amount'),
             NumberInput({
+              min: 0,
               id: 'cashout-amount-input',
               placeholder: (
                 selectors.currentSession.attributes.maxBuyin * 3
