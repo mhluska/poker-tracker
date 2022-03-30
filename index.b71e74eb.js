@@ -808,8 +808,9 @@ const createDomNode = (virtualNode)=>{
         // @ts-ignore
         element[name] = value;
         else {
-            if (typeof value === 'boolean' && value === false) continue;
-            element.setAttribute(name, String(value));
+            if (typeof value === 'boolean') {
+                if (value) element.setAttribute(name, '');
+            } else element.setAttribute(name, String(value));
         }
     }
     for (const child of children){
@@ -829,7 +830,7 @@ const reconcileProps = (domNode, prevNode, newNode)=>{
         domNode[name] = newNode.props[name];
         else if (newNode.props[name] !== prevNode.props[name]) {
             if (typeof newNode.props[name] === 'boolean') {
-                if (newNode.props[name]) domNode.setAttribute(name, name);
+                if (newNode.props[name]) domNode.setAttribute(name, '');
                 else domNode.removeAttribute(name);
             } else domNode.setAttribute(name, String(newNode.props[name]));
         }
@@ -951,7 +952,7 @@ const NewSessionScreen = ()=>{
         id: 'casino-name-input',
         type: 'text',
         placeholder: 'Bellagio',
-        required: 'required',
+        required: true,
         value: _state.appState.newSessionScreen.casinoName
     }))), _renderer.e('div', null, _renderer.e('label', null, _renderer.e('span', null, 'Blinds'), _components.NumberInput({
         id: 'small-blind-input',
@@ -1087,7 +1088,7 @@ const NumberInput = ({ id , placeholder , value , min =1 , max  })=>_renderer.e(
         value,
         min,
         max,
-        required: 'required'
+        required: true
     })
 ;
 
@@ -1148,7 +1149,7 @@ const ShowSessionScreen = ()=>{
         id: 'admin-password-input',
         type: 'password',
         autocomplete: 'current-password',
-        required: 'required'
+        required: true
     })), _renderer.e('input', {
         id: 'end-session-submit-button',
         type: 'submit',
