@@ -20,7 +20,7 @@ export const NewSessionScreen = () => {
             id: 'casino-name-input',
             type: 'text',
             placeholder: 'Bellagio',
-            required: 'required',
+            required: true,
             value: appState.newSessionScreen.casinoName,
           })
         )

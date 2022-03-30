@@ -60,11 +60,13 @@ export const createDomNode = (virtualNode: VirtualNode) => {
         // @ts-ignore
         element[name] = value;
       } else {
-        if (typeof value === 'boolean' && value === false) {
-          continue;
+        if (typeof value === 'boolean') {
+          if (value) {
+            element.setAttribute(name, '');
+          }
+        } else {
+          element.setAttribute(name, String(value));
         }
-
-        element.setAttribute(name, String(value));
       }
     }
   }
@@ -98,7 +100,7 @@ export const reconcileProps = (
     } else if (newNode.props[name] !== prevNode.props[name]) {
       if (typeof newNode.props[name] === 'boolean') {
         if (newNode.props[name]) {
-          domNode.setAttribute(name, name);
+          domNode.setAttribute(name, '');
         } else {
           domNode.removeAttribute(name);
         }

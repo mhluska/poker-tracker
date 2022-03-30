@@ -18,5 +18,5 @@ export const NumberInput = ({ id, placeholder, value, min = 1, max }: Props) =>
     value,
     min,
     max,
-    required: 'required',
+    required: true,
   });

@@ -71,7 +71,7 @@ export const ShowSessionScreen = () => {
               id: 'admin-password-input',
               type: 'password',
               autocomplete: 'current-password',
-              required: 'required',
+              required: true
             })
           ),
 
