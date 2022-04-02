@@ -1,4 +1,4 @@
-import { uuid } from '../utils';
+import { uuid, toISOString } from '../utils';
 import { appState } from '../state';
 
 export class Session {
@@ -60,7 +60,7 @@ export class Session {
       throw new Error('Session already ended');
     }
 
-    this.attributes.startTime = new Date().toISOString();
+    this.attributes.startTime = toISOString(new Date());
     this.attributes.buyins.push({
       amount: this.attributes.maxBuyin,
       time: this.attributes.startTime,
@@ -80,7 +80,7 @@ export class Session {
 
   end(cashoutAmount: number) {
     this.attributes.cashoutAmount = cashoutAmount;
-    this.attributes.endTime = new Date().toISOString();
+    this.attributes.endTime = toISOString(new Date());
   }
 
   undoEnd() {
