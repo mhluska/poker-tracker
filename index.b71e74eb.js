@@ -646,8 +646,6 @@ const handleInput = (event)=>{
                 return 'newSessionScreen.maxPlayers';
             case 'rebuy-amount-input':
                 return 'showSessionScreen.rebuyAmount';
-            case 'notes-input':
-                return 'showSessionScreen.notes';
             case 'cashout-amount-input':
                 return 'showSessionScreen.cashoutAmount';
             case 'admin-password-input':
@@ -793,6 +791,17 @@ const ELEMENT_PROPERTIES = new Set([
     'value',
     'className'
 ]);
+const EVENT_PROPS = {
+    onInput: {
+        propName: 'onInput',
+        nativeEventName: 'input',
+        supportedElements: new Set([
+            'input',
+            'select',
+            'textarea'
+        ])
+    }
+};
 const isNativeElementType = (type)=>!_utils.isCapitalized(type)
 ;
 const elementType = (element)=>{
@@ -813,6 +822,13 @@ const createDomNode = (virtualNode)=>{
     if (props) for (const name of _utils.keys(props)){
         if (name === 'tagName') continue;
         const value = props[name];
+        if (EVENT_PROPS[name]) {
+            if (EVENT_PROPS[name].supportedElements.has(tagName)) {
+                // TODO: Can we avoid a typecast here?
+                element.addEventListener(EVENT_PROPS[name].nativeEventName, value);
+                continue;
+            } else throw new Error(`Added onInput to invalid element type ${tagName}`);
+        }
         if (ELEMENT_PROPERTIES.has(name)) // TODO: Figure out why an error related to readonly properties is
         // happening despite using `Writeable`.
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -831,27 +847,34 @@ const createDomNode = (virtualNode)=>{
     }
     return element;
 };
+const reconcileEventHandlerProps = (domNode, propName, prevValue, newValue)=>{
+    if (prevValue) domNode.removeEventListener(EVENT_PROPS[propName].nativeEventName, prevValue);
+    if (newValue) domNode.addEventListener(EVENT_PROPS[propName].nativeEventName, newValue);
+};
 const reconcileProps = (domNode, prevNode, newNode)=>{
-    for (const name of _utils.keys(newNode.props)){
+    for (const name of _utils.keys(newNode.props).concat(_utils.keys(prevNode.props))){
+        const prevValue = prevNode.props[name];
+        const newValue = newNode.props[name];
         // HACK: With properties, our crappy virtal DOM can get out of sync after
         // user input so we just always write.
-        if (ELEMENT_PROPERTIES.has(name) && newNode.props[name] !== undefined) // TODO: Fix type `Element` being too generic here.
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        domNode[name] = newNode.props[name];
-        else if (newNode.props[name] !== prevNode.props[name]) {
-            if (typeof newNode.props[name] === 'boolean') {
-                if (newNode.props[name]) domNode.setAttribute(name, '');
-                else domNode.removeAttribute(name);
-            } else domNode.setAttribute(name, String(newNode.props[name]));
+        if (ELEMENT_PROPERTIES.has(name)) {
+            // TODO: Fix type `Element` being too generic here.
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            domNode[name] = newValue === undefined ? '' : newValue;
+            continue;
         }
-    }
-    for (const name1 of _utils.keys(prevNode.props))if (newNode.props[name1] === undefined) {
-        if (ELEMENT_PROPERTIES.has(name1)) // TODO: Fix type `Element` being too generic here.
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        domNode[name1] = '';
-        else domNode.removeAttribute(name1);
+        if (prevValue === newValue) continue;
+        if (EVENT_PROPS[name]) {
+            // TODO: Can we avoid a typecast here?
+            reconcileEventHandlerProps(domNode, EVENT_PROPS[name].propName, prevValue, newValue);
+            continue;
+        }
+        if (typeof newValue === 'boolean') {
+            if (newValue) domNode.setAttribute(name, '');
+            else domNode.removeAttribute(name);
+        } else if (typeof newValue === 'undefined') domNode.removeAttribute(name);
+        else domNode.setAttribute(name, String(newValue));
     }
 };
 const reconcile = (domNode, prevNode, newNode, parentElement)=>{
@@ -1117,6 +1140,9 @@ var _state = require("../state");
 const ShowSessionScreen = ()=>{
     if (!_selectors.appSelectors.currentSession) return '';
     const session = new _decorators.Session(_selectors.appSelectors.currentSession);
+    const handleNotesInput = (event)=>{
+        if (event.target) _state.appState.showSessionScreen.notes = event.target.value;
+    };
     return _renderer.e('ShowSessionScreen', {
         tagName: 'div',
         id: 'show-session-screen',
@@ -1154,8 +1180,8 @@ const ShowSessionScreen = ()=>{
     }), _renderer.e('label', {
         className: 'section'
     }, _renderer.e('div', null, 'Notes'), _renderer.e('textarea', {
-        id: 'notes-input',
-        placeholder: 'I punted again…'
+        placeholder: 'I punted again…',
+        onInput: handleNotesInput
     })), _renderer.e('label', {
         className: 'section'
     }, _renderer.e('div', null, 'Cashout Amount'), _components.NumberInput({
