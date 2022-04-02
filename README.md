@@ -45,6 +45,12 @@ backend service which adds a row to the sheet after authenticating.
 
 ### Todo
 
+- Avoid calling the `createVirtualElement()` functions until reconcile happens.
+  In other words, `VirtualElement.children` should actually be an array of
+  functions that returns the child elements when called. A function component
+  should return `{ type: string, props: object, children: Function[] }`
+- Nest `children` under `props`
+- Treat text nodes as just another virtual element
 - Use event binding instead of global `handleInput`
 - Auto render on appState change
 - Dropdown for selecting casinos
