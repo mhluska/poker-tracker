@@ -11,6 +11,12 @@ export const ShowSessionScreen = () => {
 
   const session = new SessionDecorator(appSelectors.currentSession);
 
+  const handleNotesInput = (event: Event) => {
+    if (event.target) {
+      appState.showSessionScreen.notes = (<HTMLInputElement>event.target).value;
+    }
+  };
+
   return e(
     'ShowSessionScreen',
     { tagName: 'div', id: 'show-session-screen', className: 'screen' },
@@ -48,7 +54,10 @@ export const ShowSessionScreen = () => {
         'label',
         { className: 'section' },
         e('div', null, 'Notes'),
-        e('textarea', { id: 'notes-input', placeholder: 'I punted again…' })
+        e('textarea', {
+          placeholder: 'I punted again…',
+          onInput: handleNotesInput,
+        })
       ),
 
       e(

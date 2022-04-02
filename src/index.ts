@@ -206,8 +206,6 @@ const handleInput = (event: Event) => {
         return 'newSessionScreen.maxPlayers';
       case 'rebuy-amount-input':
         return 'showSessionScreen.rebuyAmount';
-      case 'notes-input':
-        return 'showSessionScreen.notes';
       case 'cashout-amount-input':
         return 'showSessionScreen.cashoutAmount';
       case 'admin-password-input':

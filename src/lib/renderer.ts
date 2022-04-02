@@ -1,18 +1,35 @@
 import { ElementProperties } from '../types';
 import { isCapitalized, keys } from '../utils';
 
-const ELEMENT_NODE_TYPE = 1;
-const TEXT_NODE_TYPE = 3;
-const ELEMENT_PROPERTIES = new Set(['value', 'className']);
+type CustomProperties = {
+  onInput: NonNullable<GlobalEventHandlers['oninput']>;
+};
+
+type EventPropDescription = {
+  propName: keyof CustomProperties;
+  nativeEventName: string;
+  supportedElements: Set<keyof HTMLElementTagNameMap>;
+};
 
 type VirtualElement = {
   type: string;
   tagName: keyof HTMLElementTagNameMap;
-  props: Partial<ElementProperties>;
+  props: Partial<ElementProperties & CustomProperties>;
   children: VirtualNode[];
 };
 
 type VirtualNode = string | VirtualElement;
+
+const ELEMENT_NODE_TYPE = 1;
+const TEXT_NODE_TYPE = 3;
+const ELEMENT_PROPERTIES = new Set(['value', 'className']);
+const EVENT_PROPS: Record<string, EventPropDescription> = {
+  onInput: {
+    propName: 'onInput',
+    nativeEventName: 'input',
+    supportedElements: new Set(['input', 'select', 'textarea']),
+  },
+};
 
 const isNativeElementType = (
   type: string
@@ -53,6 +70,19 @@ export const createDomNode = (virtualNode: VirtualNode) => {
 
       const value = props[name];
 
+      if (EVENT_PROPS[name]) {
+        if (EVENT_PROPS[name].supportedElements.has(tagName)) {
+          // TODO: Can we avoid a typecast here?
+          element.addEventListener(
+            EVENT_PROPS[name].nativeEventName,
+            value as EventListener
+          );
+          continue;
+        } else {
+          throw new Error(`Added onInput to invalid element type ${tagName}`);
+        }
+      }
+
       if (ELEMENT_PROPERTIES.has(name)) {
         // TODO: Figure out why an error related to readonly properties is
         // happening despite using `Writeable`.
@@ -84,42 +114,68 @@ export const createDomNode = (virtualNode: VirtualNode) => {
   return element;
 };
 
+const reconcileEventHandlerProps = (
+  domNode: Element,
+  propName: keyof CustomProperties,
+  prevValue?: EventListener,
+  newValue?: EventListener
+) => {
+  if (prevValue) {
+    domNode.removeEventListener(
+      EVENT_PROPS[propName].nativeEventName,
+      prevValue
+    );
+  }
+
+  if (newValue) {
+    domNode.addEventListener(EVENT_PROPS[propName].nativeEventName, newValue);
+  }
+};
+
 export const reconcileProps = (
   domNode: Element,
   prevNode: VirtualElement,
   newNode: VirtualElement
 ) => {
-  for (const name of keys(newNode.props)) {
+  for (const name of keys(newNode.props).concat(keys(prevNode.props))) {
+    const prevValue = prevNode.props[name];
+    const newValue = newNode.props[name];
+
     // HACK: With properties, our crappy virtal DOM can get out of sync after
     // user input so we just always write.
-    if (ELEMENT_PROPERTIES.has(name) && newNode.props[name] !== undefined) {
+    if (ELEMENT_PROPERTIES.has(name)) {
       // TODO: Fix type `Element` being too generic here.
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      domNode[name] = newNode.props[name];
-    } else if (newNode.props[name] !== prevNode.props[name]) {
-      if (typeof newNode.props[name] === 'boolean') {
-        if (newNode.props[name]) {
-          domNode.setAttribute(name, '');
-        } else {
-          domNode.removeAttribute(name);
-        }
-      } else {
-        domNode.setAttribute(name, String(newNode.props[name]));
-      }
+      domNode[name] = newValue === undefined ? '' : newValue;
+      continue;
     }
-  }
 
-  for (const name of keys(prevNode.props)) {
-    if (newNode.props[name] === undefined) {
-      if (ELEMENT_PROPERTIES.has(name)) {
-        // TODO: Fix type `Element` being too generic here.
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        domNode[name] = '';
+    if (prevValue === newValue) {
+      continue;
+    }
+
+    if (EVENT_PROPS[name]) {
+      // TODO: Can we avoid a typecast here?
+      reconcileEventHandlerProps(
+        domNode,
+        EVENT_PROPS[name].propName,
+        prevValue as EventListener | undefined,
+        newValue as EventListener | undefined
+      );
+      continue;
+    }
+
+    if (typeof newValue === 'boolean') {
+      if (newValue) {
+        domNode.setAttribute(name, '');
       } else {
         domNode.removeAttribute(name);
       }
+    } else if (typeof newValue === 'undefined') {
+      domNode.removeAttribute(name);
+    } else {
+      domNode.setAttribute(name, String(newValue));
     }
   }
 };
@@ -175,10 +231,7 @@ export const reconcile = (
 
 let prevVirtualNode = e('div');
 
-export const render = (
-  component: VirtualNode,
-  appRoot: HTMLElement | null
-) => {
+export const render = (component: VirtualNode, appRoot: HTMLElement | null) => {
   if (!appRoot) {
     throw new Error('appRoot is not set');
   }
