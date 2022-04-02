@@ -694,6 +694,8 @@ parcelHelpers.export(exports, "capitalize", ()=>capitalize
 );
 parcelHelpers.export(exports, "isCapitalized", ()=>isCapitalized
 );
+parcelHelpers.export(exports, "toISOString", ()=>toISOString
+);
 const keys = Object.keys;
 const uuid = ()=>Date.now().toString(36) + Math.random().toString(36).substring(2)
 ;
@@ -729,6 +731,13 @@ const capitalize = (str)=>`${str[0].toUpperCase()}${str.slice(1)}`
 ;
 const isCapitalized = (str)=>str[0].toUpperCase() === str[0]
 ;
+const toISOString = (date)=>{
+    const tzo = -date.getTimezoneOffset();
+    const dif = tzo >= 0 ? '+' : '-';
+    const pad = (num)=>(num < 10 ? '0' : '') + num
+    ;
+    return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + 'T' + pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds()) + dif + pad(Math.floor(Math.abs(tzo) / 60)) + ':' + pad(Math.abs(tzo) % 60);
+};
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gkKU3":[function(require,module,exports) {
 exports.interopDefault = function(a) {
@@ -1282,7 +1291,7 @@ class Session {
     start() {
         if (this.startTime) throw new Error('Session already started');
         if (this.endTime) throw new Error('Session already ended');
-        this.attributes.startTime = new Date().toISOString();
+        this.attributes.startTime = _utils.toISOString(new Date());
         this.attributes.buyins.push({
             amount: this.attributes.maxBuyin,
             time: this.attributes.startTime
@@ -1299,7 +1308,7 @@ class Session {
     }
     end(cashoutAmount) {
         this.attributes.cashoutAmount = cashoutAmount;
-        this.attributes.endTime = new Date().toISOString();
+        this.attributes.endTime = _utils.toISOString(new Date());
     }
     undoEnd() {
         this.attributes.cashoutAmount = 0;
