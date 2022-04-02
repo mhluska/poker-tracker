@@ -11,6 +11,7 @@ type SessionAttributes = {
   bigBlind: number;
   maxBuyin: number;
   maxPlayers: number;
+  notes: string;
   cashoutAmount: number;
   drinkTips: number;
   dealerTips: number;
@@ -23,6 +24,7 @@ export type AppState = {
   sessions: { [id: string]: SessionAttributes };
   showSessionScreen: {
     rebuyAmount: string;
+    notes: string;
     cashoutAmount: string;
     adminPassword: string;
     isSavingSession: boolean;
@@ -68,6 +70,7 @@ const loadAppState = (): AppState => {
     currentSessionId: sessionId,
     showSessionScreen: {
       rebuyAmount: '',
+      notes: '',
       cashoutAmount: '',
       adminPassword: '',
       isSavingSession: false,

@@ -20,6 +20,7 @@ export class Session {
       bigBlind,
       maxBuyin,
       maxPlayers,
+      notes: '',
       cashoutAmount: 0,
       dealerTips: 0,
       drinkTips: 0,
@@ -78,9 +79,10 @@ export class Session {
     this.rebuy(this.attributes.maxBuyin);
   }
 
-  end(cashoutAmount: number) {
+  end(cashoutAmount: number, notes: string) {
     this.attributes.cashoutAmount = cashoutAmount;
     this.attributes.endTime = toISOString(new Date());
+    this.attributes.notes = notes;
   }
 
   undoEnd() {

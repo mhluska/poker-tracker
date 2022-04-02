@@ -60,7 +60,8 @@ const saveToGoogleSheet = async () => {
   }
 
   appSelectors.currentSession.end(
-    parseFloat(appState.showSessionScreen.cashoutAmount)
+    parseFloat(appState.showSessionScreen.cashoutAmount),
+    appState.showSessionScreen.notes
   );
 
   appState.showSessionScreen.isSavingSession = true;
@@ -205,6 +206,8 @@ const handleInput = (event: Event) => {
         return 'newSessionScreen.maxPlayers';
       case 'rebuy-amount-input':
         return 'showSessionScreen.rebuyAmount';
+      case 'notes-input':
+        return 'showSessionScreen.notes';
       case 'cashout-amount-input':
         return 'showSessionScreen.cashoutAmount';
       case 'admin-password-input':

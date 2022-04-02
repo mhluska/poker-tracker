@@ -45,20 +45,23 @@ export const ShowSessionScreen = () => {
       }),
 
       e(
-        'div',
-        null,
-        e(
-          'label',
-          null,
-          e('span', null, 'Cashout Amount'),
-          NumberInput({
-            min: 0,
-            id: 'cashout-amount-input',
-            placeholder: (
-              appSelectors.currentSession.attributes.maxBuyin * 3
-            ).toString(),
-          })
-        )
+        'label',
+        { className: 'section' },
+        e('div', null, 'Notes'),
+        e('textarea', { id: 'notes-input', placeholder: 'I punted again…' })
+      ),
+
+      e(
+        'label',
+        { className: 'section' },
+        e('div', null, 'Cashout Amount'),
+        NumberInput({
+          min: 0,
+          id: 'cashout-amount-input',
+          placeholder: (
+            appSelectors.currentSession.attributes.maxBuyin * 3
+          ).toString(),
+        })
       ),
 
       appState.cachedAdminPassword
@@ -71,7 +74,7 @@ export const ShowSessionScreen = () => {
               id: 'admin-password-input',
               type: 'password',
               autocomplete: 'current-password',
-              required: true
+              required: true,
             })
           ),
 

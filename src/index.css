@@ -1,1 +1,31 @@
 @import '../node_modules/modern-normalize/modern-normalize.css';
+
+/* Fixes iOS zoom when quickly tapping a button. */
+button {
+  touch-action: manipulation;
+}
+
+.hidden {
+  display: none;
+}
+
+.section {
+  margin: 1em 0;
+  display: block;
+}
+
+.screen {
+  padding: 1em;
+}
+
+/* TODO: Move to component. */
+.tip-button {
+  margin: 0.5em 0;
+  width: 3em;
+  height: 3em;
+}
+
+/* TODO: Move to component. */
+#session-title {
+  margin-top: 0;
+}
