@@ -548,7 +548,7 @@ const createSession = ()=>{
 };
 const saveToGoogleSheet = async ()=>{
     if (!_selectors.appSelectors.currentSession) return;
-    _selectors.appSelectors.currentSession.end(parseFloat(_state.appState.showSessionScreen.cashoutAmount));
+    _selectors.appSelectors.currentSession.end(parseFloat(_state.appState.showSessionScreen.cashoutAmount), _state.appState.showSessionScreen.notes);
     _state.appState.showSessionScreen.isSavingSession = true;
     // TODO: Make this happen automatically on appState change.
     _renderer.render(_components.App(), appRoot);
@@ -646,6 +646,8 @@ const handleInput = (event)=>{
                 return 'newSessionScreen.maxPlayers';
             case 'rebuy-amount-input':
                 return 'showSessionScreen.rebuyAmount';
+            case 'notes-input':
+                return 'showSessionScreen.notes';
             case 'cashout-amount-input':
                 return 'showSessionScreen.cashoutAmount';
             case 'admin-password-input':
@@ -1039,6 +1041,7 @@ const loadAppState = ()=>{
         currentSessionId: sessionId,
         showSessionScreen: {
             rebuyAmount: '',
+            notes: '',
             cashoutAmount: '',
             adminPassword: '',
             isSavingSession: false
@@ -1148,11 +1151,18 @@ const ShowSessionScreen = ()=>{
         className: 'hidden',
         type: 'text',
         autocomplete: 'username'
-    }), _renderer.e('div', null, _renderer.e('label', null, _renderer.e('span', null, 'Cashout Amount'), _components.NumberInput({
+    }), _renderer.e('label', {
+        className: 'section'
+    }, _renderer.e('div', null, 'Notes'), _renderer.e('textarea', {
+        id: 'notes-input',
+        placeholder: 'I punted again…'
+    })), _renderer.e('label', {
+        className: 'section'
+    }, _renderer.e('div', null, 'Cashout Amount'), _components.NumberInput({
         min: 0,
         id: 'cashout-amount-input',
         placeholder: (_selectors.appSelectors.currentSession.attributes.maxBuyin * 3).toString()
-    }))), _state.appState.cachedAdminPassword ? '' : _renderer.e('div', {
+    })), _state.appState.cachedAdminPassword ? '' : _renderer.e('div', {
         id: 'admin-password-area'
     }, _renderer.e('label', null, _renderer.e('span', null, 'Password')), _renderer.e('input', {
         id: 'admin-password-input',
@@ -1268,6 +1278,7 @@ class Session {
             bigBlind,
             maxBuyin,
             maxPlayers,
+            notes: '',
             cashoutAmount: 0,
             dealerTips: 0,
             drinkTips: 0,
@@ -1306,9 +1317,10 @@ class Session {
     rebuyMax() {
         this.rebuy(this.attributes.maxBuyin);
     }
-    end(cashoutAmount) {
+    end(cashoutAmount, notes) {
         this.attributes.cashoutAmount = cashoutAmount;
         this.attributes.endTime = _utils.toISOString(new Date());
+        this.attributes.notes = notes;
     }
     undoEnd() {
         this.attributes.cashoutAmount = 0;

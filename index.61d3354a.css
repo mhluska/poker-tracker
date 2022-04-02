@@ -113,6 +113,31 @@ summary {
   display: list-item;
 }
 
+button {
+  touch-action: manipulation;
+}
 
+.hidden {
+  display: none;
+}
+
+.section {
+  margin: 1em 0;
+  display: block;
+}
+
+.screen {
+  padding: 1em;
+}
+
+.tip-button {
+  width: 3em;
+  height: 3em;
+  margin: .5em 0;
+}
+
+#session-title {
+  margin-top: 0;
+}
 
 /*# sourceMappingURL=index.61d3354a.css.map */
