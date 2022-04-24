@@ -1150,7 +1150,6 @@ const ShowSessionScreen = ()=>{
     }, _components.NumberInput({
         id: 'rebuy-amount-input',
         placeholder: _selectors.appSelectors.currentSession.attributes.maxBuyin.toString(),
-        max: _selectors.appSelectors.currentSession.attributes.maxBuyin,
         value: _state.appState.showSessionScreen.rebuyAmount
     }), _renderer.e('input', {
         type: 'submit',
