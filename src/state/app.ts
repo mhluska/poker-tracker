@@ -10,7 +10,6 @@ type SessionAttributes = {
   smallBlind: number;
   bigBlind: number;
   maxBuyin: number;
-  maxPlayers: number;
   notes: string;
   cashoutAmount: number;
   drinkTips: number;
@@ -34,7 +33,6 @@ export type AppState = {
     smallBlind: string;
     bigBlind: string;
     maxBuyin: string;
-    maxPlayers: string;
   };
   cachedAdminPassword?: string;
 };
@@ -80,7 +78,6 @@ const loadAppState = (): AppState => {
       smallBlind: '',
       bigBlind: '',
       maxBuyin: '',
-      maxPlayers: '8',
     },
     ...state,
   };

@@ -46,7 +46,6 @@ const createSession = () => {
     parseInt(appState.newSessionScreen.smallBlind),
     parseInt(appState.newSessionScreen.bigBlind),
     parseInt(appState.newSessionScreen.maxBuyin),
-    parseInt(appState.newSessionScreen.maxPlayers)
   );
 
   session.start();

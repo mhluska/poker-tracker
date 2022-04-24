@@ -9,7 +9,6 @@ export class Session {
     smallBlind: number,
     bigBlind: number,
     maxBuyin: number,
-    maxPlayers: number
   ) {
     const id = uuid();
 
@@ -19,7 +18,6 @@ export class Session {
       smallBlind,
       bigBlind,
       maxBuyin,
-      maxPlayers,
       notes: '',
       cashoutAmount: 0,
       dealerTips: 0,

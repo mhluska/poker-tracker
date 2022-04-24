@@ -28,9 +28,9 @@ npm run deploy
 #### Start Session
 
 Creates a poker session with the current time prefilled. Asks for the casino
-name, stake, max buyin and max players. Max buyin and max players are prefilled
-if entered previously. The URL is updated and session data is stored in
-localStorage so the page can be refreshed.
+name, stake and max buyin. Max buyin is prefilled if entered previously. The URL
+is updated and session data is stored in localStorage so the page can be
+refreshed.
 
 #### Rebuy
 

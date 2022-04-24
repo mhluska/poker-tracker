@@ -64,21 +64,6 @@ export const NewSessionScreen = () => {
           })
         )
       ),
-      e(
-        'div',
-        null,
-        e(
-          'label',
-          null,
-          e('span', null, 'Max Players'),
-          NumberInput({
-            id: 'max-players-input',
-            placeholder: '8',
-            max: 10,
-            value: appState.newSessionScreen.maxPlayers,
-          })
-        )
-      ),
       e('div', null, e('input', { type: 'submit', value: 'Start Session' }))
     )
   );
