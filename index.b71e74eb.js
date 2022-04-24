@@ -1014,11 +1014,6 @@ const NewSessionScreen = ()=>{
         id: 'max-buyin-input',
         placeholder: '500',
         value: _state.appState.newSessionScreen.maxBuyin
-    }))), _renderer.e('div', null, _renderer.e('label', null, _renderer.e('span', null, 'Max Players'), _components.NumberInput({
-        id: 'max-players-input',
-        placeholder: '8',
-        max: 10,
-        value: _state.appState.newSessionScreen.maxPlayers
     }))), _renderer.e('div', null, _renderer.e('input', {
         type: 'submit',
         value: 'Start Session'
