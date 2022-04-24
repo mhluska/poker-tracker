@@ -13,13 +13,27 @@ type EventPropDescription = {
 
 type VirtualElementProps = Partial<ElementProperties & CustomProperties>;
 
-type VirtualElement = {
-  type: Capitalize<string> | keyof HTMLElementTagNameMap;
-  props: { tagName: keyof HTMLElementTagNameMap } & VirtualElementProps;
-  children: VirtualNode[];
-};
+// TODO: This can go away once we stop naming components in render functions.
+type CustomElementType =
+  | 'IntroScreen'
+  | 'NewSessionScreen'
+  | 'ShowSessionScreen'
+  | 'NumberInput'
+  | 'TipsSection'
+  | 'BlindsButton'
+  | 'App';
 
-type VirtualNode = string | VirtualElement;
+type VirtualElement =
+  | {
+      type: keyof HTMLElementTagNameMap | CustomElementType;
+      props: { tagName: keyof HTMLElementTagNameMap } & VirtualElementProps;
+      children: VirtualElement[];
+    }
+  | {
+      type: 'String';
+      props: { value: string };
+      children: [];
+    };
 
 const ELEMENT_NODE_TYPE = 1;
 const TEXT_NODE_TYPE = 3;
@@ -36,33 +50,37 @@ const isNativeElementType = (
   type: string
 ): type is keyof HTMLElementTagNameMap => !isCapitalized(type);
 
-const elementType = (element: NonNullable<VirtualNode>) => {
-  return typeof element === 'string' ? 'string' : element.type;
-};
+const createVirtualElementString = (value: string): VirtualElement => ({
+  type: 'String',
+  props: { value },
+  children: [],
+});
 
 export const createVirtualElement = (
-  type: VirtualElement['type'],
+  type: keyof HTMLElementTagNameMap | CustomElementType,
   props:
     | ({ tagName?: keyof HTMLElementTagNameMap } & VirtualElementProps)
     | null = null,
-  ...children: VirtualElement['children']
+  ...children: (string | VirtualElement)[]
 ): VirtualElement => ({
   type,
   props: {
     ...props,
     tagName: props?.tagName || (isNativeElementType(type) ? type : 'div'),
   },
-  children,
+  children: children.map((child) =>
+    typeof child === 'string' ? createVirtualElementString(child) : child
+  ),
 });
 
 export const e = createVirtualElement;
 
-export const createDomNode = (virtualNode: VirtualNode) => {
-  if (typeof virtualNode === 'string') {
-    return document.createTextNode(virtualNode);
+export const createDomNode = (virtualElement: VirtualElement) => {
+  if (virtualElement.type === 'String') {
+    return document.createTextNode(virtualElement.props.value);
   }
 
-  const { props, children } = virtualNode;
+  const { props, children } = virtualElement;
   const { tagName } = props;
   const element = document.createElement(tagName);
 
@@ -186,8 +204,8 @@ export const reconcileProps = (
 
 export const reconcile = (
   domNode: Element | null,
-  prevNode: VirtualNode,
-  newNode: VirtualNode,
+  prevNode: VirtualElement,
+  newNode: VirtualElement,
   parentElement: Element
 ) => {
   if (!domNode) {
@@ -196,19 +214,8 @@ export const reconcile = (
   }
 
   if (prevNode && newNode) {
-    if (elementType(prevNode) !== elementType(newNode)) {
+    if (prevNode.type !== newNode.type) {
       domNode.parentElement?.replaceChild(createDomNode(newNode), domNode);
-      return;
-    }
-
-    if (typeof prevNode === 'string') {
-      domNode.parentElement?.replaceChild(createDomNode(newNode), domNode);
-      return;
-    }
-
-    // This is certain because we check that both types are the same above but
-    // TypeScript is not smart enough to know that.
-    if (typeof newNode === 'string') {
       return;
     }
 
@@ -233,9 +240,12 @@ export const reconcile = (
   }
 };
 
-let prevVirtualNode = e('div');
+let prevVirtualElement = e('div');
 
-export const render = (component: VirtualNode, appRoot: HTMLElement | null) => {
+export const render = (
+  component: VirtualElement,
+  appRoot: HTMLElement | null
+) => {
   if (!appRoot) {
     throw new Error('appRoot is not set');
   }
@@ -244,8 +254,8 @@ export const render = (component: VirtualNode, appRoot: HTMLElement | null) => {
     throw new Error('appRoot not attached to DOM');
   }
 
-  const virtualNode = e('div', null, component);
-  reconcile(appRoot, prevVirtualNode, virtualNode, appRoot.parentElement);
+  const virtualElement = e('div', null, component);
+  reconcile(appRoot, prevVirtualElement, virtualElement, appRoot.parentElement);
 
-  prevVirtualNode = virtualNode;
+  prevVirtualElement = virtualElement;
 };
