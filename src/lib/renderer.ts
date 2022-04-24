@@ -11,10 +11,11 @@ type EventPropDescription = {
   supportedElements: Set<keyof HTMLElementTagNameMap>;
 };
 
+type VirtualElementProps = Partial<ElementProperties & CustomProperties>;
+
 type VirtualElement = {
-  type: string;
-  tagName: keyof HTMLElementTagNameMap;
-  props: Partial<ElementProperties & CustomProperties>;
+  type: Capitalize<string> | keyof HTMLElementTagNameMap;
+  props: { tagName: keyof HTMLElementTagNameMap } & VirtualElementProps;
   children: VirtualNode[];
 };
 
@@ -40,15 +41,17 @@ const elementType = (element: NonNullable<VirtualNode>) => {
 };
 
 export const createVirtualElement = (
-  type: string,
-  props: VirtualElement['props'] | null = null,
+  type: VirtualElement['type'],
+  props:
+    | ({ tagName?: keyof HTMLElementTagNameMap } & VirtualElementProps)
+    | null = null,
   ...children: VirtualElement['children']
 ): VirtualElement => ({
   type,
-  tagName: isNativeElementType(type)
-    ? type
-    : (props?.tagName as keyof HTMLElementTagNameMap),
-  props: props || {},
+  props: {
+    ...props,
+    tagName: props?.tagName || (isNativeElementType(type) ? type : 'div'),
+  },
   children,
 });
 
@@ -59,7 +62,8 @@ export const createDomNode = (virtualNode: VirtualNode) => {
     return document.createTextNode(virtualNode);
   }
 
-  const { tagName, props, children } = virtualNode;
+  const { props, children } = virtualNode;
+  const { tagName } = props;
   const element = document.createElement(tagName);
 
   if (props) {
