@@ -804,20 +804,29 @@ const EVENT_PROPS = {
 };
 const isNativeElementType = (type)=>!_utils.isCapitalized(type)
 ;
-const elementType = (element)=>{
-    return typeof element === 'string' ? 'string' : element.type;
-};
+const createVirtualElementString = (value)=>({
+        type: 'String',
+        props: {
+            value
+        },
+        children: []
+    })
+;
 const createVirtualElement = (type, props = null, ...children)=>({
         type,
-        tagName: isNativeElementType(type) ? type : props?.tagName,
-        props: props || {},
-        children
+        props: {
+            ...props,
+            tagName: props?.tagName || (isNativeElementType(type) ? type : 'div')
+        },
+        children: children.map((child)=>typeof child === 'string' ? createVirtualElementString(child) : child
+        )
     })
 ;
 const e = createVirtualElement;
-const createDomNode = (virtualNode)=>{
-    if (typeof virtualNode === 'string') return document.createTextNode(virtualNode);
-    const { tagName , props , children  } = virtualNode;
+const createDomNode = (virtualElement)=>{
+    if (virtualElement.type === 'String') return document.createTextNode(virtualElement.props.value);
+    const { props , children  } = virtualElement;
+    const { tagName  } = props;
     const element = document.createElement(tagName);
     if (props) for (const name of _utils.keys(props)){
         if (name === 'tagName') continue;
@@ -883,17 +892,10 @@ const reconcile = (domNode, prevNode, newNode, parentElement)=>{
         return;
     }
     if (prevNode && newNode) {
-        if (elementType(prevNode) !== elementType(newNode)) {
+        if (prevNode.type !== newNode.type) {
             domNode.parentElement?.replaceChild(createDomNode(newNode), domNode);
             return;
         }
-        if (typeof prevNode === 'string') {
-            domNode.parentElement?.replaceChild(createDomNode(newNode), domNode);
-            return;
-        }
-        // This is certain because we check that both types are the same above but
-        // TypeScript is not smart enough to know that.
-        if (typeof newNode === 'string') return;
         reconcileProps(domNode, prevNode, newNode);
         newNode.children.forEach((newNodeChild, index)=>{
             reconcile(Array.from(domNode.childNodes).filter((node)=>node.nodeType === ELEMENT_NODE_TYPE || node.nodeType === TEXT_NODE_TYPE
@@ -902,13 +904,13 @@ const reconcile = (domNode, prevNode, newNode, parentElement)=>{
     } else if (newNode) domNode.parentElement?.replaceChild(createDomNode(newNode), domNode);
     else if (prevNode) domNode.remove();
 };
-let prevVirtualNode = e('div');
+let prevVirtualElement = e('div');
 const render = (component, appRoot)=>{
     if (!appRoot) throw new Error('appRoot is not set');
     if (!appRoot.parentElement) throw new Error('appRoot not attached to DOM');
-    const virtualNode = e('div', null, component);
-    reconcile(appRoot, prevVirtualNode, virtualNode, appRoot.parentElement);
-    prevVirtualNode = virtualNode;
+    const virtualElement = e('div', null, component);
+    reconcile(appRoot, prevVirtualElement, virtualElement, appRoot.parentElement);
+    prevVirtualElement = virtualElement;
 };
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../utils":"dsXzW"}],"dHnah":[function(require,module,exports) {
