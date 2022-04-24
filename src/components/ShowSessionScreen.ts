@@ -31,7 +31,6 @@ export const ShowSessionScreen = () => {
       NumberInput({
         id: 'rebuy-amount-input',
         placeholder: appSelectors.currentSession.attributes.maxBuyin.toString(),
-        max: appSelectors.currentSession.attributes.maxBuyin,
         value: appState.showSessionScreen.rebuyAmount,
       }),
       e('input', { type: 'submit', value: 'Rebuy' }),
