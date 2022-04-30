@@ -6,10 +6,6 @@ export type PlainObject = {
 
 export type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 
-export type ElementProperties = Writeable<
-  HTMLElementTagNameMap[keyof HTMLElementTagNameMap]
->;
-
 export enum Environments {
   Development = 'development',
   Production = 'production',
