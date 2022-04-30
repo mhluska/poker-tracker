@@ -829,8 +829,7 @@ const e = createVirtualElement;
 const reconcileEventHandlerProps = (domNode, propName, prevValue, newValue)=>{
     if (prevValue) domNode.removeEventListener(EVENT_PROPS[propName].nativeEventName, prevValue);
     if (newValue) {
-        if (EVENT_PROPS[propName].supportedElements.has(domNode.tagName.toLowerCase())) // TODO: Can we avoid a typecast here?
-        domNode.addEventListener(EVENT_PROPS[propName].nativeEventName, newValue);
+        if (EVENT_PROPS[propName].supportedElements.has(domNode.tagName.toLowerCase())) domNode.addEventListener(EVENT_PROPS[propName].nativeEventName, newValue);
         else throw new Error(`Added onInput to invalid element type ${domNode.tagName}`);
     }
 };
