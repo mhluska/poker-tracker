@@ -11,11 +11,11 @@ type EventPropDescription = {
   supportedElements: Set<keyof HTMLElementTagNameMap>;
 };
 
-type ElementProperties = Writeable<
+type ElementKeys = Writeable<
   HTMLElementTagNameMap[keyof HTMLElementTagNameMap]
 >;
 
-type VirtualElementProps = Partial<ElementProperties & CustomProperties>;
+type VirtualElementProps = Partial<ElementKeys & CustomProperties>;
 
 // TODO: This can go away once we stop naming components in render functions.
 // See https://github.com/mhluska/poker-tracker/issues/9
@@ -45,7 +45,14 @@ enum NodeTypes {
   Text = 3,
 }
 
-const ELEMENT_PROPERTIES = new Set(['value', 'className']);
+enum ElementProperties {
+  Value = 'value',
+  ClassName = 'className',
+}
+
+const ELEMENT_PROPERTIES = new Set<Partial<ElementKeys>>(
+  Object.values(ElementProperties)
+);
 const EVENT_PROPS: Record<string, EventPropDescription> = {
   onInput: {
     propName: 'onInput',
@@ -122,16 +129,19 @@ const reconcileProps = (
   prevNode: VirtualElement | null,
   newNode: VirtualElement | null
 ) => {
+  if (prevNode?.type === 'String' || newNode?.type === 'String') {
+    return;
+  }
+
   const prevPropKeys = prevNode ? keys(prevNode.props) : [];
   const newPropKeys = newNode ? keys(newNode.props) : [];
 
-  // TODO: Fix name having type `never`.
   for (const name of newPropKeys.concat(prevPropKeys)) {
     const prevValue = prevNode?.props[name];
     const newValue = newNode?.props[name];
 
-    // HACK: With properties, our crappy virtal DOM can get out of sync after
-    // user input so we just always write.
+    // HACK: With properties (as opposed to attributes), our crappy virtal DOM
+    // can get out of sync after user input so we just always write.
     if (ELEMENT_PROPERTIES.has(name)) {
       // TODO: Fix type `Element` being too generic here.
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
