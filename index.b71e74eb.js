@@ -542,7 +542,7 @@ const rebuy = ()=>{
     _state.appState.showSessionScreen.rebuyAmount = '';
 };
 const createSession = ()=>{
-    const session = _models.Session.create(_state.appState.newSessionScreen.casinoName, parseInt(_state.appState.newSessionScreen.smallBlind), parseInt(_state.appState.newSessionScreen.bigBlind), parseInt(_state.appState.newSessionScreen.maxBuyin), parseInt(_state.appState.newSessionScreen.maxPlayers));
+    const session = _models.Session.create(_state.appState.newSessionScreen.casinoName, parseInt(_state.appState.newSessionScreen.smallBlind), parseInt(_state.appState.newSessionScreen.bigBlind), parseInt(_state.appState.newSessionScreen.maxBuyin));
     session.start();
     navigateToShowSessionScreen(session);
 };
@@ -776,17 +776,16 @@ parcelHelpers.export(exports, "createVirtualElement", ()=>createVirtualElement
 );
 parcelHelpers.export(exports, "e", ()=>e
 );
-parcelHelpers.export(exports, "createDomNode", ()=>createDomNode
-);
-parcelHelpers.export(exports, "reconcileProps", ()=>reconcileProps
-);
 parcelHelpers.export(exports, "reconcile", ()=>reconcile
 );
 parcelHelpers.export(exports, "render", ()=>render
 );
 var _utils = require("../utils");
-const ELEMENT_NODE_TYPE = 1;
-const TEXT_NODE_TYPE = 3;
+let NodeTypes;
+(function(NodeTypes1) {
+    NodeTypes1[NodeTypes1["Element"] = 1] = "Element";
+    NodeTypes1[NodeTypes1["Text"] = 3] = "Text";
+})(NodeTypes || (NodeTypes = {}));
 const ELEMENT_PROPERTIES = new Set([
     'value',
     'className'
@@ -803,6 +802,10 @@ const EVENT_PROPS = {
     }
 };
 const isNativeElementType = (type)=>!_utils.isCapitalized(type)
+;
+const isElementNode = (node)=>node.nodeType === NodeTypes.Element
+;
+const isTextNode = (node)=>node.nodeType === NodeTypes.Text
 ;
 const createVirtualElementString = (value)=>({
         type: 'String',
@@ -886,29 +889,49 @@ const reconcileProps = (domNode, prevNode, newNode)=>{
         else domNode.setAttribute(name, String(newValue));
     }
 };
+const reconcileStrings = (domNode, prevNode, newNode)=>{
+    if (newNode.type !== 'String') return;
+    if (prevNode.type === 'String' && prevNode.props.value === newNode.props.value) return;
+    if (isElementNode(domNode)) domNode.parentElement?.replaceChild(createDomNode(newNode), domNode);
+    else if (isTextNode(domNode)) domNode.replaceData(0, domNode.length, newNode.props.value);
+};
 const reconcile = (domNode, prevNode, newNode, parentElement)=>{
     if (!domNode) {
+        if (newNode) // TODO: This should not append but insert at the correct position in the
+        // row of siblings.
         parentElement.appendChild(createDomNode(newNode));
         return;
     }
-    if (prevNode && newNode) {
-        if (prevNode.type !== newNode.type) {
-            domNode.parentElement?.replaceChild(createDomNode(newNode), domNode);
-            return;
-        }
-        reconcileProps(domNode, prevNode, newNode);
-        newNode.children.forEach((newNodeChild, index)=>{
-            reconcile(Array.from(domNode.childNodes).filter((node)=>node.nodeType === ELEMENT_NODE_TYPE || node.nodeType === TEXT_NODE_TYPE
-            )[index], prevNode.children[index], newNodeChild, domNode);
-        });
-    } else if (newNode) domNode.parentElement?.replaceChild(createDomNode(newNode), domNode);
-    else if (prevNode) domNode.remove();
+    if (!newNode) {
+        domNode.remove();
+        return;
+    }
+    if (!prevNode || prevNode.type !== newNode.type) {
+        parentElement.replaceChild(createDomNode(newNode), domNode);
+        return;
+    }
+    if (newNode.type === 'String') {
+        reconcileStrings(domNode, prevNode, newNode);
+        return;
+    } else if (isTextNode(domNode)) {
+        parentElement.replaceChild(createDomNode(newNode), domNode);
+        return;
+    }
+    // We are guaranteed to have domNode, prevNode and newNode here.
+    reconcileProps(domNode, prevNode, newNode);
+    const domNodeChildren = Array.from(domNode.childNodes).filter((node)=>node.nodeType === NodeTypes.Element || node.nodeType === NodeTypes.Text
+    );
+    newNode.children.forEach((newNodeChild, index)=>{
+        reconcile(domNodeChildren[index], prevNode.children[index], newNodeChild, domNode);
+    });
 };
-let prevVirtualElement = e('div');
+// This should mimic the real appRoot node.
+let prevVirtualElement = createVirtualElement('div');
 const render = (component, appRoot)=>{
+    if (!component) throw new Error('component is null');
     if (!appRoot) throw new Error('appRoot is not set');
     if (!appRoot.parentElement) throw new Error('appRoot not attached to DOM');
-    const virtualElement = e('div', null, component);
+    const virtualElement = createVirtualElement('div', null, component);
     reconcile(appRoot, prevVirtualElement, virtualElement, appRoot.parentElement);
     prevVirtualElement = virtualElement;
 };
@@ -1070,8 +1093,7 @@ const loadAppState = ()=>{
             casinoName: '',
             smallBlind: '',
             bigBlind: '',
-            maxBuyin: '',
-            maxPlayers: '8'
+            maxBuyin: ''
         },
         ...state
     };
@@ -1135,7 +1157,7 @@ var _decorators = require("../decorators");
 var _selectors = require("../selectors");
 var _state = require("../state");
 const ShowSessionScreen = ()=>{
-    if (!_selectors.appSelectors.currentSession) return '';
+    if (!_selectors.appSelectors.currentSession) return null;
     const session = new _decorators.Session(_selectors.appSelectors.currentSession);
     const handleNotesInput = (event)=>{
         if (event.target) _state.appState.showSessionScreen.notes = event.target.value;
@@ -1291,7 +1313,7 @@ parcelHelpers.export(exports, "Session", ()=>Session
 var _utils = require("../utils");
 var _state = require("../state");
 class Session {
-    static create(casinoName, smallBlind, bigBlind, maxBuyin, maxPlayers) {
+    static create(casinoName, smallBlind, bigBlind, maxBuyin) {
         const id = _utils.uuid();
         _state.appState.sessions[id] = {
             id: _utils.uuid(),
@@ -1299,7 +1321,6 @@ class Session {
             smallBlind,
             bigBlind,
             maxBuyin,
-            maxPlayers,
             notes: '',
             cashoutAmount: 0,
             dealerTips: 0,
@@ -1400,7 +1421,7 @@ const App = ()=>{
         case _types.Screen.ShowSession:
             return _.ShowSessionScreen();
         default:
-            return '';
+            throw new Error(`Unknown screen ${_state.appState.screen}`);
     }
 };
 
