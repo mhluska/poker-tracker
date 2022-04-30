@@ -792,17 +792,20 @@ let ElementProperties;
     ElementProperties1["ClassName"] = 'className';
 })(ElementProperties || (ElementProperties = {}));
 const ELEMENT_PROPERTIES = new Set(Object.values(ElementProperties));
-const EVENT_PROPS = {
-    onInput: {
-        propName: 'onInput',
-        nativeEventName: 'input',
-        supportedElements: new Set([
-            'input',
-            'select',
-            'textarea'
-        ])
-    }
-};
+const EVENT_PROPS = new Map([
+    [
+        'onInput',
+        {
+            propName: 'onInput',
+            nativeEventName: 'input',
+            supportedElements: new Set([
+                'input',
+                'select',
+                'textarea'
+            ])
+        }, 
+    ], 
+]);
 const isNativeElementType = (type)=>!_utils.isCapitalized(type)
 ;
 const isElementNode = (node)=>node.nodeType === NodeTypes.Element
@@ -828,10 +831,10 @@ const createVirtualElement = (type, props = null, ...children)=>({
     })
 ;
 const e = createVirtualElement;
-const reconcileEventHandlerProps = (domNode, propName, prevValue, newValue)=>{
-    if (prevValue) domNode.removeEventListener(EVENT_PROPS[propName].nativeEventName, prevValue);
+const reconcileEventHandlerProps = (domNode, propDescription, prevValue, newValue)=>{
+    if (prevValue) domNode.removeEventListener(propDescription.nativeEventName, prevValue);
     if (newValue) {
-        if (EVENT_PROPS[propName].supportedElements.has(domNode.tagName.toLowerCase())) domNode.addEventListener(EVENT_PROPS[propName].nativeEventName, newValue);
+        if (propDescription.supportedElements.has(domNode.tagName.toLowerCase())) domNode.addEventListener(propDescription.nativeEventName, newValue);
         else throw new Error(`Added onInput to invalid element type ${domNode.tagName}`);
     }
 };
@@ -852,9 +855,10 @@ const reconcileProps = (domNode, prevNode, newNode)=>{
             continue;
         }
         if (prevValue === newValue) continue;
-        if (EVENT_PROPS[name]) {
-            // TODO: Can we avoid a typecast here?
-            reconcileEventHandlerProps(domNode, EVENT_PROPS[name].propName, prevValue, newValue);
+        if (EVENT_PROPS.has(name)) {
+            const propDescription = EVENT_PROPS.get(name);
+            if (propDescription) // TODO: Can we avoid a typecast here?
+            reconcileEventHandlerProps(domNode, propDescription, prevValue, newValue);
             continue;
         }
         if (typeof newValue === 'boolean') {
