@@ -89,67 +89,6 @@ export const createVirtualElement = (
 
 export const e = createVirtualElement;
 
-const createDomNode = (virtualElement: VirtualElement) => {
-  if (virtualElement.type === 'String') {
-    return document.createTextNode(virtualElement.props.value);
-  }
-
-  const { props, children } = virtualElement;
-  const { tagName } = props;
-  const element = document.createElement(tagName);
-
-  if (props) {
-    for (const name of keys(props)) {
-      if (name === 'tagName') {
-        continue;
-      }
-
-      const value = props[name];
-
-      if (EVENT_PROPS[name]) {
-        if (EVENT_PROPS[name].supportedElements.has(tagName)) {
-          // TODO: Can we avoid a typecast here?
-          element.addEventListener(
-            EVENT_PROPS[name].nativeEventName,
-            value as EventListener
-          );
-          continue;
-        } else {
-          throw new Error(`Added onInput to invalid element type ${tagName}`);
-        }
-      }
-
-      if (ELEMENT_PROPERTIES.has(name)) {
-        // TODO: Figure out why an error related to readonly properties is
-        // happening despite using `Writeable`.
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        element[name] = value;
-      } else {
-        if (typeof value === 'boolean') {
-          if (value) {
-            element.setAttribute(name, '');
-          }
-        } else {
-          element.setAttribute(name, String(value));
-        }
-      }
-    }
-  }
-
-  for (const child of children) {
-    const childDomElement = createDomNode(child);
-
-    if (!childDomElement) {
-      continue;
-    }
-
-    element.appendChild(childDomElement);
-  }
-
-  return element;
-};
-
 const reconcileEventHandlerProps = (
   domNode: Element,
   propName: keyof CustomProperties,
@@ -164,18 +103,32 @@ const reconcileEventHandlerProps = (
   }
 
   if (newValue) {
-    domNode.addEventListener(EVENT_PROPS[propName].nativeEventName, newValue);
+    if (
+      EVENT_PROPS[propName].supportedElements.has(
+        domNode.tagName.toLowerCase() as keyof HTMLElementTagNameMap
+      )
+    ) {
+      domNode.addEventListener(EVENT_PROPS[propName].nativeEventName, newValue);
+    } else {
+      throw new Error(
+        `Added onInput to invalid element type ${domNode.tagName}`
+      );
+    }
   }
 };
 
 const reconcileProps = (
   domNode: Element,
-  prevNode: VirtualElement,
-  newNode: VirtualElement
+  prevNode: VirtualElement | null,
+  newNode: VirtualElement | null
 ) => {
-  for (const name of keys(newNode.props).concat(keys(prevNode.props))) {
-    const prevValue = prevNode.props[name];
-    const newValue = newNode.props[name];
+  const prevPropKeys = prevNode ? keys(prevNode.props) : [];
+  const newPropKeys = newNode ? keys(newNode.props) : [];
+
+  // TODO: Fix name having type `never`.
+  for (const name of newPropKeys.concat(prevPropKeys)) {
+    const prevValue = prevNode?.props[name];
+    const newValue = newNode?.props[name];
 
     // HACK: With properties, our crappy virtal DOM can get out of sync after
     // user input so we just always write.
@@ -216,10 +169,34 @@ const reconcileProps = (
   }
 };
 
+const createDomNode = (virtualElement: VirtualElement) => {
+  if (virtualElement.type === 'String') {
+    return document.createTextNode(virtualElement.props.value);
+  }
+
+  const { props, children } = virtualElement;
+  const { tagName } = props;
+  const element = document.createElement(tagName);
+
+  reconcileProps(element, null, virtualElement);
+
+  for (const child of children) {
+    const childDomElement = createDomNode(child);
+
+    if (!childDomElement) {
+      continue;
+    }
+
+    element.appendChild(childDomElement);
+  }
+
+  return element;
+};
+
 const reconcileStrings = (
   domNode: Element | Text,
   prevNode: VirtualElement,
-  newNode: VirtualElement,
+  newNode: VirtualElement
 ) => {
   if (newNode.type !== 'String') {
     return;
@@ -237,7 +214,7 @@ const reconcileStrings = (
   } else if (isTextNode(domNode)) {
     domNode.replaceData(0, domNode.length, newNode.props.value);
   }
-}
+};
 
 export const reconcile = (
   domNode: Element | Text | undefined,
