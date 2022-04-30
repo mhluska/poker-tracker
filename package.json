@@ -8,7 +8,7 @@
     "build": "parcel build src/index.html",
     "prebuild": "rm -rf dist",
     "postbuild": "./scripts/postbuild.sh",
-    "deploy": "gh-pages --dotfiles -d dist",
+    "deploy": "npm run build && gh-pages --dotfiles -d dist",
     "lint:fix": "eslint --fix"
   },
   "repository": {

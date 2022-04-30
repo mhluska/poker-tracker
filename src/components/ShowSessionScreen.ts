@@ -6,7 +6,7 @@ import { appState } from '../state';
 
 export const ShowSessionScreen = () => {
   if (!appSelectors.currentSession) {
-    return '';
+    return null;
   }
 
   const session = new SessionDecorator(appSelectors.currentSession);

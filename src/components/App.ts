@@ -11,6 +11,6 @@ export const App = () => {
     case Screen.ShowSession:
       return ShowSessionScreen();
     default:
-      return '';
+      throw new Error(`Unknown screen ${appState.screen}`);
   }
 };

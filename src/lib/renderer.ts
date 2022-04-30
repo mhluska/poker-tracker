@@ -35,8 +35,11 @@ type VirtualElement =
       children: [];
     };
 
-const ELEMENT_NODE_TYPE = 1;
-const TEXT_NODE_TYPE = 3;
+enum NodeTypes {
+  Element = 1,
+  Text = 3,
+}
+
 const ELEMENT_PROPERTIES = new Set(['value', 'className']);
 const EVENT_PROPS: Record<string, EventPropDescription> = {
   onInput: {
@@ -49,6 +52,12 @@ const EVENT_PROPS: Record<string, EventPropDescription> = {
 const isNativeElementType = (
   type: string
 ): type is keyof HTMLElementTagNameMap => !isCapitalized(type);
+
+const isElementNode = (node: Node): node is Element =>
+  node.nodeType === NodeTypes.Element;
+
+const isTextNode = (node: Node): node is Text =>
+  node.nodeType === NodeTypes.Text;
 
 const createVirtualElementString = (value: string): VirtualElement => ({
   type: 'String',
@@ -75,7 +84,7 @@ export const createVirtualElement = (
 
 export const e = createVirtualElement;
 
-export const createDomNode = (virtualElement: VirtualElement) => {
+const createDomNode = (virtualElement: VirtualElement) => {
   if (virtualElement.type === 'String') {
     return document.createTextNode(virtualElement.props.value);
   }
@@ -154,7 +163,7 @@ const reconcileEventHandlerProps = (
   }
 };
 
-export const reconcileProps = (
+const reconcileProps = (
   domNode: Element,
   prevNode: VirtualElement,
   newNode: VirtualElement
@@ -202,50 +211,91 @@ export const reconcileProps = (
   }
 };
 
-export const reconcile = (
-  domNode: Element | null,
+const reconcileStrings = (
+  domNode: Element | Text,
   prevNode: VirtualElement,
   newNode: VirtualElement,
-  parentElement: Element
 ) => {
-  if (!domNode) {
-    parentElement.appendChild(createDomNode(newNode));
+  if (newNode.type !== 'String') {
     return;
   }
 
-  if (prevNode && newNode) {
-    if (prevNode.type !== newNode.type) {
-      domNode.parentElement?.replaceChild(createDomNode(newNode), domNode);
-      return;
-    }
-
-    reconcileProps(domNode, prevNode, newNode);
-
-    newNode.children.forEach((newNodeChild, index) => {
-      reconcile(
-        Array.from(domNode.childNodes).filter(
-          (node) =>
-            node.nodeType === ELEMENT_NODE_TYPE ||
-            node.nodeType === TEXT_NODE_TYPE
-        )[index] as Element,
-        prevNode.children[index],
-        newNodeChild,
-        domNode
-      );
-    });
-  } else if (newNode) {
-    domNode.parentElement?.replaceChild(createDomNode(newNode), domNode);
-  } else if (prevNode) {
-    domNode.remove();
+  if (
+    prevNode.type === 'String' &&
+    prevNode.props.value === newNode.props.value
+  ) {
+    return;
   }
+
+  if (isElementNode(domNode)) {
+    domNode.parentElement?.replaceChild(createDomNode(newNode), domNode);
+  } else if (isTextNode(domNode)) {
+    domNode.replaceData(0, domNode.length, newNode.props.value);
+  }
+}
+
+export const reconcile = (
+  domNode: Element | Text | undefined,
+  prevNode: VirtualElement | undefined,
+  newNode: VirtualElement | undefined,
+  parentElement: Element | Text
+) => {
+  if (!domNode) {
+    if (newNode) {
+      // TODO: This should not append but insert at the correct position in the
+      // row of siblings.
+      parentElement.appendChild(createDomNode(newNode));
+    }
+    return;
+  }
+
+  if (!newNode) {
+    domNode.remove();
+    return;
+  }
+
+  if (!prevNode || prevNode.type !== newNode.type) {
+    parentElement.replaceChild(createDomNode(newNode), domNode);
+    return;
+  }
+
+  if (newNode.type === 'String') {
+    reconcileStrings(domNode, prevNode, newNode);
+    return;
+  } else if (isTextNode(domNode)) {
+    parentElement.replaceChild(createDomNode(newNode), domNode);
+    return;
+  }
+
+  // We are guaranteed to have domNode, prevNode and newNode here.
+  reconcileProps(domNode, prevNode, newNode);
+
+  const domNodeChildren = Array.from(domNode.childNodes).filter(
+    (node) =>
+      node.nodeType === NodeTypes.Element || node.nodeType === NodeTypes.Text
+  ) as (Element | Text)[];
+
+  newNode.children.forEach((newNodeChild, index) => {
+    reconcile(
+      domNodeChildren[index],
+      prevNode.children[index],
+      newNodeChild,
+      domNode
+    );
+  });
 };
 
-let prevVirtualElement = e('div');
+// This should mimic the real appRoot node.
+let prevVirtualElement = createVirtualElement('div');
 
 export const render = (
-  component: VirtualElement,
+  component: VirtualElement | null,
   appRoot: HTMLElement | null
 ) => {
+  if (!component) {
+    throw new Error('component is null');
+  }
+
   if (!appRoot) {
     throw new Error('appRoot is not set');
   }
@@ -254,7 +304,8 @@ export const render = (
     throw new Error('appRoot not attached to DOM');
   }
 
-  const virtualElement = e('div', null, component);
+  const virtualElement = createVirtualElement('div', null, component);
+
   reconcile(appRoot, prevVirtualElement, virtualElement, appRoot.parentElement);
 
   prevVirtualElement = virtualElement;
