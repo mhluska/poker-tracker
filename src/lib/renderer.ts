@@ -1,4 +1,4 @@
-import { ElementProperties } from '../types';
+import { Writeable } from '../types';
 import { isCapitalized, keys } from '../utils';
 
 type CustomProperties = {
@@ -11,9 +11,14 @@ type EventPropDescription = {
   supportedElements: Set<keyof HTMLElementTagNameMap>;
 };
 
+type ElementProperties = Writeable<
+  HTMLElementTagNameMap[keyof HTMLElementTagNameMap]
+>;
+
 type VirtualElementProps = Partial<ElementProperties & CustomProperties>;
 
 // TODO: This can go away once we stop naming components in render functions.
+// See https://github.com/mhluska/poker-tracker/issues/9
 type CustomElementType =
   | 'IntroScreen'
   | 'NewSessionScreen'
