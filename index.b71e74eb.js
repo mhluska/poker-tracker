@@ -786,10 +786,12 @@ let NodeTypes;
     NodeTypes1[NodeTypes1["Element"] = 1] = "Element";
     NodeTypes1[NodeTypes1["Text"] = 3] = "Text";
 })(NodeTypes || (NodeTypes = {}));
-const ELEMENT_PROPERTIES = new Set([
-    'value',
-    'className'
-]);
+let ElementProperties;
+(function(ElementProperties1) {
+    ElementProperties1["Value"] = 'value';
+    ElementProperties1["ClassName"] = 'className';
+})(ElementProperties || (ElementProperties = {}));
+const ELEMENT_PROPERTIES = new Set(Object.values(ElementProperties));
 const EVENT_PROPS = {
     onInput: {
         propName: 'onInput',
@@ -834,14 +836,14 @@ const reconcileEventHandlerProps = (domNode, propName, prevValue, newValue)=>{
     }
 };
 const reconcileProps = (domNode, prevNode, newNode)=>{
+    if (prevNode?.type === 'String' || newNode?.type === 'String') return;
     const prevPropKeys = prevNode ? _utils.keys(prevNode.props) : [];
     const newPropKeys = newNode ? _utils.keys(newNode.props) : [];
-    // TODO: Fix name having type `never`.
     for (const name of newPropKeys.concat(prevPropKeys)){
         const prevValue = prevNode?.props[name];
         const newValue = newNode?.props[name];
-        // HACK: With properties, our crappy virtal DOM can get out of sync after
-        // user input so we just always write.
+        // HACK: With properties (as opposed to attributes), our crappy virtal DOM
+        // can get out of sync after user input so we just always write.
         if (ELEMENT_PROPERTIES.has(name)) {
             // TODO: Fix type `Element` being too generic here.
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
