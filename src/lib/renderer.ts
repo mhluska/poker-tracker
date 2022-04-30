@@ -53,13 +53,17 @@ enum ElementProperties {
 const ELEMENT_PROPERTIES = new Set<Partial<ElementKeys>>(
   Object.values(ElementProperties)
 );
-const EVENT_PROPS: Record<string, EventPropDescription> = {
-  onInput: {
-    propName: 'onInput',
-    nativeEventName: 'input',
-    supportedElements: new Set(['input', 'select', 'textarea']),
-  },
-};
+
+const EVENT_PROPS: Map<VirtualElementProps, EventPropDescription> = new Map([
+  [
+    'onInput',
+    {
+      propName: 'onInput',
+      nativeEventName: 'input',
+      supportedElements: new Set(['input', 'select', 'textarea']),
+    },
+  ],
+]);
 
 const isNativeElementType = (
   type: string
@@ -98,24 +102,24 @@ export const e = createVirtualElement;
 
 const reconcileEventHandlerProps = (
   domNode: Element,
-  propName: keyof CustomProperties,
-  prevValue?: EventListener,
-  newValue?: EventListener
+  propDescription: EventPropDescription,
+  prevValue: EventListener | undefined,
+  newValue: EventListener | undefined
 ) => {
   if (prevValue) {
     domNode.removeEventListener(
-      EVENT_PROPS[propName].nativeEventName,
+      propDescription.nativeEventName,
       prevValue
     );
   }
 
   if (newValue) {
     if (
-      EVENT_PROPS[propName].supportedElements.has(
+      propDescription.supportedElements.has(
         domNode.tagName.toLowerCase() as keyof HTMLElementTagNameMap
       )
     ) {
-      domNode.addEventListener(EVENT_PROPS[propName].nativeEventName, newValue);
+      domNode.addEventListener(propDescription.nativeEventName, newValue);
     } else {
       throw new Error(
         `Added onInput to invalid element type ${domNode.tagName}`
@@ -154,14 +158,17 @@ const reconcileProps = (
       continue;
     }
 
-    if (EVENT_PROPS[name]) {
-      // TODO: Can we avoid a typecast here?
-      reconcileEventHandlerProps(
-        domNode,
-        EVENT_PROPS[name].propName,
-        prevValue as EventListener | undefined,
-        newValue as EventListener | undefined
-      );
+    if (EVENT_PROPS.has(name)) {
+      const propDescription = EVENT_PROPS.get(name);
+      if (propDescription) {
+        // TODO: Can we avoid a typecast here?
+        reconcileEventHandlerProps(
+          domNode,
+          propDescription,
+          prevValue as EventListener | undefined,
+          newValue as EventListener | undefined
+        );
+      }
       continue;
     }
 
