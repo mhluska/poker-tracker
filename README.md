@@ -1,8 +1,11 @@
 ## Poker Tracker
 
-Frontend for a Google Sheet that I use to track my poker sessions. To better
-understand how React works under the hood, I built my own basic React-like
-library to power this.
+Frontend for a Google Sheet used to track my poker sessions.
+
+To better understand how React works under the hood, I built my own [basic
+React-like
+library](https://github.com/mhluska/poker-tracker/blob/master/src/lib/renderer.ts)
+to power this.
 
 ### Develop
 
@@ -33,3 +36,7 @@ I wanted to be able to export the data and run my own queries on it.
 > Why a custom React?
 
 Curiosity.
+
+> Can I use this?
+
+Not yet. It only saves to my Google Sheet for now.
