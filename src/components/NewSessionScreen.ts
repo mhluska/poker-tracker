@@ -1,11 +1,17 @@
 import { e } from '../lib/renderer';
-import { NumberInput, BlindsButton } from '../components';
-import { appState } from '../state';
+import { NumberInput, BlindsButton, SuggestedCasino } from '../components';
+import { state } from '../state';
+import { appSelectors } from '../selectors';
 
 export const NewSessionScreen = () => {
+  const handleSelectSuggestedCasino = (casinoName: string) => {
+    state.app.newSessionScreen.casinoName = casinoName;
+  };
+
   return e(
     'NewSessionScreen',
     { tagName: 'div', id: 'new-session-screen', className: 'screen' },
+    SuggestedCasino({ onSelect: handleSelectSuggestedCasino }),
     e(
       'form',
       { id: 'new-session-form' },
@@ -19,9 +25,9 @@ export const NewSessionScreen = () => {
           e('input', {
             id: 'casino-name-input',
             type: 'text',
-            placeholder: 'Bellagio',
+            placeholder: appSelectors.mostFrequentCasinoName ?? 'Bellagio',
             required: true,
-            value: appState.newSessionScreen.casinoName,
+            value: state.app.newSessionScreen.casinoName,
           })
         )
       ),
@@ -35,13 +41,13 @@ export const NewSessionScreen = () => {
           NumberInput({
             id: 'small-blind-input',
             placeholder: '2',
-            value: appState.newSessionScreen.smallBlind,
+            value: state.app.newSessionScreen.smallBlind,
             max: 100,
           }),
           NumberInput({
             id: 'big-blind-input',
             placeholder: '5',
-            value: appState.newSessionScreen.bigBlind,
+            value: state.app.newSessionScreen.bigBlind,
             max: 200,
           })
         ),
@@ -60,7 +66,7 @@ export const NewSessionScreen = () => {
           NumberInput({
             id: 'max-buyin-input',
             placeholder: '500',
-            value: appState.newSessionScreen.maxBuyin,
+            value: state.app.newSessionScreen.maxBuyin,
           })
         )
       ),

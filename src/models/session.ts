@@ -1,5 +1,5 @@
 import { uuid, toISOString } from '../utils';
-import { appState } from '../state';
+import { state } from '../state';
 
 export class Session {
   id: string;
@@ -12,7 +12,7 @@ export class Session {
   ) {
     const id = uuid();
 
-    appState.sessions[id] = {
+    state.app.sessions[id] = {
       id: uuid(),
       casinoName,
       smallBlind,
@@ -37,7 +37,7 @@ export class Session {
   }
 
   get attributes() {
-    return appState.sessions[this.id];
+    return state.app.sessions[this.id];
   }
 
   get startTime() {

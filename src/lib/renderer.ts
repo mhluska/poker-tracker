@@ -1,14 +1,11 @@
 import { Writeable } from '../types';
 import { isCapitalized, keys } from '../utils';
 
-type CustomProperties = {
-  onInput: NonNullable<GlobalEventHandlers['oninput']>;
-};
+type EventHandler = (this: HTMLElement, ev: Event) => void;
 
-type EventPropDescription = {
-  propName: keyof CustomProperties;
-  nativeEventName: string;
-  supportedElements: Set<keyof HTMLElementTagNameMap>;
+type CustomProperties = {
+  onInput: EventHandler;
+  onClick: EventHandler;
 };
 
 type ElementKeys = Writeable<
@@ -32,7 +29,7 @@ type VirtualElement =
   | {
       type: keyof HTMLElementTagNameMap | CustomElementType;
       props: { tagName: keyof HTMLElementTagNameMap } & VirtualElementProps;
-      children: VirtualElement[];
+      children: (null | VirtualElement)[];
     }
   | {
       type: 'String';
@@ -54,16 +51,11 @@ const ELEMENT_PROPERTIES = new Set<Partial<ElementKeys>>(
   Object.values(ElementProperties)
 );
 
-const EVENT_PROPS: Map<VirtualElementProps, EventPropDescription> = new Map([
-  [
-    'onInput',
-    {
-      propName: 'onInput',
-      nativeEventName: 'input',
-      supportedElements: new Set(['input', 'select', 'textarea']),
-    },
-  ],
-]);
+const EVENT_PROPS: Map<keyof CustomProperties, keyof HTMLElementEventMap> =
+  new Map([
+    ['onInput', 'input'],
+    ['onClick', 'click'],
+  ]);
 
 const isNativeElementType = (
   type: string
@@ -86,7 +78,7 @@ export const createVirtualElement = (
   props:
     | ({ tagName?: keyof HTMLElementTagNameMap } & VirtualElementProps)
     | null = null,
-  ...children: (string | VirtualElement)[]
+  ...children: (null | string | VirtualElement)[]
 ): VirtualElement => ({
   type,
   props: {
@@ -102,29 +94,20 @@ export const e = createVirtualElement;
 
 const reconcileEventHandlerProps = (
   domNode: Element,
-  propDescription: EventPropDescription,
-  prevValue: EventListener | undefined,
-  newValue: EventListener | undefined
+  nativeEventName: string,
+  prevValue: EventHandler | undefined,
+  newValue: EventHandler | undefined
 ) => {
+  if (prevValue === newValue) {
+    return;
+  }
+
   if (prevValue) {
-    domNode.removeEventListener(
-      propDescription.nativeEventName,
-      prevValue
-    );
+    domNode.removeEventListener(nativeEventName, prevValue);
   }
 
   if (newValue) {
-    if (
-      propDescription.supportedElements.has(
-        domNode.tagName.toLowerCase() as keyof HTMLElementTagNameMap
-      )
-    ) {
-      domNode.addEventListener(propDescription.nativeEventName, newValue);
-    } else {
-      throw new Error(
-        `Added onInput to invalid element type ${domNode.tagName}`
-      );
-    }
+    domNode.addEventListener(nativeEventName, newValue);
   }
 };
 
@@ -158,17 +141,18 @@ const reconcileProps = (
       continue;
     }
 
-    if (EVENT_PROPS.has(name)) {
-      const propDescription = EVENT_PROPS.get(name);
-      if (propDescription) {
-        // TODO: Can we avoid a typecast here?
+    if (name === 'onClick' || name === 'onInput') {
+      const nativeEventName = EVENT_PROPS.get(name);
+
+      if (nativeEventName) {
         reconcileEventHandlerProps(
           domNode,
-          propDescription,
-          prevValue as EventListener | undefined,
-          newValue as EventListener | undefined
+          nativeEventName,
+          prevNode?.props[name],
+          newNode?.props[name]
         );
       }
+
       continue;
     }
 
@@ -198,6 +182,10 @@ const createDomNode = (virtualElement: VirtualElement) => {
   reconcileProps(element, null, virtualElement);
 
   for (const child of children) {
+    if (!child) {
+      continue;
+    }
+
     const childDomElement = createDomNode(child);
 
     if (!childDomElement) {
@@ -235,8 +223,8 @@ const reconcileStrings = (
 
 export const reconcile = (
   domNode: Element | Text | undefined,
-  prevNode: VirtualElement | undefined,
-  newNode: VirtualElement | undefined,
+  prevNode: VirtualElement | undefined | null,
+  newNode: VirtualElement | undefined | null,
   parentElement: Element | Text
 ) => {
   if (!domNode) {

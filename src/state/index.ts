@@ -1,1 +1,6 @@
-export { app as appState, AppState, saveToLocalStorage } from './app';
+export {
+  state,
+  AppState,
+  saveToLocalStorage,
+  setupAppState,
+} from './app';

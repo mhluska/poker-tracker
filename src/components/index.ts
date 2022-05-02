@@ -5,3 +5,4 @@ export { NewSessionScreen } from './NewSessionScreen';
 export { NumberInput } from './NumberInput';
 export { ShowSessionScreen } from './ShowSessionScreen';
 export { TipsSection } from './TipsSection';
+export { SuggestedCasino } from './SuggestedCasino';

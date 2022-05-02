@@ -2,7 +2,7 @@ import { e } from '../lib/renderer';
 import { NumberInput, TipsSection } from '../components';
 import { Session as SessionDecorator } from '../decorators';
 import { appSelectors } from '../selectors';
-import { appState } from '../state';
+import { state } from '../state';
 
 export const ShowSessionScreen = () => {
   if (!appSelectors.currentSession) {
@@ -13,7 +13,17 @@ export const ShowSessionScreen = () => {
 
   const handleNotesInput = (event: Event) => {
     if (event.target) {
-      appState.showSessionScreen.notes = (<HTMLInputElement>event.target).value;
+      state.app.showSessionScreen.notes = (<HTMLInputElement>(
+        event.target
+      )).value;
+    }
+  };
+
+  const handleCashoutAmountInput = (event: Event) => {
+    if (event.target) {
+      state.app.showSessionScreen.cashoutAmount = (<HTMLInputElement>(
+        event.target
+      )).value;
     }
   };
 
@@ -31,7 +41,7 @@ export const ShowSessionScreen = () => {
       NumberInput({
         id: 'rebuy-amount-input',
         placeholder: appSelectors.currentSession.attributes.maxBuyin.toString(),
-        value: appState.showSessionScreen.rebuyAmount,
+        value: state.app.showSessionScreen.rebuyAmount,
       }),
       e('input', { type: 'submit', value: 'Rebuy' }),
       e('input', { id: 'rebuy-max-button', type: 'button', value: 'Max' })
@@ -54,7 +64,6 @@ export const ShowSessionScreen = () => {
         { className: 'section' },
         e('div', null, 'Notes'),
         e('textarea', {
-          placeholder: 'I punted again…',
           onInput: handleNotesInput,
         })
       ),
@@ -65,14 +74,15 @@ export const ShowSessionScreen = () => {
         e('div', null, 'Cashout Amount'),
         NumberInput({
           min: 0,
-          id: 'cashout-amount-input',
+          value: state.app.showSessionScreen.cashoutAmount,
           placeholder: (
             appSelectors.currentSession.attributes.maxBuyin * 3
           ).toString(),
+          onInput: handleCashoutAmountInput,
         })
       ),
 
-      appState.cachedAdminPassword
+      state.app.cachedAdminPassword
         ? ''
         : e(
             'div',
@@ -90,7 +100,7 @@ export const ShowSessionScreen = () => {
         id: 'end-session-submit-button',
         type: 'submit',
         value: 'End Session',
-        disabled: appState.showSessionScreen.isSavingSession,
+        disabled: state.app.showSessionScreen.isSavingSession,
       })
     )
   );

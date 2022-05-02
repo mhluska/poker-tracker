@@ -5,28 +5,29 @@ import {
 } from './utils';
 import { App } from './components';
 import { render } from './lib/renderer';
+import { setupAppState } from './state';
 import { Screen } from './types';
 import { Api } from './services';
 import { Session } from './models';
-import { appState, saveToLocalStorage } from './state';
+import { state, saveToLocalStorage } from './state';
 import { appSelectors } from './selectors';
 
 const SAVE_APP_STATE_INTERVAL_MS = 10 * 1000;
 
 const navigateToIntroScreen = () => {
   window.history.pushState({}, '', '#');
-  appState.screen = Screen.Intro;
+  state.app.screen = Screen.Intro;
 };
 
 const navigateToNewSessionScreen = () => {
   window.history.pushState({}, '', '#/sessions/new');
-  appState.screen = Screen.NewSession;
+  state.app.screen = Screen.NewSession;
 };
 
 const navigateToShowSessionScreen = (session: Session) => {
   window.history.pushState({}, '', `#/sessions/${session.id}`);
-  appState.currentSessionId = session.id;
-  appState.screen = Screen.ShowSession;
+  state.app.currentSessionId = session.id;
+  state.app.screen = Screen.ShowSession;
 };
 
 const rebuy = () => {
@@ -35,17 +36,17 @@ const rebuy = () => {
   }
 
   appSelectors.currentSession.rebuy(
-    parseFloat(appState.showSessionScreen.rebuyAmount)
+    parseFloat(state.app.showSessionScreen.rebuyAmount)
   );
-  appState.showSessionScreen.rebuyAmount = '';
+  state.app.showSessionScreen.rebuyAmount = '';
 };
 
 const createSession = () => {
   const session = Session.create(
-    appState.newSessionScreen.casinoName,
-    parseInt(appState.newSessionScreen.smallBlind),
-    parseInt(appState.newSessionScreen.bigBlind),
-    parseInt(appState.newSessionScreen.maxBuyin),
+    state.app.newSessionScreen.casinoName,
+    parseInt(state.app.newSessionScreen.smallBlind),
+    parseInt(state.app.newSessionScreen.bigBlind),
+    parseInt(state.app.newSessionScreen.maxBuyin),
   );
 
   session.start();
@@ -59,32 +60,26 @@ const saveToGoogleSheet = async () => {
   }
 
   appSelectors.currentSession.end(
-    parseFloat(appState.showSessionScreen.cashoutAmount),
-    appState.showSessionScreen.notes
+    parseFloat(state.app.showSessionScreen.cashoutAmount),
+    state.app.showSessionScreen.notes
   );
 
-  appState.showSessionScreen.isSavingSession = true;
-
-  // TODO: Make this happen automatically on appState change.
-  render(App(), appRoot);
+  state.app.showSessionScreen.isSavingSession = true;
 
   let response;
 
   try {
     response = await apiService.saveSession(
       appSelectors.currentSession,
-      appState.cachedAdminPassword ?? appState.showSessionScreen.adminPassword
+      state.app.cachedAdminPassword ?? state.app.showSessionScreen.adminPassword
     );
   } finally {
-    appState.showSessionScreen.isSavingSession = false;
-
-    // TODO: Make this happen automatically on appState change.
-    render(App(), appRoot);
+    state.app.showSessionScreen.isSavingSession = false;
   }
 
   if (response.ok) {
-    if (!appState.cachedAdminPassword) {
-      appState.cachedAdminPassword = appState.showSessionScreen.adminPassword;
+    if (!state.app.cachedAdminPassword) {
+      state.app.cachedAdminPassword = state.app.showSessionScreen.adminPassword;
     }
 
     alert('Success!');
@@ -98,38 +93,38 @@ const saveToGoogleSheet = async () => {
 };
 
 const prefillBlinds = (smallBlind: string, bigBlind: string) => {
-  appState.newSessionScreen.smallBlind = smallBlind;
-  appState.newSessionScreen.bigBlind = bigBlind;
+  state.app.newSessionScreen.smallBlind = smallBlind;
+  state.app.newSessionScreen.bigBlind = bigBlind;
 };
 
 const prefillMaxBuyin = (maxBuyin: string) => {
-  appState.newSessionScreen.maxBuyin = maxBuyin;
+  state.app.newSessionScreen.maxBuyin = maxBuyin;
 };
 
 const handleClick = (event: Event) => {
   if (!objectIsHtmlElement(event.target)) {
-    return false;
+    return;
   }
 
   switch (event.target.id) {
     case 'new-session-button':
       navigateToNewSessionScreen();
-      return true;
+      return;
     case 'decrement-dealer-tip-button':
       appSelectors.currentSession?.updateDealerTip(-1);
-      return true;
+      return;
     case 'increment-dealer-tip-button':
       appSelectors.currentSession?.updateDealerTip(1);
-      return true;
+      return;
     case 'decrement-drink-tip-button':
       appSelectors.currentSession?.updateDrinkTip(-1);
-      return true;
+      return;
     case 'increment-drink-tip-button':
       appSelectors.currentSession?.updateDrinkTip(1);
-      return true;
+      return;
     case 'rebuy-max-button':
       appSelectors.currentSession?.rebuyMax();
-      return true;
+      return;
   }
 
   if (
@@ -143,23 +138,12 @@ const handleClick = (event: Event) => {
     );
 
     prefillMaxBuyin((parseInt(event.target.dataset.bigBlind) * 100).toString());
-
-    return true;
-  }
-
-  return false;
-};
-
-const handleAppClick = (event: Event) => {
-  if (handleClick(event)) {
-    // TODO: Make this happen automatically on appState change.
-    render(App(), appRoot);
   }
 };
 
-const handleSubmit = async (event: Event) => {
+const handleSubmit = (event: Event) => {
   if (!objectIsHtmlElement(event.target)) {
-    return false;
+    return;
   }
 
   event.preventDefault();
@@ -167,28 +151,19 @@ const handleSubmit = async (event: Event) => {
   switch (event.target.id) {
     case 'new-session-form':
       createSession();
-      return true;
+      break;
     case 'rebuy-form':
       rebuy();
-      return true;
+      break;
     case 'end-session-form':
-      await saveToGoogleSheet();
-      return true;
-  }
-
-  return false;
-};
-
-const handleAppSubmit = async (event: Event) => {
-  if (await handleSubmit(event)) {
-    // TODO: Make this happen automatically on appState change.
-    render(App(), appRoot);
+      saveToGoogleSheet();
+      break;
   }
 };
 
 const handleInput = (event: Event) => {
   if (!objectIsHtmlInputElement(event.target)) {
-    return false;
+    return;
   }
 
   const idToStateKey = (id: string) => {
@@ -205,8 +180,6 @@ const handleInput = (event: Event) => {
         return 'newSessionScreen.maxPlayers';
       case 'rebuy-amount-input':
         return 'showSessionScreen.rebuyAmount';
-      case 'cashout-amount-input':
-        return 'showSessionScreen.cashoutAmount';
       case 'admin-password-input':
         return 'showSessionScreen.adminPassword';
     }
@@ -214,26 +187,21 @@ const handleInput = (event: Event) => {
 
   const key = idToStateKey(event.target.id);
   if (!key) {
-    return false;
+    return;
   }
 
-  return objectSet(appState, key, event.target.value);
-};
-
-const handleAppInput = (event: Event) => {
-  if (handleInput(event)) {
-    // TODO: Make this happen automatically on appState change.
-    render(App(), appRoot);
-  }
+  return objectSet(state.app, key, event.target.value);
 };
 
 const apiService = new Api();
 const appRoot = document.getElementById('root');
 
 if (appRoot) {
-  appRoot.addEventListener('click', handleAppClick);
-  appRoot.addEventListener('submit', handleAppSubmit);
-  appRoot.addEventListener('input', handleAppInput);
+  setupAppState(() => render(App(), appRoot));
+
+  appRoot.addEventListener('click', handleClick);
+  appRoot.addEventListener('submit', handleSubmit);
+  appRoot.addEventListener('input', handleInput);
 }
 
 // HACK: onbeforeunload doesn't seem to work on iOS so we save periodically.
@@ -241,5 +209,3 @@ setInterval(saveToLocalStorage, SAVE_APP_STATE_INTERVAL_MS);
 document.addEventListener('visibilitychange', saveToLocalStorage);
 
 window.onbeforeunload = saveToLocalStorage;
-
-render(App(), appRoot);

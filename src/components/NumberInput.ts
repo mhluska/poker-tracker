@@ -1,14 +1,15 @@
 import { e } from '../lib/renderer';
 
 type Props = {
-  id: string;
-  placeholder: string;
+  placeholder?: string;
+  id?: string;
   value?: string;
   min?: number;
   max?: number;
+  onInput?: (event: Event) => void;
 };
 
-export const NumberInput = ({ id, placeholder, value, min = 1, max }: Props) =>
+export const NumberInput = ({ id, placeholder, value, min = 1, max, onInput }: Props) =>
   e('NumberInput', {
     tagName: 'input',
     id,
@@ -19,4 +20,5 @@ export const NumberInput = ({ id, placeholder, value, min = 1, max }: Props) =>
     min,
     max,
     required: true,
+    onInput,
   });

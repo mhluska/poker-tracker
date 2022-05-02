@@ -1,9 +1,9 @@
 import { IntroScreen, NewSessionScreen, ShowSessionScreen } from '.';
 import { Screen } from '../types';
-import { appState } from '../state';
+import { state } from '../state';
 
 export const App = () => {
-  switch (appState.screen) {
+  switch (state.app.screen) {
     case Screen.Intro:
       return IntroScreen();
     case Screen.NewSession:
@@ -11,6 +11,6 @@ export const App = () => {
     case Screen.ShowSession:
       return ShowSessionScreen();
     default:
-      throw new Error(`Unknown screen ${appState.screen}`);
+      throw new Error(`Unknown screen ${state.app.screen}`);
   }
 };

@@ -83,16 +83,46 @@ const loadAppState = (): AppState => {
   };
 };
 
-export const app = loadAppState();
+export const state = {
+  app: loadAppState(),
+};
+
+export const setupAppState = (onStateChange: () => void) => {
+  state.app = new Proxy(state.app, {
+    get(target, key, receiver) {
+      if (!Reflect.has(target, key)) {
+        return;
+      }
+
+      const value = Reflect.get(target, key, receiver);
+
+      if (typeof value === 'object' && value !== null) {
+        return new Proxy(value, this);
+      } else {
+        return value;
+      }
+    },
+
+    set(target, key, value, receiver) {
+      const success = Reflect.set(target, key, value, receiver);
+      if (success) {
+        onStateChange();
+      }
+      return success;
+    },
+  });
+
+  onStateChange();
+}
 
 export const saveToLocalStorage = () => {
   window.localStorage.setItem(
     LOCAL_STORAGE_KEY,
     JSON.stringify({
-      sessions: app.sessions,
+      sessions: state.app.sessions,
       // This is not very secure but I'm the only user of this hacky app.
       // Long-term we would want JWT.
-      cachedAdminPassword: app.cachedAdminPassword,
+      cachedAdminPassword: state.app.cachedAdminPassword,
     })
   );
 };
