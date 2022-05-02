@@ -1032,7 +1032,7 @@ class Selectors {
     get mostFrequentCasinoName() {
         if (this._cachedMostFrequentCasinoName) return this._cachedMostFrequentCasinoName;
         const casinoName = Object.values(this.appState.sessions).filter((session)=>session.endTime
-        ).sort((a, b)=>a.endTime && b.endTime ? Date.parse(a.endTime) - Date.parse(b.endTime) : 1
+        ).sort((a, b)=>a.endTime && b.endTime ? Date.parse(b.endTime) - Date.parse(a.endTime) : 1
         )[0]?.casinoName;
         if (casinoName) this._cachedMostFrequentCasinoName = casinoName;
         return casinoName;
