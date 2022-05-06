@@ -9,9 +9,9 @@ export const NewSessionScreen = () => {
   };
 
   return e(
-    'NewSessionScreen',
-    { tagName: 'div', id: 'new-session-screen', className: 'screen' },
-    SuggestedCasino({ onSelect: handleSelectSuggestedCasino }),
+    'div',
+    { id: 'new-session-screen', className: 'screen' },
+    e(SuggestedCasino, { onSelect: handleSelectSuggestedCasino }),
     e(
       'form',
       { id: 'new-session-form' },
@@ -38,23 +38,23 @@ export const NewSessionScreen = () => {
           'label',
           null,
           e('span', null, 'Blinds'),
-          NumberInput({
+          e(NumberInput, {
             id: 'small-blind-input',
             placeholder: '2',
             value: state.app.newSessionScreen.smallBlind,
             max: 100,
           }),
-          NumberInput({
+          e(NumberInput, {
             id: 'big-blind-input',
             placeholder: '5',
             value: state.app.newSessionScreen.bigBlind,
             max: 200,
           })
         ),
-        BlindsButton({ smallBlind: 1, bigBlind: 2 }),
-        BlindsButton({ smallBlind: 1, bigBlind: 3 }),
-        BlindsButton({ smallBlind: 2, bigBlind: 5 }),
-        BlindsButton({ smallBlind: 5, bigBlind: 10 })
+        e(BlindsButton, { smallBlind: 1, bigBlind: 2 }),
+        e(BlindsButton, { smallBlind: 1, bigBlind: 3 }),
+        e(BlindsButton, { smallBlind: 2, bigBlind: 5 }),
+        e(BlindsButton, { smallBlind: 5, bigBlind: 10 })
       ),
       e(
         'div',
@@ -63,7 +63,7 @@ export const NewSessionScreen = () => {
           'label',
           null,
           e('span', null, 'Max Buyin'),
-          NumberInput({
+          e(NumberInput, {
             id: 'max-buyin-input',
             placeholder: '500',
             value: state.app.newSessionScreen.maxBuyin,

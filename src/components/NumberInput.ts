@@ -1,4 +1,4 @@
-import { e } from '../lib/renderer';
+import { e, FunctionComponent } from '../lib/renderer';
 
 type Props = {
   placeholder?: string;
@@ -9,9 +9,15 @@ type Props = {
   onInput?: (event: Event) => void;
 };
 
-export const NumberInput = ({ id, placeholder, value, min = 1, max, onInput }: Props) =>
-  e('NumberInput', {
-    tagName: 'input',
+export const NumberInput: FunctionComponent<Props> = ({
+  id,
+  placeholder,
+  value,
+  min = 1,
+  max,
+  onInput,
+}) =>
+  e('input', {
     id,
     type: 'number',
     placeholder,

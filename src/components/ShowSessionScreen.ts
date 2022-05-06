@@ -1,10 +1,10 @@
-import { e } from '../lib/renderer';
+import { e, FunctionComponent } from '../lib/renderer';
 import { NumberInput, TipsSection } from '../components';
 import { Session as SessionDecorator } from '../decorators';
 import { appSelectors } from '../selectors';
 import { state } from '../state';
 
-export const ShowSessionScreen = () => {
+export const ShowSessionScreen: FunctionComponent = () => {
   if (!appSelectors.currentSession) {
     return null;
   }
@@ -28,8 +28,8 @@ export const ShowSessionScreen = () => {
   };
 
   return e(
-    'ShowSessionScreen',
-    { tagName: 'div', id: 'show-session-screen', className: 'screen' },
+    'div',
+    { id: 'show-session-screen', className: 'screen' },
     e('h1', { id: 'session-title' }, session.title()),
     e('div', null, e('span', null, `Profit: $${session.profit()}`)),
     e('div', null, e('span', null, `Start time: $${session.startTime()}`)),
@@ -38,7 +38,7 @@ export const ShowSessionScreen = () => {
     e(
       'form',
       { id: 'rebuy-form', className: 'section' },
-      NumberInput({
+      e(NumberInput, {
         id: 'rebuy-amount-input',
         placeholder: appSelectors.currentSession.attributes.maxBuyin.toString(),
         value: state.app.showSessionScreen.rebuyAmount,
@@ -47,8 +47,8 @@ export const ShowSessionScreen = () => {
       e('input', { id: 'rebuy-max-button', type: 'button', value: 'Max' })
     ),
 
-    TipsSection({ type: 'dealer', value: session.dealerTips() }),
-    TipsSection({ type: 'drink', value: session.drinkTips() }),
+    e(TipsSection, { type: 'dealer', value: session.dealerTips() }),
+    e(TipsSection, { type: 'drink', value: session.drinkTips() }),
 
     e(
       'form',
@@ -72,7 +72,7 @@ export const ShowSessionScreen = () => {
         'label',
         { className: 'section' },
         e('div', null, 'Cashout Amount'),
-        NumberInput({
+        e(NumberInput, {
           min: 0,
           value: state.app.showSessionScreen.cashoutAmount,
           placeholder: (

@@ -1,11 +1,11 @@
-import { e } from '../lib/renderer';
+import { e, FunctionComponent } from '../lib/renderer';
 import { appSelectors } from '../selectors';
 
 type Props = {
   onSelect: (casinoName: string) => void;
 };
 
-export const SuggestedCasino = ({ onSelect }: Props) => {
+export const SuggestedCasino: FunctionComponent<Props> = ({ onSelect }) => {
   const casinoName = appSelectors.mostFrequentCasinoName;
   if (!casinoName) {
     return null;

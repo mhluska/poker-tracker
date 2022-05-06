@@ -1,4 +1,4 @@
-import { e } from '../lib/renderer';
+import { e, FunctionComponent } from '../lib/renderer';
 import { capitalize } from '../utils';
 
 type Props = {
@@ -6,10 +6,10 @@ type Props = {
   value: string;
 };
 
-export const TipsSection = ({ type, value }: Props) =>
+export const TipsSection: FunctionComponent<Props> = ({ type, value }) =>
   e(
-    'TipsSection',
-    { tagName: 'div', className: 'section' },
+    'div',
+    { className: 'section' },
     e('span', null, `${capitalize(type)} tips: ${value}`),
     e(
       'div',

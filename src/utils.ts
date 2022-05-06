@@ -63,8 +63,6 @@ export const objectSet = (
 export const capitalize = (str: string) =>
   `${str[0].toUpperCase()}${str.slice(1)}`;
 
-export const isCapitalized = (str: string) => str[0].toUpperCase() === str[0];
-
 // Works like `Date#toISOString()` but includes the client timezone.
 // See https://stackoverflow.com/a/17415677/659910
 export const toISOString = (date: Date) => {
