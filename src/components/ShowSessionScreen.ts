@@ -1,4 +1,4 @@
-import { e, FunctionComponent } from '../lib/renderer';
+import { e, useEffect, FunctionComponent } from '../lib/renderer';
 import { NumberInput, TipsSection } from '../components';
 import { Session as SessionDecorator } from '../decorators';
 import { appSelectors } from '../selectors';
@@ -26,6 +26,15 @@ export const ShowSessionScreen: FunctionComponent = () => {
       )).value;
     }
   };
+
+  useEffect(() => {
+    // HACK: Trigger a render every second to make time elapsed update. This
+    // can go away once we add local component state support with `useState`.
+    setInterval(() => {
+      const notes = state.app.showSessionScreen.notes;
+      state.app.showSessionScreen.notes = notes;
+    }, 1000);
+  }, []);
 
   return e(
     'div',

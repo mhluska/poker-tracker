@@ -4,7 +4,7 @@ import {
   objectSet,
 } from './utils';
 import { App } from './components';
-import { render } from './lib/renderer';
+import { render, e } from './lib/renderer';
 import { setupAppState } from './state';
 import { Screen } from './types';
 import { Api } from './services';
@@ -197,7 +197,7 @@ const apiService = new Api();
 const appRoot = document.getElementById('root');
 
 if (appRoot) {
-  setupAppState(() => render(App(), appRoot));
+  setupAppState(() => render(e(App), appRoot));
 
   appRoot.addEventListener('click', handleClick);
   appRoot.addEventListener('submit', handleSubmit);

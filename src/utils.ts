@@ -1,8 +1,5 @@
 import { PlainObject, Primitive } from './types';
 
-// See https://github.com/microsoft/TypeScript/pull/12253#issuecomment-353494273
-export const keys = Object.keys as <T>(o: T) => (keyof T)[];
-
 // See https://stackoverflow.com/a/44078785/659910
 export const uuid = () =>
   Date.now().toString(36) + Math.random().toString(36).substring(2);

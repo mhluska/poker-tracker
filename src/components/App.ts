@@ -1,15 +1,16 @@
+import { FunctionComponent, e } from '../lib/renderer';
 import { IntroScreen, NewSessionScreen, ShowSessionScreen } from '.';
 import { Screen } from '../types';
 import { state } from '../state';
 
-export const App = () => {
+export const App: FunctionComponent = () => {
   switch (state.app.screen) {
     case Screen.Intro:
-      return IntroScreen();
+      return e(IntroScreen);
     case Screen.NewSession:
-      return NewSessionScreen();
+      return e(NewSessionScreen);
     case Screen.ShowSession:
-      return ShowSessionScreen();
+      return e(ShowSessionScreen);
     default:
       throw new Error(`Unknown screen ${state.app.screen}`);
   }

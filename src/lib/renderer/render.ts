@@ -1,50 +1,24 @@
-import { Writeable } from '../types';
-import { keys } from '../utils';
-
-type EventHandler = (this: HTMLElement, ev: Event) => void;
-
-type CustomProperties = {
-  onInput: EventHandler;
-  onClick: EventHandler;
-};
-
-type ElementKeys = Writeable<
-  HTMLElementTagNameMap[keyof HTMLElementTagNameMap]
->;
-
-type VirtualElementProps = Partial<ElementKeys & CustomProperties>;
-
-type VirtualNativeElement = {
-  type: keyof HTMLElementTagNameMap;
-  props: VirtualElementProps;
-  children: (null | VirtualElement)[];
-};
-
-type VirtualFunctionElement<Props = unknown> = {
-  type: FunctionComponent<Props>;
-  props: VirtualElementProps;
-};
-
-type VirtualStringElement = {
-  type: 'String';
-  value: string;
-};
-
-type VirtualElement<Props = unknown> =
-  | VirtualNativeElement
-  | VirtualFunctionElement<Props>
-  | VirtualStringElement;
-
-export type FunctionComponent<Props = void> = Props extends void
-  ? () => null | VirtualNativeElement
-  : (props: Props) => null | VirtualNativeElement;
-
-export type FC<Props> = FunctionComponent<Props>;
-
-enum NodeTypes {
-  Element = 1,
-  Text = 3,
-}
+import {
+  FunctionComponent,
+  ElementKeys,
+  CustomProperties,
+  VirtualStringElement,
+  VirtualElement,
+  VirtualFunctionElement,
+  VirtualElementProps,
+  VirtualNativeElement,
+  EventHandler,
+  NodeTypes,
+} from './types';
+import {
+  keys,
+  isVirtualFunctionElement,
+  isVirtualNativeElement,
+  isTextNode,
+  isElementNode,
+  replaceNode,
+} from './utils';
+import { mountWithEffects, unmountWithEffects } from './useEffect';
 
 enum ElementProperties {
   Value = 'value',
@@ -60,27 +34,6 @@ const EVENT_PROPS: Map<keyof CustomProperties, keyof HTMLElementEventMap> =
     ['onInput', 'input'],
     ['onClick', 'click'],
   ]);
-
-const isElementNode = (node: Node): node is Element =>
-  node.nodeType === NodeTypes.Element;
-
-const isTextNode = (node: Node): node is Text =>
-  node.nodeType === NodeTypes.Text;
-
-const isVirtualFunctionElement = (
-  virtualElement: VirtualElement
-): virtualElement is VirtualFunctionElement =>
-  typeof virtualElement.type === 'function';
-
-const isVirtualStringElement = (
-  virtualElement: VirtualElement
-): virtualElement is VirtualStringElement => virtualElement.type === 'String';
-
-const isVirtualNativeElement = (
-  virtualElement: VirtualElement
-): virtualElement is VirtualNativeElement =>
-  !isVirtualStringElement(virtualElement) &&
-  !isVirtualFunctionElement(virtualElement);
 
 const createVirtualElementString = (value: string): VirtualStringElement => ({
   type: 'String',
@@ -101,15 +54,16 @@ export function createVirtualElement<ChildProps>(
 
 export function createVirtualElement<Props, ChildProps>(
   type: FunctionComponent<Props> | keyof HTMLElementTagNameMap,
-  props: Props | VirtualElementProps | null,
+  props?: Props | VirtualElementProps | null,
   ...children: (null | string | VirtualElement<ChildProps>)[]
 ) {
   return typeof type === 'function'
-    ? {
+    ? ({
         type,
         props: props || {},
-      }
-    : {
+        result: null,
+      } as VirtualFunctionElement<Props>)
+    : ({
         type,
         props: {
           ...props,
@@ -118,7 +72,7 @@ export function createVirtualElement<Props, ChildProps>(
         children: children.map((child) =>
           typeof child === 'string' ? createVirtualElementString(child) : child
         ),
-      }
+      } as VirtualNativeElement);
 }
 
 export const e = createVirtualElement;
@@ -213,7 +167,7 @@ const createDomNode = (
   }
 
   if (isVirtualFunctionElement(virtualElement)) {
-    return createDomNode(virtualElement.type(virtualElement.props));
+    return createDomNode(mountWithEffects(virtualElement));
   }
 
   const { children, type: tagName } = virtualElement;
@@ -236,17 +190,6 @@ const createDomNode = (
   }
 
   return element;
-};
-
-const replaceNode = (
-  node: Text | Element,
-  newNode: Text | HTMLElement | null
-) => {
-  if (!newNode) {
-    return;
-  }
-
-  node.parentElement?.replaceChild(newNode, node);
 };
 
 const reconcileStrings = (
@@ -276,6 +219,10 @@ export const reconcile = (
   }
 
   if (!prevNode || prevNode.type !== newNode.type) {
+    if (prevNode && isVirtualFunctionElement(prevNode)) {
+      unmountWithEffects(prevNode);
+    }
+
     replaceNode(domNode, createDomNode(newNode));
     return;
   }
@@ -296,8 +243,8 @@ export const reconcile = (
   if (isVirtualFunctionElement(prevNode) && isVirtualFunctionElement(newNode)) {
     reconcile(
       domNode,
-      prevNode.type(prevNode.props),
-      newNode.type(newNode.props)
+      prevNode.result,
+      mountWithEffects(newNode)
     );
     return;
   }
@@ -326,10 +273,10 @@ export const reconcile = (
 };
 
 // This should mimic the real appRoot node.
-let prevVirtualElement = createVirtualElement('div');
+let prevVirtualElement: VirtualElement = createVirtualElement('div');
 
 export const render = (
-  component: VirtualElement | null,
+  component: VirtualNativeElement | VirtualFunctionElement | null,
   appRoot: HTMLElement | null
 ) => {
   if (!component) {

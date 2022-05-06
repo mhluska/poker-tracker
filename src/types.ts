@@ -4,8 +4,6 @@ export type PlainObject = {
   [key: string]: Primitive | PlainObject | PlainObject[];
 };
 
-export type Writeable<T> = { -readonly [P in keyof T]: T[P] };
-
 export enum Environments {
   Development = 'development',
   Production = 'production',
