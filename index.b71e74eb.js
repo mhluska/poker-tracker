@@ -672,8 +672,6 @@ parcelHelpers.export(exports, "objectSet", ()=>objectSet
 );
 parcelHelpers.export(exports, "capitalize", ()=>capitalize
 );
-parcelHelpers.export(exports, "isCapitalized", ()=>isCapitalized
-);
 parcelHelpers.export(exports, "toISOString", ()=>toISOString
 );
 const keys = Object.keys;
@@ -708,8 +706,6 @@ const objectSet = (object, key, value)=>{
     object[lastKey] = value;
 };
 const capitalize = (str)=>`${str[0].toUpperCase()}${str.slice(1)}`
-;
-const isCapitalized = (str)=>str[0].toUpperCase() === str[0]
 ;
 const toISOString = (date)=>{
     const tzo = -date.getTimezoneOffset();
@@ -1073,8 +1069,7 @@ parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "BlindsButton", ()=>BlindsButton
 );
 var _renderer = require("../lib/renderer");
-const BlindsButton = ({ smallBlind , bigBlind  })=>_renderer.e('BlindsButton', {
-        tagName: 'button',
+const BlindsButton = ({ smallBlind , bigBlind ,  })=>_renderer.e('button', {
         type: 'button',
         className: 'prefill-blinds',
         'data-small-blind': smallBlind,
@@ -1115,11 +1110,15 @@ const EVENT_PROPS = new Map([
         'click'
     ], 
 ]);
-const isNativeElementType = (type)=>!_utils.isCapitalized(type)
-;
 const isElementNode = (node)=>node.nodeType === NodeTypes.Element
 ;
 const isTextNode = (node)=>node.nodeType === NodeTypes.Text
+;
+const isVirtualFunctionElement = (virtualElement)=>typeof virtualElement.type === 'function'
+;
+const isVirtualStringElement = (virtualElement)=>virtualElement.type === 'String'
+;
+const isVirtualNativeElement = (virtualElement)=>!isVirtualStringElement(virtualElement) && !isVirtualFunctionElement(virtualElement)
 ;
 const createVirtualElementString = (value)=>({
         type: 'String',
@@ -1129,16 +1128,21 @@ const createVirtualElementString = (value)=>({
         children: []
     })
 ;
-const createVirtualElement = (type, props = null, ...children)=>({
+function createVirtualElement(type, props, ...children) {
+    return typeof type === 'function' ? {
+        type,
+        props: props || {},
+        children: []
+    } : {
         type,
         props: {
             ...props,
-            tagName: props?.tagName || (isNativeElementType(type) ? type : 'div')
+            tagName: type || 'div'
         },
         children: children.map((child)=>typeof child === 'string' ? createVirtualElementString(child) : child
         )
-    })
-;
+    };
+}
 const e = createVirtualElement;
 const reconcileEventHandlerProps = (domNode, nativeEventName, prevValue, newValue)=>{
     if (prevValue === newValue) return;
@@ -1175,9 +1179,10 @@ const reconcileProps = (domNode, prevNode, newNode)=>{
     }
 };
 const createDomNode = (virtualElement)=>{
+    if (!virtualElement) return null;
     if (virtualElement.type === 'String') return document.createTextNode(virtualElement.props.value);
-    const { props , children  } = virtualElement;
-    const { tagName  } = props;
+    if (isVirtualFunctionElement(virtualElement)) return createDomNode(virtualElement.type(virtualElement.props));
+    const { children , type: tagName  } = virtualElement;
     const element = document.createElement(tagName);
     reconcileProps(element, null, virtualElement);
     for (const child of children){
@@ -1188,41 +1193,52 @@ const createDomNode = (virtualElement)=>{
     }
     return element;
 };
+const replaceNode = (node, newNode)=>{
+    if (!newNode) return;
+    node.parentElement?.replaceChild(newNode, node);
+};
 const reconcileStrings = (domNode, prevNode, newNode)=>{
-    if (newNode.type !== 'String') return;
-    if (prevNode.type === 'String' && prevNode.props.value === newNode.props.value) return;
-    if (isElementNode(domNode)) domNode.parentElement?.replaceChild(createDomNode(newNode), domNode);
+    if (prevNode.props.value === newNode.props.value) return;
+    if (isElementNode(domNode)) replaceNode(domNode, createDomNode(newNode));
     else if (isTextNode(domNode)) domNode.replaceData(0, domNode.length, newNode.props.value);
 };
-const reconcile = (domNode, prevNode, newNode, parentElement)=>{
-    if (!domNode) {
-        if (newNode) // TODO: This should not append but insert at the correct position in the
-        // row of siblings.
-        parentElement.appendChild(createDomNode(newNode));
-        return;
-    }
+const reconcile = (domNode, prevNode, newNode)=>{
     if (!newNode) {
         domNode.remove();
         return;
     }
     if (!prevNode || prevNode.type !== newNode.type) {
-        parentElement.replaceChild(createDomNode(newNode), domNode);
+        replaceNode(domNode, createDomNode(newNode));
         return;
     }
-    if (newNode.type === 'String') {
+    // We needlessly have to repeatedly check the type of `prevNode` here even
+    // though we ensure that both types are the same above.
+    // See https://stackoverflow.com/questions/71397541
+    if (prevNode.type === 'String' && newNode.type === 'String') {
         reconcileStrings(domNode, prevNode, newNode);
         return;
-    } else if (isTextNode(domNode)) {
-        parentElement.replaceChild(createDomNode(newNode), domNode);
+    }
+    if (isTextNode(domNode)) {
+        replaceNode(domNode, createDomNode(newNode));
         return;
     }
-    // We are guaranteed to have domNode, prevNode and newNode here.
-    reconcileProps(domNode, prevNode, newNode);
-    const domNodeChildren = Array.from(domNode.childNodes).filter((node)=>node.nodeType === NodeTypes.Element || node.nodeType === NodeTypes.Text
-    );
-    newNode.children.forEach((newNodeChild, index)=>{
-        reconcile(domNodeChildren[index], prevNode.children[index], newNodeChild, domNode);
-    });
+    if (isVirtualFunctionElement(prevNode) && isVirtualFunctionElement(newNode)) {
+        reconcile(domNode, prevNode.type(prevNode.props), newNode.type(newNode.props));
+        return;
+    }
+    if (isVirtualNativeElement(prevNode) && isVirtualNativeElement(newNode)) {
+        reconcileProps(domNode, prevNode, newNode);
+        const domNodeChildren = Array.from(domNode.childNodes).filter((node)=>node.nodeType === NodeTypes.Element || node.nodeType === NodeTypes.Text
+        );
+        newNode.children.forEach((newNodeChild, index)=>{
+            const domNodeChild = domNodeChildren[index];
+            if (domNodeChild) reconcile(domNodeChild, prevNode.children[index], newNodeChild);
+            else if (newNodeChild) {
+                const node = createDomNode(newNodeChild);
+                if (node) domNode.appendChild(node);
+            }
+        });
+    }
 };
 // This should mimic the real appRoot node.
 let prevVirtualElement = createVirtualElement('div');
@@ -1231,7 +1247,7 @@ const render = (component, appRoot)=>{
     if (!appRoot) throw new Error('appRoot is not set');
     if (!appRoot.parentElement) throw new Error('appRoot not attached to DOM');
     const virtualElement = createVirtualElement('div', null, component);
-    reconcile(appRoot, prevVirtualElement, virtualElement, appRoot.parentElement);
+    reconcile(appRoot, prevVirtualElement, virtualElement);
     prevVirtualElement = virtualElement;
 };
 
@@ -1241,15 +1257,13 @@ parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "IntroScreen", ()=>IntroScreen
 );
 var _renderer = require("../lib/renderer");
-const IntroScreen = ()=>{
-    return _renderer.e('IntroScreen', {
-        tagName: 'div',
+const IntroScreen = ()=>_renderer.e('div', {
         id: 'intro-screen',
         className: 'screen'
     }, _renderer.e('button', {
         id: 'new-session-button'
-    }, 'Start Session'));
-};
+    }, 'Start Session'))
+;
 
 },{"../lib/renderer":"iHv4Y","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"iiQGi":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -1264,11 +1278,10 @@ const NewSessionScreen = ()=>{
     const handleSelectSuggestedCasino = (casinoName)=>{
         _state.state.app.newSessionScreen.casinoName = casinoName;
     };
-    return _renderer.e('NewSessionScreen', {
-        tagName: 'div',
+    return _renderer.e('div', {
         id: 'new-session-screen',
         className: 'screen'
-    }, _components.SuggestedCasino({
+    }, _renderer.e(_components.SuggestedCasino, {
         onSelect: handleSelectSuggestedCasino
     }), _renderer.e('form', {
         id: 'new-session-form'
@@ -1278,29 +1291,29 @@ const NewSessionScreen = ()=>{
         placeholder: _selectors.appSelectors.mostFrequentCasinoName ?? 'Bellagio',
         required: true,
         value: _state.state.app.newSessionScreen.casinoName
-    }))), _renderer.e('div', null, _renderer.e('label', null, _renderer.e('span', null, 'Blinds'), _components.NumberInput({
+    }))), _renderer.e('div', null, _renderer.e('label', null, _renderer.e('span', null, 'Blinds'), _renderer.e(_components.NumberInput, {
         id: 'small-blind-input',
         placeholder: '2',
         value: _state.state.app.newSessionScreen.smallBlind,
         max: 100
-    }), _components.NumberInput({
+    }), _renderer.e(_components.NumberInput, {
         id: 'big-blind-input',
         placeholder: '5',
         value: _state.state.app.newSessionScreen.bigBlind,
         max: 200
-    })), _components.BlindsButton({
+    })), _renderer.e(_components.BlindsButton, {
         smallBlind: 1,
         bigBlind: 2
-    }), _components.BlindsButton({
+    }), _renderer.e(_components.BlindsButton, {
         smallBlind: 1,
         bigBlind: 3
-    }), _components.BlindsButton({
+    }), _renderer.e(_components.BlindsButton, {
         smallBlind: 2,
         bigBlind: 5
-    }), _components.BlindsButton({
+    }), _renderer.e(_components.BlindsButton, {
         smallBlind: 5,
         bigBlind: 10
-    })), _renderer.e('div', null, _renderer.e('label', null, _renderer.e('span', null, 'Max Buyin'), _components.NumberInput({
+    })), _renderer.e('div', null, _renderer.e('label', null, _renderer.e('span', null, 'Max Buyin'), _renderer.e(_components.NumberInput, {
         id: 'max-buyin-input',
         placeholder: '500',
         value: _state.state.app.newSessionScreen.maxBuyin
@@ -1316,8 +1329,7 @@ parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "NumberInput", ()=>NumberInput
 );
 var _renderer = require("../lib/renderer");
-const NumberInput = ({ id , placeholder , value , min =1 , max , onInput  })=>_renderer.e('NumberInput', {
-        tagName: 'input',
+const NumberInput = ({ id , placeholder , value , min =1 , max , onInput ,  })=>_renderer.e('input', {
         id,
         type: 'number',
         placeholder,
@@ -1349,8 +1361,7 @@ const ShowSessionScreen = ()=>{
     const handleCashoutAmountInput = (event)=>{
         if (event.target) _state.state.app.showSessionScreen.cashoutAmount = event.target.value;
     };
-    return _renderer.e('ShowSessionScreen', {
-        tagName: 'div',
+    return _renderer.e('div', {
         id: 'show-session-screen',
         className: 'screen'
     }, _renderer.e('h1', {
@@ -1358,7 +1369,7 @@ const ShowSessionScreen = ()=>{
     }, session.title()), _renderer.e('div', null, _renderer.e('span', null, `Profit: $${session.profit()}`)), _renderer.e('div', null, _renderer.e('span', null, `Start time: $${session.startTime()}`)), _renderer.e('div', null, _renderer.e('span', null, `Time elapsed: ${session.timeElapsed()}`)), _renderer.e('form', {
         id: 'rebuy-form',
         className: 'section'
-    }, _components.NumberInput({
+    }, _renderer.e(_components.NumberInput, {
         id: 'rebuy-amount-input',
         placeholder: _selectors.appSelectors.currentSession.attributes.maxBuyin.toString(),
         value: _state.state.app.showSessionScreen.rebuyAmount
@@ -1369,10 +1380,10 @@ const ShowSessionScreen = ()=>{
         id: 'rebuy-max-button',
         type: 'button',
         value: 'Max'
-    })), _components.TipsSection({
+    })), _renderer.e(_components.TipsSection, {
         type: 'dealer',
         value: session.dealerTips()
-    }), _components.TipsSection({
+    }), _renderer.e(_components.TipsSection, {
         type: 'drink',
         value: session.drinkTips()
     }), _renderer.e('form', {
@@ -1388,7 +1399,7 @@ const ShowSessionScreen = ()=>{
         onInput: handleNotesInput
     })), _renderer.e('label', {
         className: 'section'
-    }, _renderer.e('div', null, 'Cashout Amount'), _components.NumberInput({
+    }, _renderer.e('div', null, 'Cashout Amount'), _renderer.e(_components.NumberInput, {
         min: 0,
         value: _state.state.app.showSessionScreen.cashoutAmount,
         placeholder: (_selectors.appSelectors.currentSession.attributes.maxBuyin * 3).toString(),
@@ -1464,8 +1475,7 @@ parcelHelpers.export(exports, "TipsSection", ()=>TipsSection
 );
 var _renderer = require("../lib/renderer");
 var _utils = require("../utils");
-const TipsSection = ({ type , value  })=>_renderer.e('TipsSection', {
-        tagName: 'div',
+const TipsSection = ({ type , value  })=>_renderer.e('div', {
         className: 'section'
     }, _renderer.e('span', null, `${_utils.capitalize(type)} tips: ${value}`), _renderer.e('div', null, _renderer.e('button', {
         className: 'tip-button',
