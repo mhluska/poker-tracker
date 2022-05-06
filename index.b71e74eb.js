@@ -642,7 +642,7 @@ const handleInput = (event)=>{
 const apiService = new _services.Api();
 const appRoot = document.getElementById('root');
 if (appRoot) {
-    _state.setupAppState(()=>_renderer.render(_components.App(), appRoot)
+    _state.setupAppState(()=>_renderer.render(_renderer.e(_components.App), appRoot)
     );
     appRoot.addEventListener('click', handleClick);
     appRoot.addEventListener('submit', handleSubmit);
@@ -653,11 +653,9 @@ setInterval(_state.saveToLocalStorage, SAVE_APP_STATE_INTERVAL_MS);
 document.addEventListener('visibilitychange', _state.saveToLocalStorage);
 window.onbeforeunload = _state.saveToLocalStorage;
 
-},{"./utils":"dsXzW","./types":"38MWl","./services":"f5PO7","./models":"i6QPt","./state":"6GBqf","./selectors":"2OUoq","./components":"dHnah","./lib/renderer":"iHv4Y"}],"dsXzW":[function(require,module,exports) {
+},{"./utils":"dsXzW","./types":"38MWl","./services":"f5PO7","./models":"i6QPt","./state":"6GBqf","./selectors":"2OUoq","./components":"dHnah","./lib/renderer":"eg3L3"}],"dsXzW":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "keys", ()=>keys
-);
 parcelHelpers.export(exports, "uuid", ()=>uuid
 );
 parcelHelpers.export(exports, "objectIsHtmlElement", ()=>objectIsHtmlElement
@@ -674,7 +672,6 @@ parcelHelpers.export(exports, "capitalize", ()=>capitalize
 );
 parcelHelpers.export(exports, "toISOString", ()=>toISOString
 );
-const keys = Object.keys;
 const uuid = ()=>Date.now().toString(36) + Math.random().toString(36).substring(2)
 ;
 const objectIsHtmlElement = (object)=>!!object.tagName
@@ -1077,7 +1074,26 @@ const BlindsButton = ({ smallBlind , bigBlind ,  })=>_renderer.e('button', {
     }, `${smallBlind}/${bigBlind}`)
 ;
 
-},{"../lib/renderer":"iHv4Y","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"iHv4Y":[function(require,module,exports) {
+},{"../lib/renderer":"eg3L3","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"eg3L3":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "render", ()=>_render.render
+);
+parcelHelpers.export(exports, "createVirtualElement", ()=>_render.createVirtualElement
+);
+parcelHelpers.export(exports, "e", ()=>_render.e
+);
+parcelHelpers.export(exports, "useEffect", ()=>_useEffect.useEffect
+);
+parcelHelpers.export(exports, "FunctionComponent", ()=>_types.FunctionComponent
+);
+parcelHelpers.export(exports, "FC", ()=>_types.FC
+);
+var _render = require("./render");
+var _useEffect = require("./useEffect");
+var _types = require("./types");
+
+},{"./render":"D5Bps","./useEffect":"9g13H","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./types":"6Zsey"}],"D5Bps":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "createVirtualElement", ()=>createVirtualElement
@@ -1088,12 +1104,9 @@ parcelHelpers.export(exports, "reconcile", ()=>reconcile
 );
 parcelHelpers.export(exports, "render", ()=>render
 );
-var _utils = require("../utils");
-let NodeTypes;
-(function(NodeTypes1) {
-    NodeTypes1[NodeTypes1["Element"] = 1] = "Element";
-    NodeTypes1[NodeTypes1["Text"] = 3] = "Text";
-})(NodeTypes || (NodeTypes = {}));
+var _types = require("./types");
+var _utils = require("./utils");
+var _useEffect = require("./useEffect");
 let ElementProperties;
 (function(ElementProperties1) {
     ElementProperties1["Value"] = 'value';
@@ -1110,16 +1123,6 @@ const EVENT_PROPS = new Map([
         'click'
     ], 
 ]);
-const isElementNode = (node)=>node.nodeType === NodeTypes.Element
-;
-const isTextNode = (node)=>node.nodeType === NodeTypes.Text
-;
-const isVirtualFunctionElement = (virtualElement)=>typeof virtualElement.type === 'function'
-;
-const isVirtualStringElement = (virtualElement)=>virtualElement.type === 'String'
-;
-const isVirtualNativeElement = (virtualElement)=>!isVirtualStringElement(virtualElement) && !isVirtualFunctionElement(virtualElement)
-;
 const createVirtualElementString = (value)=>({
         type: 'String',
         value
@@ -1128,7 +1131,8 @@ const createVirtualElementString = (value)=>({
 function createVirtualElement(type, props, ...children) {
     return typeof type === 'function' ? {
         type,
-        props: props || {}
+        props: props || {},
+        result: null
     } : {
         type,
         props: {
@@ -1177,7 +1181,7 @@ const reconcileProps = (domNode, prevNode, newNode)=>{
 const createDomNode = (virtualElement)=>{
     if (!virtualElement) return null;
     if (virtualElement.type === 'String') return document.createTextNode(virtualElement.value);
-    if (isVirtualFunctionElement(virtualElement)) return createDomNode(virtualElement.type(virtualElement.props));
+    if (_utils.isVirtualFunctionElement(virtualElement)) return createDomNode(_useEffect.mountWithEffects(virtualElement));
     const { children , type: tagName  } = virtualElement;
     const element = document.createElement(tagName);
     reconcileProps(element, null, virtualElement);
@@ -1189,14 +1193,10 @@ const createDomNode = (virtualElement)=>{
     }
     return element;
 };
-const replaceNode = (node, newNode)=>{
-    if (!newNode) return;
-    node.parentElement?.replaceChild(newNode, node);
-};
 const reconcileStrings = (domNode, prevNode, newNode)=>{
     if (prevNode.value === newNode.value) return;
-    if (isElementNode(domNode)) replaceNode(domNode, createDomNode(newNode));
-    else if (isTextNode(domNode)) domNode.replaceData(0, domNode.length, newNode.value);
+    if (_utils.isElementNode(domNode)) _utils.replaceNode(domNode, createDomNode(newNode));
+    else if (_utils.isTextNode(domNode)) domNode.replaceData(0, domNode.length, newNode.value);
 };
 const reconcile = (domNode, prevNode, newNode)=>{
     if (!newNode) {
@@ -1204,7 +1204,8 @@ const reconcile = (domNode, prevNode, newNode)=>{
         return;
     }
     if (!prevNode || prevNode.type !== newNode.type) {
-        replaceNode(domNode, createDomNode(newNode));
+        if (prevNode && _utils.isVirtualFunctionElement(prevNode)) _useEffect.unmountWithEffects(prevNode);
+        _utils.replaceNode(domNode, createDomNode(newNode));
         return;
     }
     // We needlessly have to repeatedly check the type of `prevNode` here even
@@ -1214,17 +1215,17 @@ const reconcile = (domNode, prevNode, newNode)=>{
         reconcileStrings(domNode, prevNode, newNode);
         return;
     }
-    if (isTextNode(domNode)) {
-        replaceNode(domNode, createDomNode(newNode));
+    if (_utils.isTextNode(domNode)) {
+        _utils.replaceNode(domNode, createDomNode(newNode));
         return;
     }
-    if (isVirtualFunctionElement(prevNode) && isVirtualFunctionElement(newNode)) {
-        reconcile(domNode, prevNode.type(prevNode.props), newNode.type(newNode.props));
+    if (_utils.isVirtualFunctionElement(prevNode) && _utils.isVirtualFunctionElement(newNode)) {
+        reconcile(domNode, prevNode.result, _useEffect.mountWithEffects(newNode));
         return;
     }
-    if (isVirtualNativeElement(prevNode) && isVirtualNativeElement(newNode)) {
+    if (_utils.isVirtualNativeElement(prevNode) && _utils.isVirtualNativeElement(newNode)) {
         reconcileProps(domNode, prevNode, newNode);
-        const domNodeChildren = Array.from(domNode.childNodes).filter((node)=>node.nodeType === NodeTypes.Element || node.nodeType === NodeTypes.Text
+        const domNodeChildren = Array.from(domNode.childNodes).filter((node)=>node.nodeType === _types.NodeTypes.Element || node.nodeType === _types.NodeTypes.Text
         );
         newNode.children.forEach((newNodeChild, index)=>{
             const domNodeChild = domNodeChildren[index];
@@ -1247,7 +1248,102 @@ const render = (component, appRoot)=>{
     prevVirtualElement = virtualElement;
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../utils":"dsXzW"}],"iudxg":[function(require,module,exports) {
+},{"./utils":"1yEYz","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./useEffect":"9g13H","./types":"6Zsey"}],"1yEYz":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "keys", ()=>keys
+);
+parcelHelpers.export(exports, "isVirtualFunctionElement", ()=>isVirtualFunctionElement
+);
+parcelHelpers.export(exports, "isVirtualStringElement", ()=>isVirtualStringElement
+);
+parcelHelpers.export(exports, "isVirtualNativeElement", ()=>isVirtualNativeElement
+);
+parcelHelpers.export(exports, "isElementNode", ()=>isElementNode
+);
+parcelHelpers.export(exports, "isTextNode", ()=>isTextNode
+);
+parcelHelpers.export(exports, "replaceNode", ()=>replaceNode
+);
+parcelHelpers.export(exports, "arraysEqual", ()=>arraysEqual
+);
+var _types = require("./types");
+const keys = Object.keys;
+const isVirtualFunctionElement = (virtualElement)=>typeof virtualElement.type === 'function'
+;
+const isVirtualStringElement = (virtualElement)=>virtualElement.type === 'String'
+;
+const isVirtualNativeElement = (virtualElement)=>!isVirtualStringElement(virtualElement) && !isVirtualFunctionElement(virtualElement)
+;
+const isElementNode = (node)=>node.nodeType === _types.NodeTypes.Element
+;
+const isTextNode = (node)=>node.nodeType === _types.NodeTypes.Text
+;
+const replaceNode = (node, newNode)=>{
+    if (!newNode) return;
+    node.parentElement?.replaceChild(newNode, node);
+};
+const arraysEqual = (arr1, arr2)=>{
+    if (arr1.length !== arr2.length) return false;
+    for(let i = 0; i < arr1.length; i += 1){
+        if (arr1[i] !== arr2[i]) return false;
+    }
+    return true;
+};
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./types":"6Zsey"}],"6Zsey":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "NodeTypes", ()=>NodeTypes
+);
+let NodeTypes;
+(function(NodeTypes1) {
+    NodeTypes1[NodeTypes1["Element"] = 1] = "Element";
+    NodeTypes1[NodeTypes1["Text"] = 3] = "Text";
+})(NodeTypes || (NodeTypes = {}));
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"9g13H":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "useEffect", ()=>useEffect
+);
+parcelHelpers.export(exports, "mountWithEffects", ()=>mountWithEffects
+);
+parcelHelpers.export(exports, "unmountWithEffects", ()=>unmountWithEffects
+);
+var _utils = require("./utils");
+const effects = new Map();
+let currentRenderEffects = [];
+const useEffect = (callback, dependencies)=>{
+    currentRenderEffects.push({
+        callback,
+        dependencies,
+        unmountCallback: undefined
+    });
+};
+const mountWithEffects = (virtualElement)=>{
+    const prevEffects = effects.get(virtualElement.type);
+    // Populates after calling the function component below.
+    currentRenderEffects = [];
+    virtualElement.result = virtualElement.type(virtualElement.props);
+    if (currentRenderEffects.length === 0) return virtualElement.result;
+    currentRenderEffects.forEach((nextEffect, index)=>{
+        const prevEffect = prevEffects?.[index];
+        if (prevEffect && _utils.arraysEqual(prevEffect.dependencies, nextEffect.dependencies)) nextEffect.unmountCallback = prevEffect.unmountCallback;
+        else nextEffect.unmountCallback = nextEffect.callback();
+    });
+    effects.set(virtualElement.type, currentRenderEffects);
+    return virtualElement.result;
+};
+const unmountWithEffects = (virtualElement)=>{
+    const componentEffects = effects.get(virtualElement.type);
+    if (!componentEffects) return virtualElement.result;
+    for (const { unmountCallback  } of componentEffects)if (unmountCallback) unmountCallback();
+    effects.delete(virtualElement.type);
+    return virtualElement.result;
+};
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./utils":"1yEYz"}],"iudxg":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "IntroScreen", ()=>IntroScreen
@@ -1261,7 +1357,7 @@ const IntroScreen = ()=>_renderer.e('div', {
     }, 'Start Session'))
 ;
 
-},{"../lib/renderer":"iHv4Y","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"iiQGi":[function(require,module,exports) {
+},{"../lib/renderer":"eg3L3","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"iiQGi":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "NewSessionScreen", ()=>NewSessionScreen
@@ -1319,7 +1415,7 @@ const NewSessionScreen = ()=>{
     }))));
 };
 
-},{"../lib/renderer":"iHv4Y","../components":"dHnah","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","../selectors":"2OUoq"}],"cCow8":[function(require,module,exports) {
+},{"../lib/renderer":"eg3L3","../components":"dHnah","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","../selectors":"2OUoq"}],"cCow8":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "NumberInput", ()=>NumberInput
@@ -1338,7 +1434,7 @@ const NumberInput = ({ id , placeholder , value , min =1 , max , onInput ,  })=>
     })
 ;
 
-},{"../lib/renderer":"iHv4Y","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"kEhZ6":[function(require,module,exports) {
+},{"../lib/renderer":"eg3L3","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"kEhZ6":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "ShowSessionScreen", ()=>ShowSessionScreen
@@ -1357,6 +1453,14 @@ const ShowSessionScreen = ()=>{
     const handleCashoutAmountInput = (event)=>{
         if (event.target) _state.state.app.showSessionScreen.cashoutAmount = event.target.value;
     };
+    _renderer.useEffect(()=>{
+        // HACK: Trigger a render every second to make time elapsed update. This
+        // can go away once we add local component state support with `useState`.
+        setInterval(()=>{
+            const notes = _state.state.app.showSessionScreen.notes;
+            _state.state.app.showSessionScreen.notes = notes;
+        }, 1000);
+    }, []);
     return _renderer.e('div', {
         id: 'show-session-screen',
         className: 'screen'
@@ -1415,7 +1519,7 @@ const ShowSessionScreen = ()=>{
     })));
 };
 
-},{"../lib/renderer":"iHv4Y","../components":"dHnah","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../decorators":"7km9a","../selectors":"2OUoq","../state":"6GBqf"}],"7km9a":[function(require,module,exports) {
+},{"../lib/renderer":"eg3L3","../components":"dHnah","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../decorators":"7km9a","../selectors":"2OUoq","../state":"6GBqf"}],"7km9a":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Session", ()=>_session.Session
@@ -1482,28 +1586,29 @@ const TipsSection = ({ type , value  })=>_renderer.e('div', {
     }, '+')))
 ;
 
-},{"../lib/renderer":"iHv4Y","../utils":"dsXzW","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"6aOJQ":[function(require,module,exports) {
+},{"../lib/renderer":"eg3L3","../utils":"dsXzW","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"6aOJQ":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "App", ()=>App
 );
+var _renderer = require("../lib/renderer");
 var _ = require(".");
 var _types = require("../types");
 var _state = require("../state");
 const App = ()=>{
     switch(_state.state.app.screen){
         case _types.Screen.Intro:
-            return _.IntroScreen();
+            return _renderer.e(_.IntroScreen);
         case _types.Screen.NewSession:
-            return _.NewSessionScreen();
+            return _renderer.e(_.NewSessionScreen);
         case _types.Screen.ShowSession:
-            return _.ShowSessionScreen();
+            return _renderer.e(_.ShowSessionScreen);
         default:
             throw new Error(`Unknown screen ${_state.state.app.screen}`);
     }
 };
 
-},{".":"dHnah","../types":"38MWl","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf"}],"fQJh5":[function(require,module,exports) {
+},{".":"dHnah","../types":"38MWl","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","../lib/renderer":"eg3L3"}],"fQJh5":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "SuggestedCasino", ()=>SuggestedCasino
@@ -1518,6 +1623,6 @@ const SuggestedCasino = ({ onSelect  })=>{
     }, 'OK'));
 };
 
-},{"../lib/renderer":"iHv4Y","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../selectors":"2OUoq"}]},["8wcER","h7u1C"], "h7u1C", "parcelRequirefb1b")
+},{"../lib/renderer":"eg3L3","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../selectors":"2OUoq"}]},["8wcER","h7u1C"], "h7u1C", "parcelRequirefb1b")
 
 //# sourceMappingURL=index.b71e74eb.js.map
