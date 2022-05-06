@@ -23,13 +23,11 @@ type VirtualNativeElement = {
 type VirtualFunctionElement<Props = unknown> = {
   type: FunctionComponent<Props>;
   props: VirtualElementProps;
-  children: [];
 };
 
 type VirtualStringElement = {
   type: 'String';
-  props: { value: string };
-  children: [];
+  value: string;
 };
 
 type VirtualElement<Props = unknown> =
@@ -84,10 +82,9 @@ const isVirtualNativeElement = (
   !isVirtualStringElement(virtualElement) &&
   !isVirtualFunctionElement(virtualElement);
 
-const createVirtualElementString = (value: string): VirtualElement => ({
+const createVirtualElementString = (value: string): VirtualStringElement => ({
   type: 'String',
-  props: { value },
-  children: [],
+  value,
 });
 
 export function createVirtualElement<Props, ChildProps>(
@@ -111,7 +108,6 @@ export function createVirtualElement<Props, ChildProps>(
     ? {
         type,
         props: props || {},
-        children: [],
       }
     : {
         type,
@@ -213,7 +209,7 @@ const createDomNode = (
   }
 
   if (virtualElement.type === 'String') {
-    return document.createTextNode(virtualElement.props.value);
+    return document.createTextNode(virtualElement.value);
   }
 
   if (isVirtualFunctionElement(virtualElement)) {
@@ -258,14 +254,14 @@ const reconcileStrings = (
   prevNode: VirtualStringElement,
   newNode: VirtualStringElement
 ) => {
-  if (prevNode.props.value === newNode.props.value) {
+  if (prevNode.value === newNode.value) {
     return;
   }
 
   if (isElementNode(domNode)) {
     replaceNode(domNode, createDomNode(newNode));
   } else if (isTextNode(domNode)) {
-    domNode.replaceData(0, domNode.length, newNode.props.value);
+    domNode.replaceData(0, domNode.length, newNode.value);
   }
 };
 
