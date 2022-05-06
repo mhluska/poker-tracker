@@ -1122,17 +1122,13 @@ const isVirtualNativeElement = (virtualElement)=>!isVirtualStringElement(virtual
 ;
 const createVirtualElementString = (value)=>({
         type: 'String',
-        props: {
-            value
-        },
-        children: []
+        value
     })
 ;
 function createVirtualElement(type, props, ...children) {
     return typeof type === 'function' ? {
         type,
-        props: props || {},
-        children: []
+        props: props || {}
     } : {
         type,
         props: {
@@ -1180,7 +1176,7 @@ const reconcileProps = (domNode, prevNode, newNode)=>{
 };
 const createDomNode = (virtualElement)=>{
     if (!virtualElement) return null;
-    if (virtualElement.type === 'String') return document.createTextNode(virtualElement.props.value);
+    if (virtualElement.type === 'String') return document.createTextNode(virtualElement.value);
     if (isVirtualFunctionElement(virtualElement)) return createDomNode(virtualElement.type(virtualElement.props));
     const { children , type: tagName  } = virtualElement;
     const element = document.createElement(tagName);
@@ -1198,9 +1194,9 @@ const replaceNode = (node, newNode)=>{
     node.parentElement?.replaceChild(newNode, node);
 };
 const reconcileStrings = (domNode, prevNode, newNode)=>{
-    if (prevNode.props.value === newNode.props.value) return;
+    if (prevNode.value === newNode.value) return;
     if (isElementNode(domNode)) replaceNode(domNode, createDomNode(newNode));
-    else if (isTextNode(domNode)) domNode.replaceData(0, domNode.length, newNode.props.value);
+    else if (isTextNode(domNode)) domNode.replaceData(0, domNode.length, newNode.value);
 };
 const reconcile = (domNode, prevNode, newNode)=>{
     if (!newNode) {
