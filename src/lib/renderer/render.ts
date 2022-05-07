@@ -18,7 +18,7 @@ import {
   isElementNode,
   replaceNode,
 } from './utils';
-import { mountWithEffects, unmountWithEffects } from './useEffect';
+import { mountWithEffects, unmountWithEffects } from './hooks';
 
 enum ElementProperties {
   Value = 'value',
