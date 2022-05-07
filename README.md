@@ -4,7 +4,7 @@ Frontend for a Google Sheet used to track my poker sessions.
 
 To better understand how React works under the hood, I built my own [basic
 React-like
-library](https://github.com/mhluska/poker-tracker/blob/master/src/lib/renderer.ts)
+library](https://github.com/mhluska/poker-tracker/tree/master/src/lib/renderer)
 to power this.
 
 ### Develop
