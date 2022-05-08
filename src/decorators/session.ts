@@ -1,5 +1,4 @@
 import { Session as SessionModel } from '../models';
-import { formatDuration } from '../utils';
 
 export class Session {
   session: SessionModel;
@@ -39,13 +38,5 @@ export class Session {
   profit() {
     const cashoutAmount = this.session.attributes.cashoutAmount ?? 0;
     return (cashoutAmount - this.session.buyinsTotal()).toString();
-  }
-
-  timeElapsed() {
-    if (!this.session.startTime) {
-      return '';
-    }
-
-    return formatDuration(Date.now() - this.session.startTime.getTime());
   }
 }

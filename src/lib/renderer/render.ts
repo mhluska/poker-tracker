@@ -18,7 +18,7 @@ import {
   isElementNode,
   replaceNode,
 } from './utils';
-import { mountWithEffects, unmountWithEffects } from './hooks';
+import { mountWithHooks, unmountWithHooks } from './hooks';
 
 enum ElementProperties {
   Value = 'value',
@@ -35,7 +35,7 @@ const EVENT_PROPS: Map<keyof CustomProperties, keyof HTMLElementEventMap> =
     ['onClick', 'click'],
   ]);
 
-const createVirtualElementString = (value: string): VirtualStringElement => ({
+const createVirtualStringElement = (value: string): VirtualStringElement => ({
   type: 'String',
   value,
 });
@@ -70,7 +70,7 @@ export function createVirtualElement<Props, ChildProps>(
           tagName: type || 'div',
         },
         children: children.map((child) =>
-          typeof child === 'string' ? createVirtualElementString(child) : child
+          typeof child === 'string' ? createVirtualStringElement(child) : child
         ),
       } as VirtualNativeElement);
 }
@@ -167,7 +167,7 @@ const createDomNode = (
   }
 
   if (isVirtualFunctionElement(virtualElement)) {
-    return createDomNode(mountWithEffects(virtualElement));
+    return createDomNode(mountWithHooks(virtualElement, forceRender));
   }
 
   const { children, type: tagName } = virtualElement;
@@ -220,7 +220,8 @@ export const reconcile = (
 
   if (!prevNode || prevNode.type !== newNode.type) {
     if (prevNode && isVirtualFunctionElement(prevNode)) {
-      unmountWithEffects(prevNode);
+      // TODO: This should happen recursively for all child nodes being removed.
+      unmountWithHooks(prevNode);
     }
 
     replaceNode(domNode, createDomNode(newNode));
@@ -244,7 +245,7 @@ export const reconcile = (
     reconcile(
       domNode,
       prevNode.result,
-      mountWithEffects(newNode)
+      mountWithHooks(newNode, forceRender)
     );
     return;
   }
@@ -272,26 +273,22 @@ export const reconcile = (
   }
 };
 
-// This should mimic the real appRoot node.
 let prevVirtualElement: VirtualElement = createVirtualElement('div');
+let forceRender: () => void;
 
+// TODO: Add `createRoot` function instead.
 export const render = (
-  component: VirtualNativeElement | VirtualFunctionElement | null,
-  appRoot: HTMLElement | null
+  component: VirtualNativeElement | VirtualFunctionElement,
+  appRoot: HTMLElement
 ) => {
-  if (!component) {
-    throw new Error('component is null');
-  }
-
-  if (!appRoot) {
-    throw new Error('appRoot is not set');
-  }
-
-  if (!appRoot.parentElement) {
-    throw new Error('appRoot not attached to DOM');
-  }
-
   const virtualElement = createVirtualElement('div', null, component);
+
+  // We cache this for use in `mountWithHooks` (the `useState` hook needs to be
+  // able to trigger renders).
+  // TODO: Add the ability to do a partial render. We'd need to stop comparing
+  // the prev virtual DOM against current and instead just compare the real DOM
+  // against the current.
+  forceRender = () => render(component, appRoot);
 
   reconcile(appRoot, prevVirtualElement, virtualElement);
 
