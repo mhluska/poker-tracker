@@ -1051,6 +1051,8 @@ parcelHelpers.export(exports, "TipsSection", ()=>_tipsSection.TipsSection
 );
 parcelHelpers.export(exports, "SuggestedCasino", ()=>_suggestedCasino.SuggestedCasino
 );
+parcelHelpers.export(exports, "Timer", ()=>_timer.Timer
+);
 var _app = require("./App");
 var _blindsButton = require("./BlindsButton");
 var _introScreen = require("./IntroScreen");
@@ -1059,8 +1061,9 @@ var _numberInput = require("./NumberInput");
 var _showSessionScreen = require("./ShowSessionScreen");
 var _tipsSection = require("./TipsSection");
 var _suggestedCasino = require("./SuggestedCasino");
+var _timer = require("./Timer");
 
-},{"./BlindsButton":"8hJpf","./IntroScreen":"iudxg","./NewSessionScreen":"iiQGi","./NumberInput":"cCow8","./ShowSessionScreen":"kEhZ6","./TipsSection":"79J6p","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./App":"6aOJQ","./SuggestedCasino":"fQJh5"}],"8hJpf":[function(require,module,exports) {
+},{"./BlindsButton":"8hJpf","./IntroScreen":"iudxg","./NewSessionScreen":"iiQGi","./NumberInput":"cCow8","./ShowSessionScreen":"kEhZ6","./TipsSection":"79J6p","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./App":"6aOJQ","./SuggestedCasino":"fQJh5","./Timer":"cVbGh"}],"8hJpf":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "BlindsButton", ()=>BlindsButton
@@ -1083,17 +1086,19 @@ parcelHelpers.export(exports, "createVirtualElement", ()=>_render.createVirtualE
 );
 parcelHelpers.export(exports, "e", ()=>_render.e
 );
-parcelHelpers.export(exports, "useEffect", ()=>_useEffect.useEffect
+parcelHelpers.export(exports, "useEffect", ()=>_hooks.useEffect
+);
+parcelHelpers.export(exports, "useState", ()=>_hooks.useState
 );
 parcelHelpers.export(exports, "FunctionComponent", ()=>_types.FunctionComponent
 );
 parcelHelpers.export(exports, "FC", ()=>_types.FC
 );
 var _render = require("./render");
-var _useEffect = require("./useEffect");
+var _hooks = require("./hooks");
 var _types = require("./types");
 
-},{"./render":"D5Bps","./useEffect":"9g13H","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./types":"6Zsey"}],"D5Bps":[function(require,module,exports) {
+},{"./render":"D5Bps","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./types":"6Zsey","./hooks":"9Cknq"}],"D5Bps":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "createVirtualElement", ()=>createVirtualElement
@@ -1106,7 +1111,7 @@ parcelHelpers.export(exports, "render", ()=>render
 );
 var _types = require("./types");
 var _utils = require("./utils");
-var _useEffect = require("./useEffect");
+var _hooks = require("./hooks");
 let ElementProperties;
 (function(ElementProperties1) {
     ElementProperties1["Value"] = 'value';
@@ -1123,7 +1128,7 @@ const EVENT_PROPS = new Map([
         'click'
     ], 
 ]);
-const createVirtualElementString = (value)=>({
+const createVirtualStringElement = (value)=>({
         type: 'String',
         value
     })
@@ -1139,7 +1144,7 @@ function createVirtualElement(type, props, ...children) {
             ...props,
             tagName: type || 'div'
         },
-        children: children.map((child)=>typeof child === 'string' ? createVirtualElementString(child) : child
+        children: children.map((child)=>typeof child === 'string' ? createVirtualStringElement(child) : child
         )
     };
 }
@@ -1181,7 +1186,7 @@ const reconcileProps = (domNode, prevNode, newNode)=>{
 const createDomNode = (virtualElement)=>{
     if (!virtualElement) return null;
     if (virtualElement.type === 'String') return document.createTextNode(virtualElement.value);
-    if (_utils.isVirtualFunctionElement(virtualElement)) return createDomNode(_useEffect.mountWithEffects(virtualElement));
+    if (_utils.isVirtualFunctionElement(virtualElement)) return createDomNode(_hooks.mountWithHooks(virtualElement, forceRender));
     const { children , type: tagName  } = virtualElement;
     const element = document.createElement(tagName);
     reconcileProps(element, null, virtualElement);
@@ -1204,7 +1209,8 @@ const reconcile = (domNode, prevNode, newNode)=>{
         return;
     }
     if (!prevNode || prevNode.type !== newNode.type) {
-        if (prevNode && _utils.isVirtualFunctionElement(prevNode)) _useEffect.unmountWithEffects(prevNode);
+        if (prevNode && _utils.isVirtualFunctionElement(prevNode)) // TODO: This should happen recursively for all child nodes being removed.
+        _hooks.unmountWithHooks(prevNode);
         _utils.replaceNode(domNode, createDomNode(newNode));
         return;
     }
@@ -1220,7 +1226,7 @@ const reconcile = (domNode, prevNode, newNode)=>{
         return;
     }
     if (_utils.isVirtualFunctionElement(prevNode) && _utils.isVirtualFunctionElement(newNode)) {
-        reconcile(domNode, prevNode.result, _useEffect.mountWithEffects(newNode));
+        reconcile(domNode, prevNode.result, _hooks.mountWithHooks(newNode, forceRender));
         return;
     }
     if (_utils.isVirtualNativeElement(prevNode) && _utils.isVirtualNativeElement(newNode)) {
@@ -1237,18 +1243,22 @@ const reconcile = (domNode, prevNode, newNode)=>{
         });
     }
 };
-// This should mimic the real appRoot node.
 let prevVirtualElement = createVirtualElement('div');
+let forceRender;
 const render = (component, appRoot)=>{
-    if (!component) throw new Error('component is null');
-    if (!appRoot) throw new Error('appRoot is not set');
-    if (!appRoot.parentElement) throw new Error('appRoot not attached to DOM');
     const virtualElement = createVirtualElement('div', null, component);
+    // We cache this for use in `mountWithHooks` (the `useState` hook needs to be
+    // able to trigger renders).
+    // TODO: Add the ability to do a partial render. We'd need to stop comparing
+    // the prev virtual DOM against current and instead just compare the real DOM
+    // against the current.
+    forceRender = ()=>render(component, appRoot)
+    ;
     reconcile(appRoot, prevVirtualElement, virtualElement);
     prevVirtualElement = virtualElement;
 };
 
-},{"./utils":"1yEYz","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./useEffect":"9g13H","./types":"6Zsey"}],"1yEYz":[function(require,module,exports) {
+},{"./utils":"1yEYz","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./types":"6Zsey","./hooks":"9Cknq"}],"1yEYz":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "keys", ()=>keys
@@ -1302,48 +1312,92 @@ let NodeTypes;
     NodeTypes1[NodeTypes1["Text"] = 3] = "Text";
 })(NodeTypes || (NodeTypes = {}));
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"9g13H":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"9Cknq":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "useEffect", ()=>useEffect
 );
-parcelHelpers.export(exports, "mountWithEffects", ()=>mountWithEffects
+parcelHelpers.export(exports, "useState", ()=>useState
 );
-parcelHelpers.export(exports, "unmountWithEffects", ()=>unmountWithEffects
+parcelHelpers.export(exports, "mountWithHooks", ()=>mountWithHooks
+);
+parcelHelpers.export(exports, "unmountWithHooks", ()=>unmountWithHooks
 );
 var _utils = require("./utils");
-const effects = new Map();
-let currentRenderEffects = [];
+let currentComponent;
+let currentForceRender;
+// TODO: Since hooks should always fire in the same order, we could just push
+// all hook data onto a single array with an index that increments per call.
+// That way we don't keep in memory other hooks data when we don't need to.
+const hooks = {
+    useState: new Map(),
+    useEffect: new Map()
+};
 const useEffect = (callback, dependencies)=>{
-    currentRenderEffects.push({
+    const componentEffects = hooks.useEffect.get(currentComponent) || [];
+    componentEffects.push({
         callback,
         dependencies,
         unmountCallback: undefined
     });
+    hooks.useEffect.set(currentComponent, componentEffects);
 };
-const mountWithEffects = (virtualElement)=>{
-    const prevEffects = effects.get(virtualElement.type);
-    // Populates after calling the function component below.
-    currentRenderEffects = [];
+const useState = (initialValue)=>{
+    let componentHookData = hooks.useState.get(currentComponent);
+    if (!componentHookData) {
+        componentHookData = [
+            {
+                value: initialValue
+            }
+        ];
+        hooks.useState.set(currentComponent, componentHookData);
+    }
+    // TODO: Make this work with multiple useState calls.
+    const hook = componentHookData[componentHookData.length - 1];
+    const setState = (value)=>{
+        if (hook.value !== value) {
+            hook.value = value;
+            // We could end up here during the current render. That means we'd kick
+            // off another render before the DOM has finished updating. So we use
+            // `requestIdleCallback` to ensure the next render runs after the current
+            // one is complete.
+            // TODO: Once fibers are implemented, this can go away.
+            window.requestIdleCallback(currentForceRender);
+        }
+    };
+    // TODO: Can we avoid the cast here? Otherwise value would be `unknown`
+    // because of the `hooks.useState` definition above.
+    return [
+        hook.value,
+        setState
+    ];
+};
+const mountWithHooks = (virtualElement, forceRender)=>{
+    currentComponent = virtualElement.type;
+    currentForceRender = forceRender;
+    const prevEffects = hooks.useEffect.get(virtualElement.type);
+    // Repopulates after calling the function component below.
+    hooks.useEffect.delete(virtualElement.type);
     virtualElement.result = virtualElement.type(virtualElement.props);
-    if (currentRenderEffects.length === 0) return virtualElement.result;
-    currentRenderEffects.forEach((nextEffect, index)=>{
+    const currentUseEffectCalls = hooks.useEffect.get(currentComponent);
+    if (!currentUseEffectCalls || currentUseEffectCalls.length === 0) return virtualElement.result;
+    currentUseEffectCalls.forEach((nextEffect, index)=>{
         const prevEffect = prevEffects?.[index];
         if (prevEffect && _utils.arraysEqual(prevEffect.dependencies, nextEffect.dependencies)) nextEffect.unmountCallback = prevEffect.unmountCallback;
         else nextEffect.unmountCallback = nextEffect.callback();
     });
-    effects.set(virtualElement.type, currentRenderEffects);
     return virtualElement.result;
 };
-const unmountWithEffects = (virtualElement)=>{
-    const componentEffects = effects.get(virtualElement.type);
+const unmountWithHooks = (virtualElement)=>{
+    const componentEffects = hooks.useEffect.get(virtualElement.type);
     if (!componentEffects) return virtualElement.result;
     for (const { unmountCallback  } of componentEffects)if (unmountCallback) unmountCallback();
-    effects.delete(virtualElement.type);
+    hooks.useEffect.delete(virtualElement.type);
+    hooks.useState.delete(virtualElement.type);
     return virtualElement.result;
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./utils":"1yEYz"}],"iudxg":[function(require,module,exports) {
+},{"./utils":"1yEYz","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"iudxg":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "IntroScreen", ()=>IntroScreen
@@ -1453,20 +1507,14 @@ const ShowSessionScreen = ()=>{
     const handleCashoutAmountInput = (event)=>{
         if (event.target) _state.state.app.showSessionScreen.cashoutAmount = event.target.value;
     };
-    _renderer.useEffect(()=>{
-        // HACK: Trigger a render every second to make time elapsed update. This
-        // can go away once we add local component state support with `useState`.
-        setInterval(()=>{
-            const notes = _state.state.app.showSessionScreen.notes;
-            _state.state.app.showSessionScreen.notes = notes;
-        }, 1000);
-    }, []);
     return _renderer.e('div', {
         id: 'show-session-screen',
         className: 'screen'
     }, _renderer.e('h1', {
         id: 'session-title'
-    }, session.title()), _renderer.e('div', null, _renderer.e('span', null, `Profit: $${session.profit()}`)), _renderer.e('div', null, _renderer.e('span', null, `Start time: $${session.startTime()}`)), _renderer.e('div', null, _renderer.e('span', null, `Time elapsed: ${session.timeElapsed()}`)), _renderer.e('form', {
+    }, session.title()), _renderer.e('div', null, _renderer.e('span', null, `Profit: $${session.profit()}`)), _renderer.e('div', null, _renderer.e('span', null, `Start time: ${session.startTime()}`)), _selectors.appSelectors.currentSession.startTime && _renderer.e('div', null, _renderer.e('span', null, 'Time elapsed: ', _renderer.e(_components.Timer, {
+        startTime: _selectors.appSelectors.currentSession.startTime
+    }))), _renderer.e('form', {
         id: 'rebuy-form',
         className: 'section'
     }, _renderer.e(_components.NumberInput, {
@@ -1531,7 +1579,6 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Session", ()=>Session
 );
-var _utils = require("../utils");
 class Session {
     constructor(session){
         this.session = session;
@@ -1564,11 +1611,11 @@ class Session {
     }
     timeElapsed() {
         if (!this.session.startTime) return '';
-        return _utils.formatDuration(Date.now() - this.session.startTime.getTime());
+        return;
     }
 }
 
-},{"../utils":"dsXzW","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"79J6p":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"79J6p":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "TipsSection", ()=>TipsSection
@@ -1623,6 +1670,26 @@ const SuggestedCasino = ({ onSelect  })=>{
     }, 'OK'));
 };
 
-},{"../lib/renderer":"eg3L3","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../selectors":"2OUoq"}]},["8wcER","h7u1C"], "h7u1C", "parcelRequirefb1b")
+},{"../lib/renderer":"eg3L3","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../selectors":"2OUoq"}],"cVbGh":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Timer", ()=>Timer
+);
+var _renderer = require("../lib/renderer");
+var _utils = require("../utils");
+const MILLISECONDS_IN_ONE_SECOND = 1000;
+const Timer = ({ startTime  })=>{
+    const [timeElaped, setTimeElapsed] = _renderer.useState('');
+    _renderer.useEffect(()=>{
+        const updateTimeElapsed = ()=>{
+            setTimeElapsed(_utils.formatDuration(Date.now() - startTime.getTime()));
+        };
+        setInterval(updateTimeElapsed, MILLISECONDS_IN_ONE_SECOND);
+        updateTimeElapsed();
+    }, []);
+    return _renderer.e('span', null, timeElaped.toString());
+};
+
+},{"../lib/renderer":"eg3L3","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../utils":"dsXzW"}]},["8wcER","h7u1C"], "h7u1C", "parcelRequirefb1b")
 
 //# sourceMappingURL=index.b71e74eb.js.map
