@@ -1609,10 +1609,6 @@ class Session {
         const cashoutAmount = this.session.attributes.cashoutAmount ?? 0;
         return (cashoutAmount - this.session.buyinsTotal()).toString();
     }
-    timeElapsed() {
-        if (!this.session.startTime) return '';
-        return;
-    }
 }
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"79J6p":[function(require,module,exports) {
