@@ -1,5 +1,5 @@
 import { Primitive, FunctionComponent, VirtualFunctionElement } from './types';
-import { arraysEqual } from './utils';
+import { arraysEqual, requestIdleCallback } from './utils';
 
 type Effect = {
   callback: () => void;
@@ -60,7 +60,7 @@ export const useState = <T>(initialValue: T): [T, (value: T) => void] => {
       // `requestIdleCallback` to ensure the next render runs after the current
       // one is complete.
       // TODO: Once fibers are implemented, this can go away.
-      window.requestIdleCallback(currentForceRender);
+      requestIdleCallback(currentForceRender);
     }
   };
 
