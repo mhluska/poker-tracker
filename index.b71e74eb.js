@@ -1277,7 +1277,10 @@ parcelHelpers.export(exports, "replaceNode", ()=>replaceNode
 );
 parcelHelpers.export(exports, "arraysEqual", ()=>arraysEqual
 );
+parcelHelpers.export(exports, "requestIdleCallback", ()=>requestIdleCallback
+);
 var _types = require("./types");
+var _polyfills = require("./polyfills");
 const keys = Object.keys;
 const isVirtualFunctionElement = (virtualElement)=>typeof virtualElement.type === 'function'
 ;
@@ -1300,8 +1303,9 @@ const arraysEqual = (arr1, arr2)=>{
     }
     return true;
 };
+const requestIdleCallback = _polyfills.polyfillRequestIdleCallback();
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./types":"6Zsey"}],"6Zsey":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./types":"6Zsey","./polyfills":"jPKpg"}],"6Zsey":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "NodeTypes", ()=>NodeTypes
@@ -1311,6 +1315,17 @@ let NodeTypes;
     NodeTypes1[NodeTypes1["Element"] = 1] = "Element";
     NodeTypes1[NodeTypes1["Text"] = 3] = "Text";
 })(NodeTypes || (NodeTypes = {}));
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"jPKpg":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "polyfillRequestIdleCallback", ()=>polyfillRequestIdleCallback
+);
+const polyfillRequestIdleCallback = ()=>{
+    if (typeof window.requestIdleCallback === 'function') return window.requestIdleCallback;
+    else return (callback)=>setTimeout(callback, 0)
+    ;
+};
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"9Cknq":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -1362,7 +1377,7 @@ const useState = (initialValue)=>{
             // `requestIdleCallback` to ensure the next render runs after the current
             // one is complete.
             // TODO: Once fibers are implemented, this can go away.
-            window.requestIdleCallback(currentForceRender);
+            _utils.requestIdleCallback(currentForceRender);
         }
     };
     // TODO: Can we avoid the cast here? Otherwise value would be `unknown`
