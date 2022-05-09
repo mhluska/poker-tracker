@@ -516,7 +516,7 @@ function hmrAcceptRun(bundle, id) {
 },{}],"h7u1C":[function(require,module,exports) {
 var _utils = require("./utils");
 var _components = require("./components");
-var _renderer = require("./lib/renderer");
+var _tortieCore = require("tortie-core");
 var _state = require("./state");
 var _types = require("./types");
 var _services = require("./services");
@@ -642,7 +642,7 @@ const handleInput = (event)=>{
 const apiService = new _services.Api();
 const appRoot = document.getElementById('root');
 if (appRoot) {
-    _state.setupAppState(()=>_renderer.render(_renderer.e(_components.App), appRoot)
+    _state.setupAppState(()=>_tortieCore.render(_tortieCore.e(_components.App), appRoot)
     );
     appRoot.addEventListener('click', handleClick);
     appRoot.addEventListener('submit', handleSubmit);
@@ -653,7 +653,7 @@ setInterval(_state.saveToLocalStorage, SAVE_APP_STATE_INTERVAL_MS);
 document.addEventListener('visibilitychange', _state.saveToLocalStorage);
 window.onbeforeunload = _state.saveToLocalStorage;
 
-},{"./utils":"dsXzW","./types":"38MWl","./services":"f5PO7","./models":"i6QPt","./state":"6GBqf","./selectors":"2OUoq","./components":"dHnah","./lib/renderer":"eg3L3"}],"dsXzW":[function(require,module,exports) {
+},{"./utils":"dsXzW","./types":"38MWl","./services":"f5PO7","./models":"i6QPt","./state":"6GBqf","./selectors":"2OUoq","./components":"dHnah","tortie-core":"89ftx"}],"dsXzW":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "uuid", ()=>uuid
@@ -1068,8 +1068,8 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "BlindsButton", ()=>BlindsButton
 );
-var _renderer = require("../lib/renderer");
-const BlindsButton = ({ smallBlind , bigBlind ,  })=>_renderer.e('button', {
+var _tortieCore = require("tortie-core");
+const BlindsButton = ({ smallBlind , bigBlind ,  })=>_tortieCore.e('button', {
         type: 'button',
         className: 'prefill-blinds',
         'data-small-blind': smallBlind,
@@ -1077,7 +1077,7 @@ const BlindsButton = ({ smallBlind , bigBlind ,  })=>_renderer.e('button', {
     }, `${smallBlind}/${bigBlind}`)
 ;
 
-},{"../lib/renderer":"eg3L3","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"eg3L3":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","tortie-core":"89ftx"}],"89ftx":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "render", ()=>_render.render
@@ -1098,7 +1098,7 @@ var _render = require("./render");
 var _hooks = require("./hooks");
 var _types = require("./types");
 
-},{"./render":"D5Bps","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./types":"6Zsey","./hooks":"9Cknq"}],"D5Bps":[function(require,module,exports) {
+},{"./render":"1tB1q","./hooks":"aGbxV","./types":"1Vawp","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"1tB1q":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "createVirtualElement", ()=>createVirtualElement
@@ -1185,10 +1185,10 @@ const reconcileProps = (domNode, prevNode, newNode)=>{
 };
 const createDomNode = (virtualElement)=>{
     if (!virtualElement) return null;
-    if (virtualElement.type === 'String') return document.createTextNode(virtualElement.value);
+    if (virtualElement.type === 'String') return appDocument.createTextNode(virtualElement.value);
     if (_utils.isVirtualFunctionElement(virtualElement)) return createDomNode(_hooks.mountWithHooks(virtualElement, forceRender));
     const { children , type: tagName  } = virtualElement;
-    const element = document.createElement(tagName);
+    const element = appDocument.createElement(tagName);
     reconcileProps(element, null, virtualElement);
     for (const child of children){
         if (!child) continue;
@@ -1245,6 +1245,7 @@ const reconcile = (domNode, prevNode, newNode)=>{
 };
 let prevVirtualElement = createVirtualElement('div');
 let forceRender;
+let appDocument;
 const render = (component, appRoot)=>{
     const virtualElement = createVirtualElement('div', null, component);
     // We cache this for use in `mountWithHooks` (the `useState` hook needs to be
@@ -1254,11 +1255,25 @@ const render = (component, appRoot)=>{
     // against the current.
     forceRender = ()=>render(component, appRoot)
     ;
+    // Lets us avoid calling `global.document` so we can run this in a Node
+    // environment. Particularly useful for testing.
+    appDocument = appRoot.ownerDocument;
     reconcile(appRoot, prevVirtualElement, virtualElement);
     prevVirtualElement = virtualElement;
 };
 
-},{"./utils":"1yEYz","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./types":"6Zsey","./hooks":"9Cknq"}],"1yEYz":[function(require,module,exports) {
+},{"./types":"1Vawp","./utils":"jTGBX","./hooks":"aGbxV","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"1Vawp":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "NodeTypes", ()=>NodeTypes
+);
+let NodeTypes;
+(function(NodeTypes1) {
+    NodeTypes1[NodeTypes1["Element"] = 1] = "Element";
+    NodeTypes1[NodeTypes1["Text"] = 3] = "Text";
+})(NodeTypes || (NodeTypes = {}));
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"jTGBX":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "keys", ()=>keys
@@ -1305,29 +1320,18 @@ const arraysEqual = (arr1, arr2)=>{
 };
 const requestIdleCallback = _polyfills.polyfillRequestIdleCallback();
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./types":"6Zsey","./polyfills":"jPKpg"}],"6Zsey":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "NodeTypes", ()=>NodeTypes
-);
-let NodeTypes;
-(function(NodeTypes1) {
-    NodeTypes1[NodeTypes1["Element"] = 1] = "Element";
-    NodeTypes1[NodeTypes1["Text"] = 3] = "Text";
-})(NodeTypes || (NodeTypes = {}));
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"jPKpg":[function(require,module,exports) {
+},{"./types":"1Vawp","./polyfills":"eDg3j","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"eDg3j":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "polyfillRequestIdleCallback", ()=>polyfillRequestIdleCallback
 );
 const polyfillRequestIdleCallback = ()=>{
-    if (typeof window.requestIdleCallback === 'function') return window.requestIdleCallback;
+    if (typeof requestIdleCallback === 'function') return requestIdleCallback;
     else return (callback)=>setTimeout(callback, 0)
     ;
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"9Cknq":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"aGbxV":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "useEffect", ()=>useEffect
@@ -1412,26 +1416,26 @@ const unmountWithHooks = (virtualElement)=>{
     return virtualElement.result;
 };
 
-},{"./utils":"1yEYz","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"iudxg":[function(require,module,exports) {
+},{"./utils":"jTGBX","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"iudxg":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "IntroScreen", ()=>IntroScreen
 );
-var _renderer = require("../lib/renderer");
-const IntroScreen = ()=>_renderer.e('div', {
+var _tortieCore = require("tortie-core");
+const IntroScreen = ()=>_tortieCore.e('div', {
         id: 'intro-screen',
         className: 'screen'
-    }, _renderer.e('button', {
+    }, _tortieCore.e('button', {
         id: 'new-session-button'
     }, 'Start Session'))
 ;
 
-},{"../lib/renderer":"eg3L3","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"iiQGi":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","tortie-core":"89ftx"}],"iiQGi":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "NewSessionScreen", ()=>NewSessionScreen
 );
-var _renderer = require("../lib/renderer");
+var _tortieCore = require("tortie-core");
 var _components = require("../components");
 var _state = require("../state");
 var _selectors = require("../selectors");
@@ -1439,58 +1443,58 @@ const NewSessionScreen = ()=>{
     const handleSelectSuggestedCasino = (casinoName)=>{
         _state.state.app.newSessionScreen.casinoName = casinoName;
     };
-    return _renderer.e('div', {
+    return _tortieCore.e('div', {
         id: 'new-session-screen',
         className: 'screen'
-    }, _renderer.e(_components.SuggestedCasino, {
+    }, _tortieCore.e(_components.SuggestedCasino, {
         onSelect: handleSelectSuggestedCasino
-    }), _renderer.e('form', {
+    }), _tortieCore.e('form', {
         id: 'new-session-form'
-    }, _renderer.e('div', null, _renderer.e('label', null, _renderer.e('span', null, 'Casino Name'), _renderer.e('input', {
+    }, _tortieCore.e('div', null, _tortieCore.e('label', null, _tortieCore.e('span', null, 'Casino Name'), _tortieCore.e('input', {
         id: 'casino-name-input',
         type: 'text',
         placeholder: _selectors.appSelectors.mostFrequentCasinoName ?? 'Bellagio',
         required: true,
         value: _state.state.app.newSessionScreen.casinoName
-    }))), _renderer.e('div', null, _renderer.e('label', null, _renderer.e('span', null, 'Blinds'), _renderer.e(_components.NumberInput, {
+    }))), _tortieCore.e('div', null, _tortieCore.e('label', null, _tortieCore.e('span', null, 'Blinds'), _tortieCore.e(_components.NumberInput, {
         id: 'small-blind-input',
         placeholder: '2',
         value: _state.state.app.newSessionScreen.smallBlind,
         max: 100
-    }), _renderer.e(_components.NumberInput, {
+    }), _tortieCore.e(_components.NumberInput, {
         id: 'big-blind-input',
         placeholder: '5',
         value: _state.state.app.newSessionScreen.bigBlind,
         max: 200
-    })), _renderer.e(_components.BlindsButton, {
+    })), _tortieCore.e(_components.BlindsButton, {
         smallBlind: 1,
         bigBlind: 2
-    }), _renderer.e(_components.BlindsButton, {
+    }), _tortieCore.e(_components.BlindsButton, {
         smallBlind: 1,
         bigBlind: 3
-    }), _renderer.e(_components.BlindsButton, {
+    }), _tortieCore.e(_components.BlindsButton, {
         smallBlind: 2,
         bigBlind: 5
-    }), _renderer.e(_components.BlindsButton, {
+    }), _tortieCore.e(_components.BlindsButton, {
         smallBlind: 5,
         bigBlind: 10
-    })), _renderer.e('div', null, _renderer.e('label', null, _renderer.e('span', null, 'Max Buyin'), _renderer.e(_components.NumberInput, {
+    })), _tortieCore.e('div', null, _tortieCore.e('label', null, _tortieCore.e('span', null, 'Max Buyin'), _tortieCore.e(_components.NumberInput, {
         id: 'max-buyin-input',
         placeholder: '500',
         value: _state.state.app.newSessionScreen.maxBuyin
-    }))), _renderer.e('div', null, _renderer.e('input', {
+    }))), _tortieCore.e('div', null, _tortieCore.e('input', {
         type: 'submit',
         value: 'Start Session'
     }))));
 };
 
-},{"../lib/renderer":"eg3L3","../components":"dHnah","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","../selectors":"2OUoq"}],"cCow8":[function(require,module,exports) {
+},{"../components":"dHnah","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","../selectors":"2OUoq","tortie-core":"89ftx"}],"cCow8":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "NumberInput", ()=>NumberInput
 );
-var _renderer = require("../lib/renderer");
-const NumberInput = ({ id , placeholder , value , min =1 , max , onInput ,  })=>_renderer.e('input', {
+var _tortieCore = require("tortie-core");
+const NumberInput = ({ id , placeholder , value , min =1 , max , onInput ,  })=>_tortieCore.e('input', {
         id,
         type: 'number',
         placeholder,
@@ -1503,12 +1507,12 @@ const NumberInput = ({ id , placeholder , value , min =1 , max , onInput ,  })=>
     })
 ;
 
-},{"../lib/renderer":"eg3L3","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"kEhZ6":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","tortie-core":"89ftx"}],"kEhZ6":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "ShowSessionScreen", ()=>ShowSessionScreen
 );
-var _renderer = require("../lib/renderer");
+var _tortieCore = require("tortie-core");
 var _components = require("../components");
 var _decorators = require("../decorators");
 var _selectors = require("../selectors");
@@ -1522,59 +1526,59 @@ const ShowSessionScreen = ()=>{
     const handleCashoutAmountInput = (event)=>{
         if (event.target) _state.state.app.showSessionScreen.cashoutAmount = event.target.value;
     };
-    return _renderer.e('div', {
+    return _tortieCore.e('div', {
         id: 'show-session-screen',
         className: 'screen'
-    }, _renderer.e('h1', {
+    }, _tortieCore.e('h1', {
         id: 'session-title'
-    }, session.title()), _renderer.e('div', null, _renderer.e('span', null, `Profit: $${session.profit()}`)), _renderer.e('div', null, _renderer.e('span', null, `Start time: ${session.startTime()}`)), _selectors.appSelectors.currentSession.startTime && _renderer.e('div', null, _renderer.e('span', null, 'Time elapsed: ', _renderer.e(_components.Timer, {
+    }, session.title()), _tortieCore.e('div', null, _tortieCore.e('span', null, `Profit: $${session.profit()}`)), _tortieCore.e('div', null, _tortieCore.e('span', null, `Start time: ${session.startTime()}`)), _selectors.appSelectors.currentSession.startTime && _tortieCore.e('div', null, _tortieCore.e('span', null, 'Time elapsed: ', _tortieCore.e(_components.Timer, {
         startTime: _selectors.appSelectors.currentSession.startTime
-    }))), _renderer.e('form', {
+    }))), _tortieCore.e('form', {
         id: 'rebuy-form',
         className: 'section'
-    }, _renderer.e(_components.NumberInput, {
+    }, _tortieCore.e(_components.NumberInput, {
         id: 'rebuy-amount-input',
         placeholder: _selectors.appSelectors.currentSession.attributes.maxBuyin.toString(),
         value: _state.state.app.showSessionScreen.rebuyAmount
-    }), _renderer.e('input', {
+    }), _tortieCore.e('input', {
         type: 'submit',
         value: 'Rebuy'
-    }), _renderer.e('input', {
+    }), _tortieCore.e('input', {
         id: 'rebuy-max-button',
         type: 'button',
         value: 'Max'
-    })), _renderer.e(_components.TipsSection, {
+    })), _tortieCore.e(_components.TipsSection, {
         type: 'dealer',
         value: session.dealerTips()
-    }), _renderer.e(_components.TipsSection, {
+    }), _tortieCore.e(_components.TipsSection, {
         type: 'drink',
         value: session.drinkTips()
-    }), _renderer.e('form', {
+    }), _tortieCore.e('form', {
         id: 'end-session-form',
         className: 'section'
-    }, _renderer.e('input', {
+    }, _tortieCore.e('input', {
         className: 'hidden',
         type: 'text',
         autocomplete: 'username'
-    }), _renderer.e('label', {
+    }), _tortieCore.e('label', {
         className: 'section'
-    }, _renderer.e('div', null, 'Notes'), _renderer.e('textarea', {
+    }, _tortieCore.e('div', null, 'Notes'), _tortieCore.e('textarea', {
         onInput: handleNotesInput
-    })), _renderer.e('label', {
+    })), _tortieCore.e('label', {
         className: 'section'
-    }, _renderer.e('div', null, 'Cashout Amount'), _renderer.e(_components.NumberInput, {
+    }, _tortieCore.e('div', null, 'Cashout Amount'), _tortieCore.e(_components.NumberInput, {
         min: 0,
         value: _state.state.app.showSessionScreen.cashoutAmount,
         placeholder: (_selectors.appSelectors.currentSession.attributes.maxBuyin * 3).toString(),
         onInput: handleCashoutAmountInput
-    })), _state.state.app.cachedAdminPassword ? '' : _renderer.e('div', {
+    })), _state.state.app.cachedAdminPassword ? '' : _tortieCore.e('div', {
         id: 'admin-password-area'
-    }, _renderer.e('label', null, _renderer.e('span', null, 'Password')), _renderer.e('input', {
+    }, _tortieCore.e('label', null, _tortieCore.e('span', null, 'Password')), _tortieCore.e('input', {
         id: 'admin-password-input',
         type: 'password',
         autocomplete: 'current-password',
         required: true
-    })), _renderer.e('input', {
+    })), _tortieCore.e('input', {
         id: 'end-session-submit-button',
         type: 'submit',
         value: 'End Session',
@@ -1582,7 +1586,7 @@ const ShowSessionScreen = ()=>{
     })));
 };
 
-},{"../lib/renderer":"eg3L3","../components":"dHnah","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../decorators":"7km9a","../selectors":"2OUoq","../state":"6GBqf"}],"7km9a":[function(require,module,exports) {
+},{"../components":"dHnah","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../decorators":"7km9a","../selectors":"2OUoq","../state":"6GBqf","tortie-core":"89ftx"}],"7km9a":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Session", ()=>_session.Session
@@ -1631,76 +1635,76 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "TipsSection", ()=>TipsSection
 );
-var _renderer = require("../lib/renderer");
+var _tortieCore = require("tortie-core");
 var _utils = require("../utils");
-const TipsSection = ({ type , value  })=>_renderer.e('div', {
+const TipsSection = ({ type , value  })=>_tortieCore.e('div', {
         className: 'section'
-    }, _renderer.e('span', null, `${_utils.capitalize(type)} tips: ${value}`), _renderer.e('div', null, _renderer.e('button', {
+    }, _tortieCore.e('span', null, `${_utils.capitalize(type)} tips: ${value}`), _tortieCore.e('div', null, _tortieCore.e('button', {
         className: 'tip-button',
         id: `decrement-${type}-tip-button`
-    }, '-'), _renderer.e('button', {
+    }, '-'), _tortieCore.e('button', {
         className: 'tip-button',
         id: `increment-${type}-tip-button`
     }, '+')))
 ;
 
-},{"../lib/renderer":"eg3L3","../utils":"dsXzW","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"6aOJQ":[function(require,module,exports) {
+},{"../utils":"dsXzW","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","tortie-core":"89ftx"}],"6aOJQ":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "App", ()=>App
 );
-var _renderer = require("../lib/renderer");
+var _tortieCore = require("tortie-core");
 var _ = require(".");
 var _types = require("../types");
 var _state = require("../state");
 const App = ()=>{
     switch(_state.state.app.screen){
         case _types.Screen.Intro:
-            return _renderer.e(_.IntroScreen);
+            return _tortieCore.e(_.IntroScreen);
         case _types.Screen.NewSession:
-            return _renderer.e(_.NewSessionScreen);
+            return _tortieCore.e(_.NewSessionScreen);
         case _types.Screen.ShowSession:
-            return _renderer.e(_.ShowSessionScreen);
+            return _tortieCore.e(_.ShowSessionScreen);
         default:
             throw new Error(`Unknown screen ${_state.state.app.screen}`);
     }
 };
 
-},{".":"dHnah","../types":"38MWl","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","../lib/renderer":"eg3L3"}],"fQJh5":[function(require,module,exports) {
+},{".":"dHnah","../types":"38MWl","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","tortie-core":"89ftx"}],"fQJh5":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "SuggestedCasino", ()=>SuggestedCasino
 );
-var _renderer = require("../lib/renderer");
+var _tortieCore = require("tortie-core");
 var _selectors = require("../selectors");
 const SuggestedCasino = ({ onSelect  })=>{
     const casinoName = _selectors.appSelectors.mostFrequentCasinoName;
     if (!casinoName) return null;
-    return _renderer.e('div', null, `Play at ${casinoName} again?`, _renderer.e('button', {
+    return _tortieCore.e('div', null, `Play at ${casinoName} again?`, _tortieCore.e('button', {
         onClick: ()=>onSelect(casinoName)
     }, 'OK'));
 };
 
-},{"../lib/renderer":"eg3L3","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../selectors":"2OUoq"}],"cVbGh":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../selectors":"2OUoq","tortie-core":"89ftx"}],"cVbGh":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Timer", ()=>Timer
 );
-var _renderer = require("../lib/renderer");
+var _tortieCore = require("tortie-core");
 var _utils = require("../utils");
 const MILLISECONDS_IN_ONE_SECOND = 1000;
 const Timer = ({ startTime  })=>{
-    const [timeElaped, setTimeElapsed] = _renderer.useState('');
-    _renderer.useEffect(()=>{
+    const [timeElaped, setTimeElapsed] = _tortieCore.useState('');
+    _tortieCore.useEffect(()=>{
         const updateTimeElapsed = ()=>{
             setTimeElapsed(_utils.formatDuration(Date.now() - startTime.getTime()));
         };
         setInterval(updateTimeElapsed, MILLISECONDS_IN_ONE_SECOND);
         updateTimeElapsed();
     }, []);
-    return _renderer.e('span', null, timeElaped.toString());
+    return _tortieCore.e('span', null, timeElaped.toString());
 };
 
-},{"../lib/renderer":"eg3L3","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../utils":"dsXzW"}]},["8wcER","h7u1C"], "h7u1C", "parcelRequirefb1b")
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../utils":"dsXzW","tortie-core":"89ftx"}]},["8wcER","h7u1C"], "h7u1C", "parcelRequirefb1b")
 
 //# sourceMappingURL=index.b71e74eb.js.map
