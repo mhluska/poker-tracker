@@ -1,4 +1,4 @@
-import { e, FunctionComponent } from '../lib/renderer';
+import { e, FunctionComponent } from 'tortie-core';
 
 type Props = {
   placeholder?: string;

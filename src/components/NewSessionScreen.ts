@@ -1,4 +1,4 @@
-import { e } from '../lib/renderer';
+import { e } from 'tortie-core';
 import { NumberInput, BlindsButton, SuggestedCasino } from '../components';
 import { state } from '../state';
 import { appSelectors } from '../selectors';

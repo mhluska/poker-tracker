@@ -4,7 +4,7 @@ import {
   objectSet,
 } from './utils';
 import { App } from './components';
-import { render, e } from './lib/renderer';
+import { render, e } from 'tortie-core';
 import { setupAppState } from './state';
 import { Screen } from './types';
 import { Api } from './services';

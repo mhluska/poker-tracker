@@ -1,4 +1,4 @@
-import { e, FunctionComponent } from '../lib/renderer';
+import { e, FunctionComponent } from 'tortie-core';
 import { appSelectors } from '../selectors';
 
 type Props = {

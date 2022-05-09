@@ -1,4 +1,4 @@
-import { e, FunctionComponent } from '../lib/renderer';
+import { e, FunctionComponent } from 'tortie-core';
 import { capitalize } from '../utils';
 
 type Props = {

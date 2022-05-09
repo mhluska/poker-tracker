@@ -1,4 +1,4 @@
-import { e } from '../lib/renderer';
+import { e } from 'tortie-core';
 
 export const IntroScreen = () => (
   e(

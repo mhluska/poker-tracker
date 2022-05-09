@@ -1,4 +1,4 @@
-import { FunctionComponent, e } from '../lib/renderer';
+import { FunctionComponent, e } from 'tortie-core';
 import { IntroScreen, NewSessionScreen, ShowSessionScreen } from '.';
 import { Screen } from '../types';
 import { state } from '../state';

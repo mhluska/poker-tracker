@@ -1,4 +1,4 @@
-import { e, FunctionComponent } from '../lib/renderer';
+import { e, FunctionComponent } from 'tortie-core';
 import { NumberInput, TipsSection, Timer } from '../components';
 import { Session as SessionDecorator } from '../decorators';
 import { appSelectors } from '../selectors';
