@@ -37,6 +37,6 @@
     "typescript": "^4.6.3"
   },
   "dependencies": {
-    "tortie-core": "^0.0.1"
+    "tortie-core": "^0.0.2"
   }
 }
