@@ -149,7 +149,14 @@ a {
 }
 
 .app-footer {
+  opacity: 1;
   font-size: .8em;
+  transition: opacity 1s ease-out;
+}
+
+.app-footer.invisible {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .tip-button {
