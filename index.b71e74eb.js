@@ -1727,7 +1727,7 @@ const AppFooter = ()=>{
     _tortieCore.useEffect(()=>{
         setTimeout(()=>{
             setFooterHidden(true);
-        }, MILLISECONDS_IN_ONE_SECOND);
+        }, 3 * MILLISECONDS_IN_ONE_SECOND);
     }, []);
     return _tortieCore.e('div', {
         className: `app-footer ${footerHidden ? 'invisible' : ''}`
