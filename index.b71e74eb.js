@@ -1721,12 +1721,13 @@ parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "AppFooter", ()=>AppFooter
 );
 var _tortieCore = require("tortie-core");
+const MILLISECONDS_IN_ONE_SECOND = 1000;
 const AppFooter = ()=>{
     const [footerHidden, setFooterHidden] = _tortieCore.useState(false);
     _tortieCore.useEffect(()=>{
         setTimeout(()=>{
             setFooterHidden(true);
-        }, 1000);
+        }, MILLISECONDS_IN_ONE_SECOND);
     }, []);
     return _tortieCore.e('div', {
         className: `app-footer ${footerHidden ? 'invisible' : ''}`
