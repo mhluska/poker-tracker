@@ -7,3 +7,4 @@ export { ShowSessionScreen } from './ShowSessionScreen';
 export { TipsSection } from './TipsSection';
 export { SuggestedCasino } from './SuggestedCasino';
 export { Timer } from './Timer';
+export { AppFooter } from './AppFooter';
