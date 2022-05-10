@@ -1112,6 +1112,7 @@ parcelHelpers.export(exports, "render", ()=>render
 var _types = require("./types");
 var _utils = require("./utils");
 var _hooks = require("./hooks");
+var _polyfills = require("./polyfills");
 let ElementProperties;
 (function(ElementProperties1) {
     ElementProperties1["Value"] = 'value';
@@ -1246,7 +1247,15 @@ const reconcile = (domNode, prevNode, newNode)=>{
 let prevVirtualElement = createVirtualElement('div');
 let forceRender;
 let appDocument;
+let polyfilled = false;
 const render = (component, appRoot)=>{
+    // Lets us avoid calling `global.document` so we can run this in a Node
+    // environment. Particularly useful for testing.
+    appDocument = appRoot.ownerDocument;
+    if (!polyfilled && appDocument.defaultView) {
+        _polyfills.polyfillAll(appDocument.defaultView);
+        polyfilled = true;
+    }
     const virtualElement = createVirtualElement('div', null, component);
     // We cache this for use in `mountWithHooks` (the `useState` hook needs to be
     // able to trigger renders).
@@ -1255,14 +1264,11 @@ const render = (component, appRoot)=>{
     // against the current.
     forceRender = ()=>render(component, appRoot)
     ;
-    // Lets us avoid calling `global.document` so we can run this in a Node
-    // environment. Particularly useful for testing.
-    appDocument = appRoot.ownerDocument;
     reconcile(appRoot, prevVirtualElement, virtualElement);
     prevVirtualElement = virtualElement;
 };
 
-},{"./types":"1Vawp","./utils":"jTGBX","./hooks":"aGbxV","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"1Vawp":[function(require,module,exports) {
+},{"./types":"1Vawp","./utils":"jTGBX","./hooks":"aGbxV","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./polyfills":"eDg3j"}],"1Vawp":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "NodeTypes", ()=>NodeTypes
@@ -1292,10 +1298,7 @@ parcelHelpers.export(exports, "replaceNode", ()=>replaceNode
 );
 parcelHelpers.export(exports, "arraysEqual", ()=>arraysEqual
 );
-parcelHelpers.export(exports, "requestIdleCallback", ()=>requestIdleCallback
-);
 var _types = require("./types");
-var _polyfills = require("./polyfills");
 const keys = Object.keys;
 const isVirtualFunctionElement = (virtualElement)=>typeof virtualElement.type === 'function'
 ;
@@ -1318,20 +1321,8 @@ const arraysEqual = (arr1, arr2)=>{
     }
     return true;
 };
-const requestIdleCallback = _polyfills.polyfillRequestIdleCallback();
 
-},{"./types":"1Vawp","./polyfills":"eDg3j","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"eDg3j":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "polyfillRequestIdleCallback", ()=>polyfillRequestIdleCallback
-);
-const polyfillRequestIdleCallback = ()=>{
-    if (typeof requestIdleCallback === 'function') return requestIdleCallback;
-    else return (callback)=>setTimeout(callback, 0)
-    ;
-};
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"aGbxV":[function(require,module,exports) {
+},{"./types":"1Vawp","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"aGbxV":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "useEffect", ()=>useEffect
@@ -1381,7 +1372,7 @@ const useState = (initialValue)=>{
             // `requestIdleCallback` to ensure the next render runs after the current
             // one is complete.
             // TODO: Once fibers are implemented, this can go away.
-            _utils.requestIdleCallback(currentForceRender);
+            requestIdleCallback(currentForceRender);
         }
     };
     // TODO: Can we avoid the cast here? Otherwise value would be `unknown`
@@ -1416,7 +1407,22 @@ const unmountWithHooks = (virtualElement)=>{
     return virtualElement.result;
 };
 
-},{"./utils":"jTGBX","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"iudxg":[function(require,module,exports) {
+},{"./utils":"jTGBX","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"eDg3j":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "polyfillRequestIdleCallback", ()=>polyfillRequestIdleCallback
+);
+parcelHelpers.export(exports, "polyfillAll", ()=>polyfillAll
+);
+const polyfillRequestIdleCallback = (window)=>{
+    if (typeof window.requestIdleCallback === 'undefined') window.requestIdleCallback = (callback, options)=>setTimeout(callback, 0)
+    ;
+};
+const polyfillAll = (window)=>{
+    polyfillRequestIdleCallback(window);
+};
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"iudxg":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "IntroScreen", ()=>IntroScreen
