@@ -1,5 +1,7 @@
 import { e, FunctionComponent } from 'tortie-core';
-import { capitalize } from '../utils';
+
+import { capitalize } from '../../utils';
+import './styles.css';
 
 type Props = {
   type: 'dealer' | 'drink';

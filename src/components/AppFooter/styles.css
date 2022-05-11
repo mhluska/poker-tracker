@@ -1,0 +1,11 @@
+.app-footer {
+  padding: 1em;
+  font-size: 0.8em;
+  opacity: 1;
+  transition: opacity 1s ease-out;
+}
+
+.app-footer--invisible {
+  opacity: 0;
+  pointer-events: none;
+}

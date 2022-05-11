@@ -1,8 +1,10 @@
 import { e, FunctionComponent } from 'tortie-core';
-import { IntroScreen, NewSessionScreen, ShowSessionScreen } from '.';
-import { AppFooter } from '.';
-import { Screen } from '../types';
-import { state } from '../state';
+
+import { IntroScreen, NewSessionScreen, ShowSessionScreen } from '..';
+import { AppFooter } from '..';
+import { Screen } from '../../types';
+import { state } from '../../state';
+import './styles.css';
 
 const selectScreen = (screen: Screen) => {
   switch (screen) {

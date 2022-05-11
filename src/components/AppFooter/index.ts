@@ -1,4 +1,5 @@
 import { e, useEffect, useState } from 'tortie-core';
+import './styles.css';
 
 const MILLISECONDS_IN_ONE_SECOND = 1000;
 
@@ -14,7 +15,7 @@ export const AppFooter = () => {
   return e(
     'div',
     {
-      className: `app-footer ${footerHidden ? 'invisible' : ''}`,
+      className: `app-footer ${footerHidden ? 'app-footer--invisible' : ''}`,
     },
     'Powered by ',
     e(

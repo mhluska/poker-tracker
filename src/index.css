@@ -14,16 +14,9 @@ a {
   color: inherit;
 }
 
-.app {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-#root,
-.app,
 .screen {
   flex-grow: 1;
+  padding: 1em;
 }
 
 .hidden {
@@ -35,35 +28,8 @@ a {
   display: block;
 }
 
-.screen,
-.app-footer {
-  padding: 1em;
-}
-
-.app-footer {
-  font-size: 0.8em;
-  opacity: 1;
-  transition: opacity 1s ease-out;
-}
-
-.app-footer.invisible {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* TODO: Move to component. */
-.tip-button {
-  margin: 0.5em 0;
-  width: 3em;
-  height: 3em;
-}
-
-/* TODO: Move to component. */
-#session-title {
-  margin-top: 0;
-}
-
 #root {
+  flex-grow: 1;
   height: 100%;
   display: flex;
 }

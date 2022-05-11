@@ -1,8 +1,10 @@
 import { e, FunctionComponent } from 'tortie-core';
-import { NumberInput, TipsSection, Timer } from '../components';
-import { Session as SessionDecorator } from '../decorators';
-import { appSelectors } from '../selectors';
-import { state } from '../state';
+
+import { NumberInput, TipsSection, Timer } from '../../components';
+import { Session as SessionDecorator } from '../../decorators';
+import { appSelectors } from '../../selectors';
+import { state } from '../../state';
+import './styles.css'
 
 export const ShowSessionScreen: FunctionComponent = () => {
   if (!appSelectors.currentSession) {
@@ -30,7 +32,7 @@ export const ShowSessionScreen: FunctionComponent = () => {
   return e(
     'div',
     { id: 'show-session-screen', className: 'screen' },
-    e('h1', { id: 'session-title' }, session.title()),
+    e('h1', { className: 'session-title' }, session.title()),
     e('div', null, e('span', null, `Profit: $${session.profit()}`)),
     e('div', null, e('span', null, `Start time: ${session.startTime()}`)),
     appSelectors.currentSession.startTime &&
