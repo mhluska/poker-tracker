@@ -527,10 +527,6 @@ const navigateToIntroScreen = ()=>{
     window.history.pushState({}, '', '#');
     _state.state.app.screen = _types.Screen.Intro;
 };
-const navigateToNewSessionScreen = ()=>{
-    window.history.pushState({}, '', '#/sessions/new');
-    _state.state.app.screen = _types.Screen.NewSession;
-};
 const navigateToShowSessionScreen = (session)=>{
     window.history.pushState({}, '', `#/sessions/${session.id}`);
     _state.state.app.currentSessionId = session.id;
@@ -566,40 +562,6 @@ const saveToGoogleSheet = async ()=>{
         _selectors.appSelectors.currentSession.undoEnd();
     }
 };
-const prefillBlinds = (smallBlind, bigBlind)=>{
-    _state.state.app.newSessionScreen.smallBlind = smallBlind;
-    _state.state.app.newSessionScreen.bigBlind = bigBlind;
-};
-const prefillMaxBuyin = (maxBuyin)=>{
-    _state.state.app.newSessionScreen.maxBuyin = maxBuyin;
-};
-const handleClick = (event)=>{
-    if (!_utils.objectIsHtmlElement(event.target)) return;
-    switch(event.target.id){
-        case 'new-session-button':
-            navigateToNewSessionScreen();
-            return;
-        case 'decrement-dealer-tip-button':
-            _selectors.appSelectors.currentSession?.updateDealerTip(-1);
-            return;
-        case 'increment-dealer-tip-button':
-            _selectors.appSelectors.currentSession?.updateDealerTip(1);
-            return;
-        case 'decrement-drink-tip-button':
-            _selectors.appSelectors.currentSession?.updateDrinkTip(-1);
-            return;
-        case 'increment-drink-tip-button':
-            _selectors.appSelectors.currentSession?.updateDrinkTip(1);
-            return;
-        case 'rebuy-max-button':
-            _selectors.appSelectors.currentSession?.rebuyMax();
-            return;
-    }
-    if (event.target.classList.contains('prefill-blinds') && event.target.dataset.smallBlind && event.target.dataset.bigBlind) {
-        prefillBlinds(event.target.dataset.smallBlind, event.target.dataset.bigBlind);
-        prefillMaxBuyin((parseInt(event.target.dataset.bigBlind) * 100).toString());
-    }
-};
 const handleSubmit = (event)=>{
     if (!_utils.objectIsHtmlElement(event.target)) return;
     event.preventDefault();
@@ -615,38 +577,12 @@ const handleSubmit = (event)=>{
             break;
     }
 };
-const handleInput = (event)=>{
-    if (!_utils.objectIsHtmlInputElement(event.target)) return;
-    const idToStateKey = (id)=>{
-        switch(id){
-            case 'casino-name-input':
-                return 'newSessionScreen.casinoName';
-            case 'small-blind-input':
-                return 'newSessionScreen.smallBlind';
-            case 'big-blind-input':
-                return 'newSessionScreen.bigBlind';
-            case 'max-buyin-input':
-                return 'newSessionScreen.maxBuyin';
-            case 'max-players-input':
-                return 'newSessionScreen.maxPlayers';
-            case 'rebuy-amount-input':
-                return 'showSessionScreen.rebuyAmount';
-            case 'admin-password-input':
-                return 'showSessionScreen.adminPassword';
-        }
-    };
-    const key = idToStateKey(event.target.id);
-    if (!key) return;
-    return _utils.objectSet(_state.state.app, key, event.target.value);
-};
 const apiService = new _services.Api();
 const appRoot = document.getElementById('root');
 if (appRoot) {
     _state.setupAppState(()=>_tortieCore.render(_tortieCore.e(_components.App), appRoot)
     );
-    appRoot.addEventListener('click', handleClick);
     appRoot.addEventListener('submit', handleSubmit);
-    appRoot.addEventListener('input', handleInput);
 }
 // HACK: onbeforeunload doesn't seem to work on iOS so we save periodically.
 setInterval(_state.saveToLocalStorage, SAVE_APP_STATE_INTERVAL_MS);
@@ -1072,15 +1008,21 @@ parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "BlindsButton", ()=>BlindsButton
 );
 var _tortieCore = require("tortie-core");
-const BlindsButton = ({ smallBlind , bigBlind ,  })=>_tortieCore.e('button', {
+var _state = require("../state");
+const BlindsButton = ({ smallBlind , bigBlind ,  })=>{
+    const handleClickPrefillBlinds = ()=>{
+        _state.state.app.newSessionScreen.smallBlind = smallBlind.toString();
+        _state.state.app.newSessionScreen.bigBlind = bigBlind.toString();
+        _state.state.app.newSessionScreen.maxBuyin = (bigBlind * 100).toString();
+    };
+    return _tortieCore.e('button', {
         type: 'button',
         className: 'prefill-blinds',
-        'data-small-blind': smallBlind,
-        'data-big-blind': bigBlind
-    }, `${smallBlind}/${bigBlind}`)
-;
+        onClick: handleClickPrefillBlinds
+    }, `${smallBlind}/${bigBlind}`);
+};
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","tortie-core":"bNMI3"}],"bNMI3":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","tortie-core":"bNMI3","../state":"6GBqf"}],"bNMI3":[function(require,module,exports) {
 function $parcel$export(e, n, v, s) {
     Object.defineProperty(e, n, {
         get: v,
@@ -1365,15 +1307,21 @@ parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "IntroScreen", ()=>IntroScreen
 );
 var _tortieCore = require("tortie-core");
-const IntroScreen = ()=>_tortieCore.e('div', {
-        id: 'intro-screen',
+var _types = require("../types");
+var _state = require("../state");
+const IntroScreen = ()=>{
+    const navigateToNewSessionScreen = ()=>{
+        window.history.pushState({}, '', '#/sessions/new');
+        _state.state.app.screen = _types.Screen.NewSession;
+    };
+    return _tortieCore.e('div', {
         className: 'screen'
     }, _tortieCore.e('button', {
-        id: 'new-session-button'
-    }, 'Start Session'))
-;
+        onClick: navigateToNewSessionScreen
+    }, 'Start Session'));
+};
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","tortie-core":"bNMI3"}],"iiQGi":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","tortie-core":"bNMI3","../state":"6GBqf","../types":"38MWl"}],"iiQGi":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "NewSessionScreen", ()=>NewSessionScreen
@@ -1387,28 +1335,27 @@ const NewSessionScreen = ()=>{
         _state.state.app.newSessionScreen.casinoName = casinoName;
     };
     return _tortieCore.e('div', {
-        id: 'new-session-screen',
         className: 'screen'
     }, _tortieCore.e(_components.SuggestedCasino, {
         onSelect: handleSelectSuggestedCasino
     }), _tortieCore.e('form', {
         id: 'new-session-form'
     }, _tortieCore.e('div', null, _tortieCore.e('label', null, _tortieCore.e('span', null, 'Casino Name'), _tortieCore.e('input', {
-        id: 'casino-name-input',
         type: 'text',
         placeholder: _selectors.appSelectors.mostFrequentCasinoName ?? 'Bellagio',
         required: true,
-        value: _state.state.app.newSessionScreen.casinoName
+        value: _state.state.app.newSessionScreen.casinoName,
+        onInput: (event)=>_state.state.app.newSessionScreen.casinoName = event.target.value
     }))), _tortieCore.e('div', null, _tortieCore.e('label', null, _tortieCore.e('span', null, 'Blinds'), _tortieCore.e(_components.NumberInput, {
-        id: 'small-blind-input',
         placeholder: '2',
         value: _state.state.app.newSessionScreen.smallBlind,
-        max: 100
+        max: 100,
+        onInput: (event)=>_state.state.app.newSessionScreen.smallBlind = event.target.value
     }), _tortieCore.e(_components.NumberInput, {
-        id: 'big-blind-input',
         placeholder: '5',
         value: _state.state.app.newSessionScreen.bigBlind,
-        max: 200
+        max: 200,
+        onInput: (event)=>_state.state.app.newSessionScreen.bigBlind = event.target.value
     })), _tortieCore.e(_components.BlindsButton, {
         smallBlind: 1,
         bigBlind: 2
@@ -1422,9 +1369,9 @@ const NewSessionScreen = ()=>{
         smallBlind: 5,
         bigBlind: 10
     })), _tortieCore.e('div', null, _tortieCore.e('label', null, _tortieCore.e('span', null, 'Max Buyin'), _tortieCore.e(_components.NumberInput, {
-        id: 'max-buyin-input',
         placeholder: '500',
-        value: _state.state.app.newSessionScreen.maxBuyin
+        value: _state.state.app.newSessionScreen.maxBuyin,
+        onInput: (event)=>_state.state.app.newSessionScreen.maxBuyin = event.target.value
     }))), _tortieCore.e('div', null, _tortieCore.e('input', {
         type: 'submit',
         value: 'Start Session'
@@ -1471,7 +1418,6 @@ const ShowSessionScreen = ()=>{
         if (event.target) _state.state.app.showSessionScreen.cashoutAmount = event.target.value;
     };
     return _tortieCore.e('div', {
-        id: 'show-session-screen',
         className: 'screen'
     }, _tortieCore.e('h1', {
         className: 'session-title'
@@ -1481,22 +1427,25 @@ const ShowSessionScreen = ()=>{
         id: 'rebuy-form',
         className: 'section'
     }, _tortieCore.e(_components.NumberInput, {
-        id: 'rebuy-amount-input',
         placeholder: _selectors.appSelectors.currentSession.attributes.maxBuyin.toString(),
-        value: _state.state.app.showSessionScreen.rebuyAmount
+        value: _state.state.app.showSessionScreen.rebuyAmount,
+        onInput: (event)=>_state.state.app.showSessionScreen.rebuyAmount = event.target.value
     }), _tortieCore.e('input', {
         type: 'submit',
         value: 'Rebuy'
     }), _tortieCore.e('input', {
-        id: 'rebuy-max-button',
+        onClick: ()=>_selectors.appSelectors.currentSession?.rebuyMax()
+        ,
         type: 'button',
         value: 'Max'
     })), _tortieCore.e(_components.TipsSection, {
         type: 'dealer',
-        value: session.dealerTips()
+        value: session.dealerTips(),
+        onUpdateTip: (change)=>_selectors.appSelectors.currentSession?.updateDealerTip(change)
     }), _tortieCore.e(_components.TipsSection, {
         type: 'drink',
-        value: session.drinkTips()
+        value: session.drinkTips(),
+        onUpdateTip: (change)=>_selectors.appSelectors.currentSession?.updateDrinkTip(change)
     }), _tortieCore.e('form', {
         id: 'end-session-form',
         className: 'section'
@@ -1515,15 +1464,12 @@ const ShowSessionScreen = ()=>{
         value: _state.state.app.showSessionScreen.cashoutAmount,
         placeholder: (_selectors.appSelectors.currentSession.attributes.maxBuyin * 3).toString(),
         onInput: handleCashoutAmountInput
-    })), _state.state.app.cachedAdminPassword ? '' : _tortieCore.e('div', {
-        id: 'admin-password-area'
-    }, _tortieCore.e('label', null, _tortieCore.e('span', null, 'Password')), _tortieCore.e('input', {
-        id: 'admin-password-input',
+    })), _state.state.app.cachedAdminPassword ? '' : _tortieCore.e('div', null, _tortieCore.e('label', null, _tortieCore.e('span', null, 'Password')), _tortieCore.e('input', {
         type: 'password',
         autocomplete: 'current-password',
-        required: true
+        required: true,
+        onInput: (event)=>_state.state.app.showSessionScreen.adminPassword = event.target.value
     })), _tortieCore.e('input', {
-        id: 'end-session-submit-button',
         type: 'submit',
         value: 'End Session',
         disabled: _state.state.app.showSessionScreen.isSavingSession
@@ -1582,14 +1528,14 @@ parcelHelpers.export(exports, "TipsSection", ()=>TipsSection
 var _tortieCore = require("tortie-core");
 var _utils = require("../../utils");
 var _stylesCss = require("./styles.css");
-const TipsSection = ({ type , value  })=>_tortieCore.e('div', {
+const TipsSection = ({ type , value , onUpdateTip ,  })=>_tortieCore.e('div', {
         className: 'section'
     }, _tortieCore.e('span', null, `${_utils.capitalize(type)} tips: ${value}`), _tortieCore.e('div', null, _tortieCore.e('button', {
         className: 'tip-button',
-        id: `decrement-${type}-tip-button`
+        onClick: ()=>onUpdateTip(-1)
     }, '-'), _tortieCore.e('button', {
         className: 'tip-button',
-        id: `increment-${type}-tip-button`
+        onClick: ()=>onUpdateTip(1)
     }, '+')))
 ;
 
