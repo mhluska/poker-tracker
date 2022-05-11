@@ -1,15 +1,6 @@
-import { PlainObject, Primitive } from './types';
-
 // See https://stackoverflow.com/a/44078785/659910
 export const uuid = () =>
   Date.now().toString(36) + Math.random().toString(36).substring(2);
-
-export const objectIsHtmlElement = (object: unknown): object is HTMLElement =>
-  !!(object as HTMLElement).tagName;
-
-export const objectIsHtmlInputElement = (
-  object: unknown
-): object is HTMLInputElement => !!(object as HTMLInputElement).type;
 
 export const formatDuration = (ms: number) => {
   let seconds = ms / 1000;
@@ -24,37 +15,6 @@ export const formatDuration = (ms: number) => {
   const secondsFormatted = seconds < 10 ? `0${seconds}` : seconds.toString();
 
   return `${hoursFormatted}:${minutesFormatted}:${secondsFormatted}`;
-};
-
-export const isPlainObject = (object: unknown): object is PlainObject =>
-  typeof object === 'object' && !Array.isArray(object);
-
-export const objectSet = (
-  object: PlainObject,
-  key: string,
-  value: Primitive
-) => {
-  if (!key) {
-    return;
-  }
-
-  const subKeys = key.split('.');
-  const lastKey = subKeys.pop();
-
-  if (!lastKey) {
-    return;
-  }
-
-  for (const key of subKeys) {
-    const next = object[key];
-    if (!isPlainObject(next)) {
-      return;
-    }
-
-    object = next;
-  }
-
-  object[lastKey] = value;
 };
 
 export const capitalize = (str: string) =>

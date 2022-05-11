@@ -3,8 +3,12 @@ import { e, FunctionComponent } from 'tortie-core';
 import { NumberInput, TipsSection, Timer } from '../../components';
 import { Session as SessionDecorator } from '../../decorators';
 import { appSelectors } from '../../selectors';
+import { Screen } from '../../types';
+import { Api } from '../../services';
 import { state } from '../../state';
-import './styles.css'
+import './styles.css';
+
+const apiService = new Api();
 
 export const ShowSessionScreen: FunctionComponent = () => {
   if (!appSelectors.currentSession) {
@@ -29,9 +33,70 @@ export const ShowSessionScreen: FunctionComponent = () => {
     }
   };
 
+  const handleSubmitRebuyForm = (event: Event) => {
+    event.preventDefault();
+
+    if (!appSelectors.currentSession) {
+      return;
+    }
+
+    appSelectors.currentSession.rebuy(
+      parseFloat(state.app.showSessionScreen.rebuyAmount)
+    );
+    state.app.showSessionScreen.rebuyAmount = '';
+  };
+
+  const navigateToIntroScreen = () => {
+    window.history.pushState({}, '', '#');
+    state.app.screen = Screen.Intro;
+  };
+
+  const saveToGoogleSheet = async () => {
+    if (!appSelectors.currentSession) {
+      return;
+    }
+
+    appSelectors.currentSession.end(
+      parseFloat(state.app.showSessionScreen.cashoutAmount),
+      state.app.showSessionScreen.notes
+    );
+
+    state.app.showSessionScreen.isSavingSession = true;
+
+    let response;
+
+    try {
+      response = await apiService.saveSession(
+        appSelectors.currentSession,
+        state.app.cachedAdminPassword ?? state.app.showSessionScreen.adminPassword
+      );
+    } finally {
+      state.app.showSessionScreen.isSavingSession = false;
+    }
+
+    if (response.ok) {
+      if (!state.app.cachedAdminPassword) {
+        state.app.cachedAdminPassword = state.app.showSessionScreen.adminPassword;
+      }
+
+      alert('Success!');
+      navigateToIntroScreen();
+    } else {
+      alert('Something went wrong.');
+
+      // TODO: Use changesets so we don't have to do this.
+      appSelectors.currentSession.undoEnd();
+    }
+  };
+
+  const handleSubmitEndSessionForm = (event: Event) => {
+    event.preventDefault();
+    saveToGoogleSheet();
+  };
+
   return e(
     'div',
-    { id: 'show-session-screen', className: 'screen' },
+    { className: 'screen' },
     e('h1', { className: 'session-title' }, session.title()),
     e('div', null, e('span', null, `Profit: $${session.profit()}`)),
     e('div', null, e('span', null, `Start time: ${session.startTime()}`)),
@@ -49,22 +114,39 @@ export const ShowSessionScreen: FunctionComponent = () => {
 
     e(
       'form',
-      { id: 'rebuy-form', className: 'section' },
+      { className: 'section', onSubmit: handleSubmitRebuyForm },
       e(NumberInput, {
-        id: 'rebuy-amount-input',
         placeholder: appSelectors.currentSession.attributes.maxBuyin.toString(),
         value: state.app.showSessionScreen.rebuyAmount,
+        onInput: (event) =>
+          (state.app.showSessionScreen.rebuyAmount = (
+            event.target as HTMLInputElement
+          ).value),
       }),
       e('input', { type: 'submit', value: 'Rebuy' }),
-      e('input', { id: 'rebuy-max-button', type: 'button', value: 'Max' })
+      e('input', {
+        onClick: () => appSelectors.currentSession?.rebuyMax(),
+        type: 'button',
+        value: 'Max',
+      })
     ),
 
-    e(TipsSection, { type: 'dealer', value: session.dealerTips() }),
-    e(TipsSection, { type: 'drink', value: session.drinkTips() }),
+    e(TipsSection, {
+      type: 'dealer',
+      value: session.dealerTips(),
+      onUpdateTip: (change) =>
+        appSelectors.currentSession?.updateDealerTip(change),
+    }),
+    e(TipsSection, {
+      type: 'drink',
+      value: session.drinkTips(),
+      onUpdateTip: (change) =>
+        appSelectors.currentSession?.updateDrinkTip(change),
+    }),
 
     e(
       'form',
-      { id: 'end-session-form', className: 'section' },
+      { className: 'section', onSubmit: handleSubmitEndSessionForm },
       e('input', {
         className: 'hidden',
         type: 'text',
@@ -98,18 +180,20 @@ export const ShowSessionScreen: FunctionComponent = () => {
         ? ''
         : e(
             'div',
-            { id: 'admin-password-area' },
+            null,
             e('label', null, e('span', null, 'Password')),
             e('input', {
-              id: 'admin-password-input',
               type: 'password',
               autocomplete: 'current-password',
               required: true,
+              onInput: (event) =>
+                (state.app.showSessionScreen.adminPassword = (
+                  event.target as HTMLInputElement
+                ).value),
             })
           ),
 
       e('input', {
-        id: 'end-session-submit-button',
         type: 'submit',
         value: 'End Session',
         disabled: state.app.showSessionScreen.isSavingSession,

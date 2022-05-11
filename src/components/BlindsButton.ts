@@ -1,5 +1,7 @@
 import { e, FunctionComponent } from 'tortie-core';
 
+import { state } from '../state';
+
 type Props = {
   smallBlind: number;
   bigBlind: number;
@@ -8,14 +10,20 @@ type Props = {
 export const BlindsButton: FunctionComponent<Props> = ({
   smallBlind,
   bigBlind,
-}) =>
-  e(
+}) => {
+  const handleClickPrefillBlinds = () => {
+    state.app.newSessionScreen.smallBlind = smallBlind.toString();
+    state.app.newSessionScreen.bigBlind = bigBlind.toString();
+    state.app.newSessionScreen.maxBuyin = (bigBlind * 100).toString();
+  };
+
+  return e(
     'button',
     {
       type: 'button',
       className: 'prefill-blinds',
-      'data-small-blind': smallBlind,
-      'data-big-blind': bigBlind,
+      onClick: handleClickPrefillBlinds,
     },
     `${smallBlind}/${bigBlind}`
   );
+};
