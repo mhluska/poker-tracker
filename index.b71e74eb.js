@@ -1066,7 +1066,7 @@ var _suggestedCasino = require("./SuggestedCasino");
 var _timer = require("./Timer");
 var _appFooter = require("./AppFooter");
 
-},{"./BlindsButton":"8hJpf","./IntroScreen":"iudxg","./NewSessionScreen":"iiQGi","./NumberInput":"cCow8","./ShowSessionScreen":"kEhZ6","./TipsSection":"79J6p","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./App":"6aOJQ","./SuggestedCasino":"fQJh5","./Timer":"cVbGh","./AppFooter":"hvH5W"}],"8hJpf":[function(require,module,exports) {
+},{"./BlindsButton":"8hJpf","./IntroScreen":"iudxg","./NewSessionScreen":"iiQGi","./NumberInput":"cCow8","./ShowSessionScreen":"cEjtd","./TipsSection":"kNF34","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./App":"69iFB","./SuggestedCasino":"fQJh5","./Timer":"cVbGh","./AppFooter":"jeym2"}],"8hJpf":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "BlindsButton", ()=>BlindsButton
@@ -1450,16 +1450,17 @@ const NumberInput = ({ id , placeholder , value , min =1 , max , onInput ,  })=>
     })
 ;
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","tortie-core":"bNMI3"}],"kEhZ6":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","tortie-core":"bNMI3"}],"cEjtd":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "ShowSessionScreen", ()=>ShowSessionScreen
 );
 var _tortieCore = require("tortie-core");
-var _components = require("../components");
-var _decorators = require("../decorators");
-var _selectors = require("../selectors");
-var _state = require("../state");
+var _components = require("../../components");
+var _decorators = require("../../decorators");
+var _selectors = require("../../selectors");
+var _state = require("../../state");
+var _stylesCss = require("./styles.css");
 const ShowSessionScreen = ()=>{
     if (!_selectors.appSelectors.currentSession) return null;
     const session = new _decorators.Session(_selectors.appSelectors.currentSession);
@@ -1473,7 +1474,7 @@ const ShowSessionScreen = ()=>{
         id: 'show-session-screen',
         className: 'screen'
     }, _tortieCore.e('h1', {
-        id: 'session-title'
+        className: 'session-title'
     }, session.title()), _tortieCore.e('div', null, _tortieCore.e('span', null, `Profit: $${session.profit()}`)), _tortieCore.e('div', null, _tortieCore.e('span', null, `Start time: ${session.startTime()}`)), _selectors.appSelectors.currentSession.startTime && _tortieCore.e('div', null, _tortieCore.e('span', null, 'Time elapsed: ', _tortieCore.e(_components.Timer, {
         startTime: _selectors.appSelectors.currentSession.startTime
     }))), _tortieCore.e('form', {
@@ -1529,7 +1530,7 @@ const ShowSessionScreen = ()=>{
     })));
 };
 
-},{"../components":"dHnah","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../decorators":"7km9a","../selectors":"2OUoq","../state":"6GBqf","tortie-core":"bNMI3"}],"7km9a":[function(require,module,exports) {
+},{"tortie-core":"bNMI3","./styles.css":"ddS5y","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../../components":"dHnah","../../decorators":"7km9a","../../selectors":"2OUoq","../../state":"6GBqf"}],"ddS5y":[function() {},{}],"7km9a":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Session", ()=>_session.Session
@@ -1573,13 +1574,14 @@ class Session {
     }
 }
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"79J6p":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"kNF34":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "TipsSection", ()=>TipsSection
 );
 var _tortieCore = require("tortie-core");
-var _utils = require("../utils");
+var _utils = require("../../utils");
+var _stylesCss = require("./styles.css");
 const TipsSection = ({ type , value  })=>_tortieCore.e('div', {
         className: 'section'
     }, _tortieCore.e('span', null, `${_utils.capitalize(type)} tips: ${value}`), _tortieCore.e('div', null, _tortieCore.e('button', {
@@ -1591,15 +1593,16 @@ const TipsSection = ({ type , value  })=>_tortieCore.e('div', {
     }, '+')))
 ;
 
-},{"../utils":"dsXzW","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","tortie-core":"bNMI3"}],"6aOJQ":[function(require,module,exports) {
+},{"tortie-core":"bNMI3","./styles.css":"dvAXf","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../../utils":"dsXzW"}],"dvAXf":[function() {},{}],"69iFB":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "App", ()=>App
 );
 var _tortieCore = require("tortie-core");
-var _ = require(".");
-var _types = require("../types");
-var _state = require("../state");
+var _ = require("..");
+var _types = require("../../types");
+var _state = require("../../state");
+var _stylesCss = require("./styles.css");
 const selectScreen = (screen)=>{
     switch(screen){
         case _types.Screen.Intro:
@@ -1619,7 +1622,7 @@ const App = ()=>{
     }, _tortieCore.e(Screen), _tortieCore.e(_.AppFooter));
 };
 
-},{".":"dHnah","../types":"38MWl","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","tortie-core":"bNMI3"}],"fQJh5":[function(require,module,exports) {
+},{"tortie-core":"bNMI3","./styles.css":"14Ghk","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","..":"dHnah","../../types":"38MWl","../../state":"6GBqf"}],"14Ghk":[function() {},{}],"fQJh5":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "SuggestedCasino", ()=>SuggestedCasino
@@ -1654,12 +1657,13 @@ const Timer = ({ startTime  })=>{
     return _tortieCore.e('span', null, timeElaped.toString());
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../utils":"dsXzW","tortie-core":"bNMI3"}],"hvH5W":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../utils":"dsXzW","tortie-core":"bNMI3"}],"jeym2":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "AppFooter", ()=>AppFooter
 );
 var _tortieCore = require("tortie-core");
+var _stylesCss = require("./styles.css");
 const MILLISECONDS_IN_ONE_SECOND = 1000;
 const AppFooter = ()=>{
     const [footerHidden, setFooterHidden] = _tortieCore.useState(false);
@@ -1669,7 +1673,7 @@ const AppFooter = ()=>{
         }, 3 * MILLISECONDS_IN_ONE_SECOND);
     }, []);
     return _tortieCore.e('div', {
-        className: `app-footer ${footerHidden ? 'invisible' : ''}`
+        className: `app-footer ${footerHidden ? 'app-footer--invisible' : ''}`
     }, 'Powered by ', _tortieCore.e('a', {
         href: 'https://github.com/mhluska/tortie',
         target: '_blank',
@@ -1677,6 +1681,6 @@ const AppFooter = ()=>{
     }, 'tortie'));
 };
 
-},{"tortie-core":"bNMI3","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["8wcER","h7u1C"], "h7u1C", "parcelRequirefb1b")
+},{"tortie-core":"bNMI3","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./styles.css":"iYPF0"}],"iYPF0":[function() {},{}]},["8wcER","h7u1C"], "h7u1C", "parcelRequirefb1b")
 
 //# sourceMappingURL=index.b71e74eb.js.map

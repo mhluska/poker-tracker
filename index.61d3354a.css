@@ -125,14 +125,9 @@ a {
   color: inherit;
 }
 
-.app {
-  flex-direction: column;
-  justify-content: space-between;
-  display: flex;
-}
-
-#root, .app, .screen {
+.screen {
   flex-grow: 1;
+  padding: 1em;
 }
 
 .hidden {
@@ -144,19 +139,14 @@ a {
   display: block;
 }
 
-.screen, .app-footer {
-  padding: 1em;
+#root {
+  height: 100%;
+  flex-grow: 1;
+  display: flex;
 }
 
-.app-footer {
-  opacity: 1;
-  font-size: .8em;
-  transition: opacity 1s ease-out;
-}
-
-.app-footer.invisible {
-  opacity: 0;
-  pointer-events: none;
+.session-title {
+  margin-top: 0;
 }
 
 .tip-button {
@@ -165,13 +155,23 @@ a {
   margin: .5em 0;
 }
 
-#session-title {
-  margin-top: 0;
+.app {
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: space-between;
+  display: flex;
 }
 
-#root {
-  height: 100%;
-  display: flex;
+.app-footer {
+  opacity: 1;
+  padding: 1em;
+  font-size: .8em;
+  transition: opacity 1s ease-out;
+}
+
+.app-footer--invisible {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /*# sourceMappingURL=index.61d3354a.css.map */
