@@ -1081,284 +1081,78 @@ const BlindsButton = ({ smallBlind , bigBlind ,  })=>_tortieCore.e('button', {
 ;
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","tortie-core":"bNMI3"}],"bNMI3":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "render", ()=>_render.render
-);
-parcelHelpers.export(exports, "createVirtualElement", ()=>_render.createVirtualElement
-);
-parcelHelpers.export(exports, "e", ()=>_render.e
-);
-parcelHelpers.export(exports, "useEffect", ()=>_hooks.useEffect
-);
-parcelHelpers.export(exports, "useState", ()=>_hooks.useState
-);
-var _render = require("./render");
-var _hooks = require("./hooks");
-
-},{"./render":"lPZVa","./hooks":"eyl8R","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"lPZVa":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "createVirtualElement", ()=>createVirtualElement
-);
-parcelHelpers.export(exports, "e", ()=>e
-);
-parcelHelpers.export(exports, "reconcile", ()=>reconcile
-);
-parcelHelpers.export(exports, "render", ()=>render
-);
-var _types = require("./types");
-var _utils = require("./utils");
-var _hooks = require("./hooks");
-var _polyfills = require("./polyfills");
-var ElementProperties;
-(function(ElementProperties1) {
-    ElementProperties1["Value"] = "value";
-    ElementProperties1["ClassName"] = "className";
-})(ElementProperties || (ElementProperties = {}));
-const ELEMENT_PROPERTIES = new Set(Object.values(ElementProperties));
-const EVENT_PROPS = new Map([
-    [
-        'onInput',
-        'input'
-    ],
-    [
-        'onClick',
-        'click'
-    ], 
-]);
-const createVirtualStringElement = (value)=>({
-        type: 'String',
-        value
-    })
-;
-function createVirtualElement(type, props, ...children) {
-    return typeof type === 'function' ? {
-        type,
-        props: props || {},
-        result: null
-    } : {
-        type,
-        props: Object.assign(Object.assign({}, props), {
-            tagName: type || 'div'
-        }),
-        children: children.map((child)=>typeof child === 'string' ? createVirtualStringElement(child) : child
-        )
-    };
+function $parcel$export(e, n, v, s) {
+    Object.defineProperty(e, n, {
+        get: v,
+        set: s,
+        enumerable: true,
+        configurable: true
+    });
 }
-const e = createVirtualElement;
-const reconcileEventHandlerProps = (domNode, nativeEventName, prevValue, newValue)=>{
-    if (prevValue === newValue) return;
-    if (prevValue) domNode.removeEventListener(nativeEventName, prevValue);
-    if (newValue) domNode.addEventListener(nativeEventName, newValue);
-};
-const reconcileProps = (domNode, prevNode, newNode)=>{
-    if ((prevNode === null || prevNode === void 0 ? void 0 : prevNode.type) === 'String' || (newNode === null || newNode === void 0 ? void 0 : newNode.type) === 'String') return;
-    const prevPropKeys = prevNode ? _utils.keys(prevNode.props) : [];
-    const newPropKeys = newNode ? _utils.keys(newNode.props) : [];
-    for (const name of newPropKeys.concat(prevPropKeys)){
-        const prevValue = prevNode === null || prevNode === void 0 ? void 0 : prevNode.props[name];
-        const newValue = newNode === null || newNode === void 0 ? void 0 : newNode.props[name];
-        // HACK: With properties (as opposed to attributes), our crappy virtal DOM
-        // can get out of sync after user input so we just always write.
-        if (ELEMENT_PROPERTIES.has(name)) {
-            // TODO: Fix type `Element` being too generic here.
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            domNode[name] = newValue === undefined ? '' : newValue;
-            continue;
-        }
-        if (prevValue === newValue) continue;
-        if (name === 'onClick' || name === 'onInput') {
-            const nativeEventName = EVENT_PROPS.get(name);
-            if (nativeEventName) reconcileEventHandlerProps(domNode, nativeEventName, prevNode === null || prevNode === void 0 ? void 0 : prevNode.props[name], newNode === null || newNode === void 0 ? void 0 : newNode.props[name]);
-            continue;
-        }
-        if (typeof newValue === 'boolean') {
-            if (newValue) domNode.setAttribute(name, '');
-            else domNode.removeAttribute(name);
-        } else if (typeof newValue === 'undefined') domNode.removeAttribute(name);
-        else domNode.setAttribute(name, String(newValue));
-    }
-};
-const createDomNode = (virtualElement)=>{
-    if (!virtualElement) return null;
-    if (virtualElement.type === 'String') return appDocument.createTextNode(virtualElement.value);
-    if (_utils.isVirtualFunctionElement(virtualElement)) return createDomNode(_hooks.mountWithHooks(virtualElement, forceRender));
-    const { children , type: tagName  } = virtualElement;
-    const element = appDocument.createElement(tagName);
-    reconcileProps(element, null, virtualElement);
-    for (const child of children){
-        if (!child) continue;
-        const childDomElement = createDomNode(child);
-        if (!childDomElement) continue;
-        element.appendChild(childDomElement);
-    }
-    return element;
-};
-const reconcileStrings = (domNode, prevNode, newNode)=>{
-    if (prevNode.value === newNode.value) return;
-    if (_utils.isElementNode(domNode)) _utils.replaceNode(domNode, createDomNode(newNode));
-    else if (_utils.isTextNode(domNode)) domNode.replaceData(0, domNode.length, newNode.value);
-};
-const reconcile = (domNode, prevNode, newNode)=>{
-    if (!newNode) {
-        domNode.remove();
-        return;
-    }
-    if (!prevNode || prevNode.type !== newNode.type) {
-        if (prevNode && _utils.isVirtualFunctionElement(prevNode)) // TODO: This should happen recursively for all child nodes being removed.
-        _hooks.unmountWithHooks(prevNode);
-        _utils.replaceNode(domNode, createDomNode(newNode));
-        return;
-    }
-    // We needlessly have to repeatedly check the type of `prevNode` here even
-    // though we ensure that both types are the same above.
-    // See https://stackoverflow.com/questions/71397541
-    if (prevNode.type === 'String' && newNode.type === 'String') {
-        reconcileStrings(domNode, prevNode, newNode);
-        return;
-    }
-    if (_utils.isTextNode(domNode)) {
-        _utils.replaceNode(domNode, createDomNode(newNode));
-        return;
-    }
-    if (_utils.isVirtualFunctionElement(prevNode) && _utils.isVirtualFunctionElement(newNode)) {
-        reconcile(domNode, prevNode.result, _hooks.mountWithHooks(newNode, forceRender));
-        return;
-    }
-    if (_utils.isVirtualNativeElement(prevNode) && _utils.isVirtualNativeElement(newNode)) {
-        reconcileProps(domNode, prevNode, newNode);
-        const domNodeChildren = Array.from(domNode.childNodes).filter((node)=>node.nodeType === _types.NodeTypes.Element || node.nodeType === _types.NodeTypes.Text
-        );
-        newNode.children.forEach((newNodeChild, index)=>{
-            const domNodeChild = domNodeChildren[index];
-            if (domNodeChild) reconcile(domNodeChild, prevNode.children[index], newNodeChild);
-            else if (newNodeChild) {
-                const node = createDomNode(newNodeChild);
-                if (node) domNode.appendChild(node);
-            }
-        });
-    }
-};
-let prevVirtualElement = createVirtualElement('div');
-let forceRender;
-let appDocument;
-let polyfilled = false;
-const render = (component, appRoot)=>{
-    // Lets us avoid calling `global.document` so we can run this in a Node
-    // environment. Particularly useful for testing.
-    appDocument = appRoot.ownerDocument;
-    if (!polyfilled && appDocument.defaultView) {
-        _polyfills.polyfillAll(appDocument.defaultView);
-        polyfilled = true;
-    }
-    const virtualElement = createVirtualElement('div', null, component);
-    // We cache this for use in `mountWithHooks` (the `useState` hook needs to be
-    // able to trigger renders).
-    // TODO: Add the ability to do a partial render. We'd need to stop comparing
-    // the prev virtual DOM against current and instead just compare the real DOM
-    // against the current.
-    forceRender = ()=>render(component, appRoot)
-    ;
-    reconcile(appRoot, prevVirtualElement, virtualElement);
-    prevVirtualElement = virtualElement;
-};
-
-},{"./types":"4r5H9","./utils":"4uqbk","./hooks":"eyl8R","./polyfills":"8yIst","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"4r5H9":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "NodeTypes", ()=>NodeTypes
+$parcel$export(module.exports, "render", ()=>$6282e142bf746237$export$b3890eb0ae9dca99
 );
-var NodeTypes;
-(function(NodeTypes1) {
-    NodeTypes1[NodeTypes1["Element"] = 1] = "Element";
-    NodeTypes1[NodeTypes1["Text"] = 3] = "Text";
-})(NodeTypes || (NodeTypes = {}));
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"4uqbk":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "keys", ()=>keys
+$parcel$export(module.exports, "createVirtualElement", ()=>$6282e142bf746237$export$e1e7a9dd34b01909
 );
-parcelHelpers.export(exports, "isVirtualFunctionElement", ()=>isVirtualFunctionElement
+$parcel$export(module.exports, "e", ()=>$6282e142bf746237$export$f1e1789686576879
 );
-parcelHelpers.export(exports, "isVirtualStringElement", ()=>isVirtualStringElement
+$parcel$export(module.exports, "useEffect", ()=>$a8eda090f2a27456$export$6d9c69b0de29b591
 );
-parcelHelpers.export(exports, "isVirtualNativeElement", ()=>isVirtualNativeElement
+$parcel$export(module.exports, "useState", ()=>$a8eda090f2a27456$export$60241385465d0a34
 );
-parcelHelpers.export(exports, "isElementNode", ()=>isElementNode
-);
-parcelHelpers.export(exports, "isTextNode", ()=>isTextNode
-);
-parcelHelpers.export(exports, "replaceNode", ()=>replaceNode
-);
-parcelHelpers.export(exports, "arraysEqual", ()=>arraysEqual
-);
-var _types = require("./types");
-const keys = Object.keys;
-const isVirtualFunctionElement = (virtualElement)=>typeof virtualElement.type === 'function'
+let $faefaad95e5fcca0$export$2ed9472effad1b70;
+(function($faefaad95e5fcca0$export$2ed9472effad1b701) {
+    $faefaad95e5fcca0$export$2ed9472effad1b701[$faefaad95e5fcca0$export$2ed9472effad1b701["Element"] = 1] = "Element";
+    $faefaad95e5fcca0$export$2ed9472effad1b701[$faefaad95e5fcca0$export$2ed9472effad1b701["Text"] = 3] = "Text";
+})($faefaad95e5fcca0$export$2ed9472effad1b70 || ($faefaad95e5fcca0$export$2ed9472effad1b70 = {}));
+const $9ba0f9a5c47c04f2$export$ed97f33186d4b816 = Object.keys;
+const $9ba0f9a5c47c04f2$export$1f142f2b4209d4fb = (virtualElement)=>typeof virtualElement.type === 'function'
 ;
-const isVirtualStringElement = (virtualElement)=>virtualElement.type === 'String'
+const $9ba0f9a5c47c04f2$export$8e6ee0da8e48457 = (virtualElement)=>virtualElement.type === 'String'
 ;
-const isVirtualNativeElement = (virtualElement)=>!isVirtualStringElement(virtualElement) && !isVirtualFunctionElement(virtualElement)
+const $9ba0f9a5c47c04f2$export$c3bf1ddc270d7633 = (virtualElement)=>!$9ba0f9a5c47c04f2$export$8e6ee0da8e48457(virtualElement) && !$9ba0f9a5c47c04f2$export$1f142f2b4209d4fb(virtualElement)
 ;
-const isElementNode = (node)=>node.nodeType === _types.NodeTypes.Element
+const $9ba0f9a5c47c04f2$export$95fe5d3c5526a812 = (node)=>node.nodeType === $faefaad95e5fcca0$export$2ed9472effad1b70.Element
 ;
-const isTextNode = (node)=>node.nodeType === _types.NodeTypes.Text
+const $9ba0f9a5c47c04f2$export$ccbedd67ef6e9417 = (node)=>node.nodeType === $faefaad95e5fcca0$export$2ed9472effad1b70.Text
 ;
-const replaceNode = (node, newNode)=>{
-    var _a;
+const $9ba0f9a5c47c04f2$export$5542201de9311ab2 = (node, newNode)=>{
     if (!newNode) return;
-    (_a = node.parentElement) === null || _a === void 0 || _a.replaceChild(newNode, node);
+    node.parentElement?.replaceChild(newNode, node);
 };
-const arraysEqual = (arr1, arr2)=>{
+const $9ba0f9a5c47c04f2$export$234180f8206db11b = (arr1, arr2)=>{
     if (arr1.length !== arr2.length) return false;
     for(let i = 0; i < arr1.length; i += 1){
         if (arr1[i] !== arr2[i]) return false;
     }
     return true;
 };
-
-},{"./types":"4r5H9","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"eyl8R":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "useEffect", ()=>useEffect
-);
-parcelHelpers.export(exports, "useState", ()=>useState
-);
-parcelHelpers.export(exports, "mountWithHooks", ()=>mountWithHooks
-);
-parcelHelpers.export(exports, "unmountWithHooks", ()=>unmountWithHooks
-);
-var _utils = require("./utils");
-let currentComponent;
-let currentForceRender;
+let $a8eda090f2a27456$var$currentComponent;
+let $a8eda090f2a27456$var$currentForceRender;
 // TODO: Since hooks should always fire in the same order, we could just push
 // all hook data onto a single array with an index that increments per call.
 // That way we don't keep in memory other hooks data when we don't need to.
-const hooks = {
+const $a8eda090f2a27456$var$hooks = {
     useState: new Map(),
     useEffect: new Map()
 };
-const useEffect = (callback, dependencies)=>{
-    const componentEffects = hooks.useEffect.get(currentComponent) || [];
+const $a8eda090f2a27456$export$6d9c69b0de29b591 = (callback, dependencies)=>{
+    const componentEffects = $a8eda090f2a27456$var$hooks.useEffect.get($a8eda090f2a27456$var$currentComponent) || [];
     componentEffects.push({
-        callback,
-        dependencies,
+        callback: callback,
+        dependencies: dependencies,
         unmountCallback: undefined
     });
-    hooks.useEffect.set(currentComponent, componentEffects);
+    $a8eda090f2a27456$var$hooks.useEffect.set($a8eda090f2a27456$var$currentComponent, componentEffects);
 };
-const useState = (initialValue)=>{
-    let componentHookData = hooks.useState.get(currentComponent);
+const $a8eda090f2a27456$export$60241385465d0a34 = (initialValue)=>{
+    let componentHookData = $a8eda090f2a27456$var$hooks.useState.get($a8eda090f2a27456$var$currentComponent);
     if (!componentHookData) {
         componentHookData = [
             {
                 value: initialValue
             }
         ];
-        hooks.useState.set(currentComponent, componentHookData);
+        $a8eda090f2a27456$var$hooks.useState.set($a8eda090f2a27456$var$currentComponent, componentHookData);
     }
     // TODO: Make this work with multiple useState calls.
     const hook = componentHookData[componentHookData.length - 1];
@@ -1370,7 +1164,7 @@ const useState = (initialValue)=>{
             // `requestIdleCallback` to ensure the next render runs after the current
             // one is complete.
             // TODO: Once fibers are implemented, this can go away.
-            requestIdleCallback(currentForceRender);
+            requestIdleCallback($a8eda090f2a27456$var$currentForceRender);
         }
     };
     // TODO: Can we avoid the cast here? Otherwise value would be `unknown`
@@ -1380,47 +1174,192 @@ const useState = (initialValue)=>{
         setState
     ];
 };
-const mountWithHooks = (virtualElement, forceRender)=>{
-    currentComponent = virtualElement.type;
-    currentForceRender = forceRender;
-    const prevEffects = hooks.useEffect.get(virtualElement.type);
+const $a8eda090f2a27456$export$1f54128a3b72f976 = (virtualElement, forceRender)=>{
+    $a8eda090f2a27456$var$currentComponent = virtualElement.type;
+    $a8eda090f2a27456$var$currentForceRender = forceRender;
+    const prevEffects = $a8eda090f2a27456$var$hooks.useEffect.get(virtualElement.type);
     // Repopulates after calling the function component below.
-    hooks.useEffect.delete(virtualElement.type);
+    $a8eda090f2a27456$var$hooks.useEffect.delete(virtualElement.type);
     virtualElement.result = virtualElement.type(virtualElement.props);
-    const currentUseEffectCalls = hooks.useEffect.get(currentComponent);
+    const currentUseEffectCalls = $a8eda090f2a27456$var$hooks.useEffect.get($a8eda090f2a27456$var$currentComponent);
     if (!currentUseEffectCalls || currentUseEffectCalls.length === 0) return virtualElement.result;
     currentUseEffectCalls.forEach((nextEffect, index)=>{
-        const prevEffect = prevEffects === null || prevEffects === void 0 ? void 0 : prevEffects[index];
-        if (prevEffect && _utils.arraysEqual(prevEffect.dependencies, nextEffect.dependencies)) nextEffect.unmountCallback = prevEffect.unmountCallback;
+        const prevEffect = prevEffects?.[index];
+        if (prevEffect && $9ba0f9a5c47c04f2$export$234180f8206db11b(prevEffect.dependencies, nextEffect.dependencies)) nextEffect.unmountCallback = prevEffect.unmountCallback;
         else nextEffect.unmountCallback = nextEffect.callback();
     });
     return virtualElement.result;
 };
-const unmountWithHooks = (virtualElement)=>{
-    const componentEffects = hooks.useEffect.get(virtualElement.type);
+const $a8eda090f2a27456$export$5dbc7eba4ac92ab9 = (virtualElement)=>{
+    const componentEffects = $a8eda090f2a27456$var$hooks.useEffect.get(virtualElement.type);
     if (!componentEffects) return virtualElement.result;
-    for (const { unmountCallback  } of componentEffects)if (unmountCallback) unmountCallback();
-    hooks.useEffect.delete(virtualElement.type);
-    hooks.useState.delete(virtualElement.type);
+    for (const { unmountCallback: unmountCallback  } of componentEffects)if (unmountCallback) unmountCallback();
+    $a8eda090f2a27456$var$hooks.useEffect.delete(virtualElement.type);
+    $a8eda090f2a27456$var$hooks.useState.delete(virtualElement.type);
     return virtualElement.result;
 };
-
-},{"./utils":"4uqbk","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"8yIst":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "polyfillRequestIdleCallback", ()=>polyfillRequestIdleCallback
-);
-parcelHelpers.export(exports, "polyfillAll", ()=>polyfillAll
-);
-const polyfillRequestIdleCallback = (window)=>{
+const $de1f0c81d0bd7057$export$3ed58cadf6a78866 = (window)=>{
     if (typeof window.requestIdleCallback === 'undefined') window.requestIdleCallback = (callback, options)=>setTimeout(callback, 0)
     ;
 };
-const polyfillAll = (window)=>{
-    polyfillRequestIdleCallback(window);
+const $de1f0c81d0bd7057$export$a4d8dbbf1b4206a6 = (window)=>{
+    $de1f0c81d0bd7057$export$3ed58cadf6a78866(window);
+};
+let $6282e142bf746237$var$ElementProperties;
+(function(ElementProperties) {
+    ElementProperties["Value"] = 'value';
+    ElementProperties["ClassName"] = 'className';
+})($6282e142bf746237$var$ElementProperties || ($6282e142bf746237$var$ElementProperties = {}));
+const $6282e142bf746237$var$ELEMENT_PROPERTIES = new Set(Object.values($6282e142bf746237$var$ElementProperties));
+const $6282e142bf746237$var$EVENT_PROPS = new Map([
+    [
+        'onInput',
+        'input'
+    ],
+    [
+        'onClick',
+        'click'
+    ], 
+]);
+const $6282e142bf746237$var$createVirtualStringElement = (value)=>({
+        type: 'String',
+        value: value
+    })
+;
+function $6282e142bf746237$export$e1e7a9dd34b01909(type, props, ...children) {
+    return typeof type === 'function' ? {
+        type: type,
+        props: props || {},
+        result: null
+    } : {
+        type: type,
+        props: {
+            ...props,
+            tagName: type || 'div'
+        },
+        children: children.map((child)=>typeof child === 'string' ? $6282e142bf746237$var$createVirtualStringElement(child) : child
+        )
+    };
+}
+const $6282e142bf746237$export$f1e1789686576879 = $6282e142bf746237$export$e1e7a9dd34b01909;
+const $6282e142bf746237$var$reconcileEventHandlerProps = (domNode, nativeEventName, prevValue, newValue)=>{
+    if (prevValue === newValue) return;
+    if (prevValue) domNode.removeEventListener(nativeEventName, prevValue);
+    if (newValue) domNode.addEventListener(nativeEventName, newValue);
+};
+const $6282e142bf746237$var$reconcileProps = (domNode, prevNode, newNode)=>{
+    if (prevNode?.type === 'String' || newNode?.type === 'String') return;
+    const prevPropKeys = prevNode ? $9ba0f9a5c47c04f2$export$ed97f33186d4b816(prevNode.props) : [];
+    const newPropKeys = newNode ? $9ba0f9a5c47c04f2$export$ed97f33186d4b816(newNode.props) : [];
+    for (const name of newPropKeys.concat(prevPropKeys)){
+        const prevValue = prevNode?.props[name];
+        const newValue = newNode?.props[name];
+        // HACK: With properties (as opposed to attributes), our crappy virtal DOM
+        // can get out of sync after user input so we just always write.
+        if ($6282e142bf746237$var$ELEMENT_PROPERTIES.has(name)) {
+            // TODO: Fix type `Element` being too generic here.
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            domNode[name] = newValue === undefined ? '' : newValue;
+            continue;
+        }
+        if (prevValue === newValue) continue;
+        if (name === 'onClick' || name === 'onInput') {
+            const nativeEventName = $6282e142bf746237$var$EVENT_PROPS.get(name);
+            if (nativeEventName) $6282e142bf746237$var$reconcileEventHandlerProps(domNode, nativeEventName, prevNode?.props[name], newNode?.props[name]);
+            continue;
+        }
+        if (typeof newValue === 'boolean') {
+            if (newValue) domNode.setAttribute(name, '');
+            else domNode.removeAttribute(name);
+        } else if (typeof newValue === 'undefined') domNode.removeAttribute(name);
+        else domNode.setAttribute(name, String(newValue));
+    }
+};
+const $6282e142bf746237$var$createDomNode = (virtualElement)=>{
+    if (!virtualElement) return null;
+    if (virtualElement.type === 'String') return $6282e142bf746237$var$appDocument.createTextNode(virtualElement.value);
+    if ($9ba0f9a5c47c04f2$export$1f142f2b4209d4fb(virtualElement)) return $6282e142bf746237$var$createDomNode($a8eda090f2a27456$export$1f54128a3b72f976(virtualElement, $6282e142bf746237$var$forceRender));
+    const { children: children , type: tagName  } = virtualElement;
+    const element = $6282e142bf746237$var$appDocument.createElement(tagName);
+    $6282e142bf746237$var$reconcileProps(element, null, virtualElement);
+    for (const child of children){
+        if (!child) continue;
+        const childDomElement = $6282e142bf746237$var$createDomNode(child);
+        if (!childDomElement) continue;
+        element.appendChild(childDomElement);
+    }
+    return element;
+};
+const $6282e142bf746237$var$reconcileStrings = (domNode, prevNode, newNode)=>{
+    if (prevNode.value === newNode.value) return;
+    if ($9ba0f9a5c47c04f2$export$95fe5d3c5526a812(domNode)) $9ba0f9a5c47c04f2$export$5542201de9311ab2(domNode, $6282e142bf746237$var$createDomNode(newNode));
+    else if ($9ba0f9a5c47c04f2$export$ccbedd67ef6e9417(domNode)) domNode.replaceData(0, domNode.length, newNode.value);
+};
+const $6282e142bf746237$export$38319cad1f6d89e0 = (domNode, prevNode, newNode)=>{
+    if (!newNode) {
+        domNode.remove();
+        return;
+    }
+    if (!prevNode || prevNode.type !== newNode.type) {
+        if (prevNode && $9ba0f9a5c47c04f2$export$1f142f2b4209d4fb(prevNode)) $a8eda090f2a27456$export$5dbc7eba4ac92ab9(prevNode);
+        $9ba0f9a5c47c04f2$export$5542201de9311ab2(domNode, $6282e142bf746237$var$createDomNode(newNode));
+        return;
+    }
+    // We needlessly have to repeatedly check the type of `prevNode` here even
+    // though we ensure that both types are the same above.
+    // See https://stackoverflow.com/questions/71397541
+    if (prevNode.type === 'String' && newNode.type === 'String') {
+        $6282e142bf746237$var$reconcileStrings(domNode, prevNode, newNode);
+        return;
+    }
+    if ($9ba0f9a5c47c04f2$export$ccbedd67ef6e9417(domNode)) {
+        $9ba0f9a5c47c04f2$export$5542201de9311ab2(domNode, $6282e142bf746237$var$createDomNode(newNode));
+        return;
+    }
+    if ($9ba0f9a5c47c04f2$export$1f142f2b4209d4fb(prevNode) && $9ba0f9a5c47c04f2$export$1f142f2b4209d4fb(newNode)) {
+        $6282e142bf746237$export$38319cad1f6d89e0(domNode, prevNode.result, $a8eda090f2a27456$export$1f54128a3b72f976(newNode, $6282e142bf746237$var$forceRender));
+        return;
+    }
+    if ($9ba0f9a5c47c04f2$export$c3bf1ddc270d7633(prevNode) && $9ba0f9a5c47c04f2$export$c3bf1ddc270d7633(newNode)) {
+        $6282e142bf746237$var$reconcileProps(domNode, prevNode, newNode);
+        const domNodeChildren = Array.from(domNode.childNodes).filter((node)=>node.nodeType === $faefaad95e5fcca0$export$2ed9472effad1b70.Element || node.nodeType === $faefaad95e5fcca0$export$2ed9472effad1b70.Text
+        );
+        newNode.children.forEach((newNodeChild, index)=>{
+            const domNodeChild = domNodeChildren[index];
+            if (domNodeChild) $6282e142bf746237$export$38319cad1f6d89e0(domNodeChild, prevNode.children[index], newNodeChild);
+            else if (newNodeChild) {
+                const node = $6282e142bf746237$var$createDomNode(newNodeChild);
+                if (node) domNode.appendChild(node);
+            }
+        });
+    }
+};
+let $6282e142bf746237$var$prevVirtualElement = $6282e142bf746237$export$e1e7a9dd34b01909('div');
+let $6282e142bf746237$var$forceRender;
+let $6282e142bf746237$var$appDocument;
+let $6282e142bf746237$var$polyfilled = false;
+const $6282e142bf746237$export$b3890eb0ae9dca99 = (component, appRoot)=>{
+    // Lets us avoid calling `global.document` so we can run this in a Node
+    // environment. Particularly useful for testing.
+    $6282e142bf746237$var$appDocument = appRoot.ownerDocument;
+    if (!$6282e142bf746237$var$polyfilled && $6282e142bf746237$var$appDocument.defaultView) {
+        $de1f0c81d0bd7057$export$a4d8dbbf1b4206a6($6282e142bf746237$var$appDocument.defaultView);
+        $6282e142bf746237$var$polyfilled = true;
+    }
+    const virtualElement = $6282e142bf746237$export$e1e7a9dd34b01909('div', null, component);
+    // We cache this for use in `mountWithHooks` (the `useState` hook needs to be
+    // able to trigger renders).
+    // TODO: Add the ability to do a partial render. We'd need to stop comparing
+    // the prev virtual DOM against current and instead just compare the real DOM
+    // against the current.
+    $6282e142bf746237$var$forceRender = ()=>$6282e142bf746237$export$b3890eb0ae9dca99(component, appRoot)
+    ;
+    $6282e142bf746237$export$38319cad1f6d89e0(appRoot, $6282e142bf746237$var$prevVirtualElement, virtualElement);
+    $6282e142bf746237$var$prevVirtualElement = virtualElement;
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"iudxg":[function(require,module,exports) {
+},{}],"iudxg":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "IntroScreen", ()=>IntroScreen
