@@ -514,339 +514,19 @@ function hmrAcceptRun(bundle, id) {
 }
 
 },{}],"h7u1C":[function(require,module,exports) {
-var _utils = require("./utils");
 var _components = require("./components");
 var _tortieCore = require("tortie-core");
 var _state = require("./state");
-var _types = require("./types");
-var _services = require("./services");
-var _models = require("./models");
-var _selectors = require("./selectors");
 const SAVE_APP_STATE_INTERVAL_MS = 10000;
-const navigateToIntroScreen = ()=>{
-    window.history.pushState({}, '', '#');
-    _state.state.app.screen = _types.Screen.Intro;
-};
-const navigateToShowSessionScreen = (session)=>{
-    window.history.pushState({}, '', `#/sessions/${session.id}`);
-    _state.state.app.currentSessionId = session.id;
-    _state.state.app.screen = _types.Screen.ShowSession;
-};
-const rebuy = ()=>{
-    if (!_selectors.appSelectors.currentSession) return;
-    _selectors.appSelectors.currentSession.rebuy(parseFloat(_state.state.app.showSessionScreen.rebuyAmount));
-    _state.state.app.showSessionScreen.rebuyAmount = '';
-};
-const createSession = ()=>{
-    const session = _models.Session.create(_state.state.app.newSessionScreen.casinoName, parseInt(_state.state.app.newSessionScreen.smallBlind), parseInt(_state.state.app.newSessionScreen.bigBlind), parseInt(_state.state.app.newSessionScreen.maxBuyin));
-    session.start();
-    navigateToShowSessionScreen(session);
-};
-const saveToGoogleSheet = async ()=>{
-    if (!_selectors.appSelectors.currentSession) return;
-    _selectors.appSelectors.currentSession.end(parseFloat(_state.state.app.showSessionScreen.cashoutAmount), _state.state.app.showSessionScreen.notes);
-    _state.state.app.showSessionScreen.isSavingSession = true;
-    let response;
-    try {
-        response = await apiService.saveSession(_selectors.appSelectors.currentSession, _state.state.app.cachedAdminPassword ?? _state.state.app.showSessionScreen.adminPassword);
-    } finally{
-        _state.state.app.showSessionScreen.isSavingSession = false;
-    }
-    if (response.ok) {
-        if (!_state.state.app.cachedAdminPassword) _state.state.app.cachedAdminPassword = _state.state.app.showSessionScreen.adminPassword;
-        alert('Success!');
-        navigateToIntroScreen();
-    } else {
-        alert('Something went wrong.');
-        // TODO: Use changesets so we don't have to do this.
-        _selectors.appSelectors.currentSession.undoEnd();
-    }
-};
-const handleSubmit = (event)=>{
-    if (!_utils.objectIsHtmlElement(event.target)) return;
-    event.preventDefault();
-    switch(event.target.id){
-        case 'new-session-form':
-            createSession();
-            break;
-        case 'rebuy-form':
-            rebuy();
-            break;
-        case 'end-session-form':
-            saveToGoogleSheet();
-            break;
-    }
-};
-const apiService = new _services.Api();
 const appRoot = document.getElementById('root');
-if (appRoot) {
-    _state.setupAppState(()=>_tortieCore.render(_tortieCore.e(_components.App), appRoot)
-    );
-    appRoot.addEventListener('submit', handleSubmit);
-}
+if (appRoot) _state.setupAppState(()=>_tortieCore.render(_tortieCore.e(_components.App), appRoot)
+);
 // HACK: onbeforeunload doesn't seem to work on iOS so we save periodically.
 setInterval(_state.saveToLocalStorage, SAVE_APP_STATE_INTERVAL_MS);
 document.addEventListener('visibilitychange', _state.saveToLocalStorage);
 window.onbeforeunload = _state.saveToLocalStorage;
 
-},{"./utils":"dsXzW","./types":"38MWl","./services":"f5PO7","./models":"i6QPt","./state":"6GBqf","./selectors":"2OUoq","./components":"dHnah","tortie-core":"bNMI3"}],"dsXzW":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "uuid", ()=>uuid
-);
-parcelHelpers.export(exports, "objectIsHtmlElement", ()=>objectIsHtmlElement
-);
-parcelHelpers.export(exports, "objectIsHtmlInputElement", ()=>objectIsHtmlInputElement
-);
-parcelHelpers.export(exports, "formatDuration", ()=>formatDuration
-);
-parcelHelpers.export(exports, "isPlainObject", ()=>isPlainObject
-);
-parcelHelpers.export(exports, "objectSet", ()=>objectSet
-);
-parcelHelpers.export(exports, "capitalize", ()=>capitalize
-);
-parcelHelpers.export(exports, "toISOString", ()=>toISOString
-);
-const uuid = ()=>Date.now().toString(36) + Math.random().toString(36).substring(2)
-;
-const objectIsHtmlElement = (object)=>!!object.tagName
-;
-const objectIsHtmlInputElement = (object)=>!!object.type
-;
-const formatDuration = (ms)=>{
-    let seconds = ms / 1000;
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds - hours * 3600) / 60);
-    seconds = Math.round(seconds - hours * 3600 - minutes * 60);
-    const hoursFormatted = hours < 10 ? `0${hours}` : hours.toString();
-    const minutesFormatted = minutes < 10 ? `0${minutes}` : minutes.toString();
-    const secondsFormatted = seconds < 10 ? `0${seconds}` : seconds.toString();
-    return `${hoursFormatted}:${minutesFormatted}:${secondsFormatted}`;
-};
-const isPlainObject = (object)=>typeof object === 'object' && !Array.isArray(object)
-;
-const objectSet = (object, key, value)=>{
-    if (!key) return;
-    const subKeys = key.split('.');
-    const lastKey = subKeys.pop();
-    if (!lastKey) return;
-    for (const key1 of subKeys){
-        const next = object[key1];
-        if (!isPlainObject(next)) return;
-        object = next;
-    }
-    object[lastKey] = value;
-};
-const capitalize = (str)=>`${str[0].toUpperCase()}${str.slice(1)}`
-;
-const toISOString = (date)=>{
-    const tzo = -date.getTimezoneOffset();
-    const dif = tzo >= 0 ? '+' : '-';
-    const pad = (num)=>(num < 10 ? '0' : '') + num
-    ;
-    return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + 'T' + pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds()) + dif + pad(Math.floor(Math.abs(tzo) / 60)) + ':' + pad(Math.abs(tzo) % 60);
-};
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gkKU3":[function(require,module,exports) {
-exports.interopDefault = function(a) {
-    return a && a.__esModule ? a : {
-        default: a
-    };
-};
-exports.defineInteropFlag = function(a) {
-    Object.defineProperty(a, '__esModule', {
-        value: true
-    });
-};
-exports.exportAll = function(source, dest) {
-    Object.keys(source).forEach(function(key) {
-        if (key === 'default' || key === '__esModule' || dest.hasOwnProperty(key)) return;
-        Object.defineProperty(dest, key, {
-            enumerable: true,
-            get: function() {
-                return source[key];
-            }
-        });
-    });
-    return dest;
-};
-exports.export = function(dest, destName, get) {
-    Object.defineProperty(dest, destName, {
-        enumerable: true,
-        get: get
-    });
-};
-
-},{}],"38MWl":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "Environments", ()=>Environments
-);
-parcelHelpers.export(exports, "Screen", ()=>Screen
-);
-let Environments;
-(function(Environments1) {
-    Environments1["Development"] = 'development';
-    Environments1["Production"] = 'production';
-})(Environments || (Environments = {}));
-let Screen;
-(function(Screen1) {
-    Screen1["Intro"] = 'intro';
-    Screen1["NewSession"] = 'new-session';
-    Screen1["ShowSession"] = 'show-session';
-})(Screen || (Screen = {}));
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"f5PO7":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "Api", ()=>_api.Api
-);
-var _api = require("./api");
-
-},{"./api":"8wVyB","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"8wVyB":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "Api", ()=>Api
-);
-var _types = require("../types");
-var _constants = require("../constants");
-class Api {
-    origin() {
-        if (_constants.environment === _types.Environments.Development) return 'http://localhost:3000';
-        else return 'https://blackjack-trainer-api.herokuapp.com';
-    }
-    request(path, body, requestOptions) {
-        const url = `${this.origin()}/api/v1${path}`;
-        return window.fetch(url, {
-            method: requestOptions.method,
-            headers: {
-                ...requestOptions.headers,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body)
-        });
-    }
-    post(path, body, requestOptions) {
-        return this.request(path, body, {
-            method: 'POST',
-            ...requestOptions
-        });
-    }
-    saveSession(session, adminPassword) {
-        return this.post('/poker_sessions', {
-            data: {
-                type: 'poker_session',
-                attributes: session.attributes
-            }
-        }, {
-            headers: {
-                'Poker-Sessions-Admin-Password': adminPassword
-            }
-        });
-    }
-}
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../types":"38MWl","../constants":"45DZp"}],"45DZp":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "environment", ()=>environment
-);
-var _types = require("./types");
-const getEnvironment = ()=>{
-    if (window.location.hostname === 'localhost') return _types.Environments.Development;
-    else return _types.Environments.Production;
-};
-const environment = getEnvironment();
-
-},{"./types":"38MWl","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"i6QPt":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "Session", ()=>_session.Session
-);
-var _session = require("./session");
-
-},{"./session":"6Afiv","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"6Afiv":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "Session", ()=>Session
-);
-var _utils = require("../utils");
-var _state = require("../state");
-class Session {
-    static create(casinoName, smallBlind, bigBlind, maxBuyin) {
-        const id = _utils.uuid();
-        _state.state.app.sessions[id] = {
-            id: _utils.uuid(),
-            casinoName,
-            smallBlind,
-            bigBlind,
-            maxBuyin,
-            notes: '',
-            cashoutAmount: 0,
-            dealerTips: 0,
-            drinkTips: 0,
-            buyins: []
-        };
-        return new this(id);
-    }
-    constructor(id){
-        this.id = id;
-        if (!this.attributes) throw new Error(`Session ${id} does not exist`);
-    }
-    get attributes() {
-        return _state.state.app.sessions[this.id];
-    }
-    get startTime() {
-        return this.attributes.startTime ? new Date(this.attributes.startTime) : null;
-    }
-    get endTime() {
-        return this.attributes.endTime ? new Date(this.attributes.endTime) : null;
-    }
-    start() {
-        if (this.startTime) throw new Error('Session already started');
-        if (this.endTime) throw new Error('Session already ended');
-        this.attributes.startTime = _utils.toISOString(new Date());
-        this.attributes.buyins.push({
-            amount: this.attributes.maxBuyin,
-            time: this.attributes.startTime
-        });
-    }
-    rebuy(amount) {
-        this.attributes.buyins.push({
-            amount,
-            time: new Date().toISOString()
-        });
-    }
-    rebuyMax() {
-        this.rebuy(this.attributes.maxBuyin);
-    }
-    end(cashoutAmount, notes) {
-        this.attributes.cashoutAmount = cashoutAmount;
-        this.attributes.endTime = _utils.toISOString(new Date());
-        this.attributes.notes = notes;
-    }
-    undoEnd() {
-        this.attributes.cashoutAmount = 0;
-        delete this.attributes.endTime;
-    }
-    buyinsTotal() {
-        return this.attributes.buyins.reduce((prev, current)=>prev + current.amount
-        , 0);
-    }
-    updateTip(type, change) {
-        if (this.attributes[type] + change < 0) return;
-        this.attributes[type] += change;
-    }
-    updateDealerTip(change) {
-        this.updateTip('dealerTips', change);
-    }
-    updateDrinkTip(change) {
-        this.updateTip('drinkTips', change);
-    }
-}
-
-},{"../utils":"dsXzW","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf"}],"6GBqf":[function(require,module,exports) {
+},{"./state":"6GBqf","./components":"dHnah","tortie-core":"bNMI3"}],"6GBqf":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "state", ()=>_app.state
@@ -931,44 +611,56 @@ const saveToLocalStorage = ()=>{
     }));
 };
 
-},{"../types":"38MWl","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"2OUoq":[function(require,module,exports) {
+},{"../types":"38MWl","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"38MWl":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "appSelectors", ()=>_app.selectors
+parcelHelpers.export(exports, "Environments", ()=>Environments
 );
-var _app = require("./app");
-
-},{"./app":"5T4lc","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"5T4lc":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "selectors", ()=>selectors
+parcelHelpers.export(exports, "Screen", ()=>Screen
 );
-var _models = require("../models");
-var _state = require("../state");
-// TODO: Add automatic caching.
-class Selectors {
-    constructor(appState){
-        this.appState = appState;
-    }
-    get currentSession() {
-        if (this.appState.currentSessionId && this._cachedCurrentSessionId !== this.appState.currentSessionId) {
-            this._cachedCurrentSessionId = this.appState.currentSessionId;
-            this._cachedCurrentSession = new _models.Session(this.appState.currentSessionId);
-        }
-        return this._cachedCurrentSession;
-    }
-    // TODO: Get this using a frecency algorithm.
-    get mostFrequentCasinoName() {
-        if (this._cachedMostFrequentCasinoName) return this._cachedMostFrequentCasinoName;
-        const casinoName = Object.values(this.appState.sessions).sort((a, b)=>a.endTime && b.endTime ? Date.parse(b.endTime) - Date.parse(a.endTime) : 1
-        )[0]?.casinoName;
-        if (casinoName) this._cachedMostFrequentCasinoName = casinoName;
-        return casinoName;
-    }
-}
-const selectors = new Selectors(_state.state.app);
+let Environments;
+(function(Environments1) {
+    Environments1["Development"] = 'development';
+    Environments1["Production"] = 'production';
+})(Environments || (Environments = {}));
+let Screen;
+(function(Screen1) {
+    Screen1["Intro"] = 'intro';
+    Screen1["NewSession"] = 'new-session';
+    Screen1["ShowSession"] = 'show-session';
+})(Screen || (Screen = {}));
 
-},{"../models":"i6QPt","../state":"6GBqf","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"dHnah":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gkKU3":[function(require,module,exports) {
+exports.interopDefault = function(a) {
+    return a && a.__esModule ? a : {
+        default: a
+    };
+};
+exports.defineInteropFlag = function(a) {
+    Object.defineProperty(a, '__esModule', {
+        value: true
+    });
+};
+exports.exportAll = function(source, dest) {
+    Object.keys(source).forEach(function(key) {
+        if (key === 'default' || key === '__esModule' || dest.hasOwnProperty(key)) return;
+        Object.defineProperty(dest, key, {
+            enumerable: true,
+            get: function() {
+                return source[key];
+            }
+        });
+    });
+    return dest;
+};
+exports.export = function(dest, destName, get) {
+    Object.defineProperty(dest, destName, {
+        enumerable: true,
+        get: get
+    });
+};
+
+},{}],"dHnah":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "App", ()=>_app.App
@@ -1161,6 +853,10 @@ const $6282e142bf746237$var$EVENT_PROPS = new Map([
     [
         'onClick',
         'click'
+    ],
+    [
+        'onSubmit',
+        'submit'
     ], 
 ]);
 const $6282e142bf746237$var$createVirtualStringElement = (value)=>({
@@ -1206,7 +902,7 @@ const $6282e142bf746237$var$reconcileProps = (domNode, prevNode, newNode)=>{
             continue;
         }
         if (prevValue === newValue) continue;
-        if (name === 'onClick' || name === 'onInput') {
+        if (name === 'onClick' || name === 'onInput' || name === 'onSubmit') {
             const nativeEventName = $6282e142bf746237$var$EVENT_PROPS.get(name);
             if (nativeEventName) $6282e142bf746237$var$reconcileEventHandlerProps(domNode, nativeEventName, prevNode?.props[name], newNode?.props[name]);
             continue;
@@ -1330,16 +1026,29 @@ var _tortieCore = require("tortie-core");
 var _components = require("../components");
 var _state = require("../state");
 var _selectors = require("../selectors");
+var _types = require("../types");
+var _models = require("../models");
 const NewSessionScreen = ()=>{
     const handleSelectSuggestedCasino = (casinoName)=>{
         _state.state.app.newSessionScreen.casinoName = casinoName;
+    };
+    const navigateToShowSessionScreen = (session)=>{
+        window.history.pushState({}, '', `#/sessions/${session.id}`);
+        _state.state.app.currentSessionId = session.id;
+        _state.state.app.screen = _types.Screen.ShowSession;
+    };
+    const handleSubmit = (event)=>{
+        event.preventDefault();
+        const session = _models.Session.create(_state.state.app.newSessionScreen.casinoName, parseInt(_state.state.app.newSessionScreen.smallBlind), parseInt(_state.state.app.newSessionScreen.bigBlind), parseInt(_state.state.app.newSessionScreen.maxBuyin));
+        session.start();
+        navigateToShowSessionScreen(session);
     };
     return _tortieCore.e('div', {
         className: 'screen'
     }, _tortieCore.e(_components.SuggestedCasino, {
         onSelect: handleSelectSuggestedCasino
     }), _tortieCore.e('form', {
-        id: 'new-session-form'
+        onSubmit: handleSubmit
     }, _tortieCore.e('div', null, _tortieCore.e('label', null, _tortieCore.e('span', null, 'Casino Name'), _tortieCore.e('input', {
         type: 'text',
         placeholder: _selectors.appSelectors.mostFrequentCasinoName ?? 'Bellagio',
@@ -1378,7 +1087,164 @@ const NewSessionScreen = ()=>{
     }))));
 };
 
-},{"../components":"dHnah","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","../selectors":"2OUoq","tortie-core":"bNMI3"}],"cCow8":[function(require,module,exports) {
+},{"../components":"dHnah","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","../selectors":"2OUoq","tortie-core":"bNMI3","../models":"i6QPt","../types":"38MWl"}],"2OUoq":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "appSelectors", ()=>_app.selectors
+);
+var _app = require("./app");
+
+},{"./app":"5T4lc","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"5T4lc":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "selectors", ()=>selectors
+);
+var _models = require("../models");
+var _state = require("../state");
+// TODO: Add automatic caching.
+class Selectors {
+    constructor(appState){
+        this.appState = appState;
+    }
+    get currentSession() {
+        if (this.appState.currentSessionId && this._cachedCurrentSessionId !== this.appState.currentSessionId) {
+            this._cachedCurrentSessionId = this.appState.currentSessionId;
+            this._cachedCurrentSession = new _models.Session(this.appState.currentSessionId);
+        }
+        return this._cachedCurrentSession;
+    }
+    // TODO: Get this using a frecency algorithm.
+    get mostFrequentCasinoName() {
+        if (this._cachedMostFrequentCasinoName) return this._cachedMostFrequentCasinoName;
+        const casinoName = Object.values(this.appState.sessions).sort((a, b)=>a.endTime && b.endTime ? Date.parse(b.endTime) - Date.parse(a.endTime) : 1
+        )[0]?.casinoName;
+        if (casinoName) this._cachedMostFrequentCasinoName = casinoName;
+        return casinoName;
+    }
+}
+const selectors = new Selectors(_state.state.app);
+
+},{"../models":"i6QPt","../state":"6GBqf","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"i6QPt":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Session", ()=>_session.Session
+);
+var _session = require("./session");
+
+},{"./session":"6Afiv","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"6Afiv":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Session", ()=>Session
+);
+var _utils = require("../utils");
+var _state = require("../state");
+class Session {
+    static create(casinoName, smallBlind, bigBlind, maxBuyin) {
+        const id = _utils.uuid();
+        _state.state.app.sessions[id] = {
+            id: _utils.uuid(),
+            casinoName,
+            smallBlind,
+            bigBlind,
+            maxBuyin,
+            notes: '',
+            cashoutAmount: 0,
+            dealerTips: 0,
+            drinkTips: 0,
+            buyins: []
+        };
+        return new this(id);
+    }
+    constructor(id){
+        this.id = id;
+        if (!this.attributes) throw new Error(`Session ${id} does not exist`);
+    }
+    get attributes() {
+        return _state.state.app.sessions[this.id];
+    }
+    get startTime() {
+        return this.attributes.startTime ? new Date(this.attributes.startTime) : null;
+    }
+    get endTime() {
+        return this.attributes.endTime ? new Date(this.attributes.endTime) : null;
+    }
+    start() {
+        if (this.startTime) throw new Error('Session already started');
+        if (this.endTime) throw new Error('Session already ended');
+        this.attributes.startTime = _utils.toISOString(new Date());
+        this.attributes.buyins.push({
+            amount: this.attributes.maxBuyin,
+            time: this.attributes.startTime
+        });
+    }
+    rebuy(amount) {
+        this.attributes.buyins.push({
+            amount,
+            time: new Date().toISOString()
+        });
+    }
+    rebuyMax() {
+        this.rebuy(this.attributes.maxBuyin);
+    }
+    end(cashoutAmount, notes) {
+        this.attributes.cashoutAmount = cashoutAmount;
+        this.attributes.endTime = _utils.toISOString(new Date());
+        this.attributes.notes = notes;
+    }
+    undoEnd() {
+        this.attributes.cashoutAmount = 0;
+        delete this.attributes.endTime;
+    }
+    buyinsTotal() {
+        return this.attributes.buyins.reduce((prev, current)=>prev + current.amount
+        , 0);
+    }
+    updateTip(type, change) {
+        if (this.attributes[type] + change < 0) return;
+        this.attributes[type] += change;
+    }
+    updateDealerTip(change) {
+        this.updateTip('dealerTips', change);
+    }
+    updateDrinkTip(change) {
+        this.updateTip('drinkTips', change);
+    }
+}
+
+},{"../utils":"dsXzW","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf"}],"dsXzW":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "uuid", ()=>uuid
+);
+parcelHelpers.export(exports, "formatDuration", ()=>formatDuration
+);
+parcelHelpers.export(exports, "capitalize", ()=>capitalize
+);
+parcelHelpers.export(exports, "toISOString", ()=>toISOString
+);
+const uuid = ()=>Date.now().toString(36) + Math.random().toString(36).substring(2)
+;
+const formatDuration = (ms)=>{
+    let seconds = ms / 1000;
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds - hours * 3600) / 60);
+    seconds = Math.round(seconds - hours * 3600 - minutes * 60);
+    const hoursFormatted = hours < 10 ? `0${hours}` : hours.toString();
+    const minutesFormatted = minutes < 10 ? `0${minutes}` : minutes.toString();
+    const secondsFormatted = seconds < 10 ? `0${seconds}` : seconds.toString();
+    return `${hoursFormatted}:${minutesFormatted}:${secondsFormatted}`;
+};
+const capitalize = (str)=>`${str[0].toUpperCase()}${str.slice(1)}`
+;
+const toISOString = (date)=>{
+    const tzo = -date.getTimezoneOffset();
+    const dif = tzo >= 0 ? '+' : '-';
+    const pad = (num)=>(num < 10 ? '0' : '') + num
+    ;
+    return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + 'T' + pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds()) + dif + pad(Math.floor(Math.abs(tzo) / 60)) + ':' + pad(Math.abs(tzo) % 60);
+};
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"cCow8":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "NumberInput", ()=>NumberInput
@@ -1406,8 +1272,11 @@ var _tortieCore = require("tortie-core");
 var _components = require("../../components");
 var _decorators = require("../../decorators");
 var _selectors = require("../../selectors");
+var _types = require("../../types");
+var _services = require("../../services");
 var _state = require("../../state");
 var _stylesCss = require("./styles.css");
+const apiService = new _services.Api();
 const ShowSessionScreen = ()=>{
     if (!_selectors.appSelectors.currentSession) return null;
     const session = new _decorators.Session(_selectors.appSelectors.currentSession);
@@ -1417,6 +1286,40 @@ const ShowSessionScreen = ()=>{
     const handleCashoutAmountInput = (event)=>{
         if (event.target) _state.state.app.showSessionScreen.cashoutAmount = event.target.value;
     };
+    const handleSubmitRebuyForm = (event)=>{
+        event.preventDefault();
+        if (!_selectors.appSelectors.currentSession) return;
+        _selectors.appSelectors.currentSession.rebuy(parseFloat(_state.state.app.showSessionScreen.rebuyAmount));
+        _state.state.app.showSessionScreen.rebuyAmount = '';
+    };
+    const navigateToIntroScreen = ()=>{
+        window.history.pushState({}, '', '#');
+        _state.state.app.screen = _types.Screen.Intro;
+    };
+    const saveToGoogleSheet = async ()=>{
+        if (!_selectors.appSelectors.currentSession) return;
+        _selectors.appSelectors.currentSession.end(parseFloat(_state.state.app.showSessionScreen.cashoutAmount), _state.state.app.showSessionScreen.notes);
+        _state.state.app.showSessionScreen.isSavingSession = true;
+        let response;
+        try {
+            response = await apiService.saveSession(_selectors.appSelectors.currentSession, _state.state.app.cachedAdminPassword ?? _state.state.app.showSessionScreen.adminPassword);
+        } finally{
+            _state.state.app.showSessionScreen.isSavingSession = false;
+        }
+        if (response.ok) {
+            if (!_state.state.app.cachedAdminPassword) _state.state.app.cachedAdminPassword = _state.state.app.showSessionScreen.adminPassword;
+            alert('Success!');
+            navigateToIntroScreen();
+        } else {
+            alert('Something went wrong.');
+            // TODO: Use changesets so we don't have to do this.
+            _selectors.appSelectors.currentSession.undoEnd();
+        }
+    };
+    const handleSubmitEndSessionForm = (event)=>{
+        event.preventDefault();
+        saveToGoogleSheet();
+    };
     return _tortieCore.e('div', {
         className: 'screen'
     }, _tortieCore.e('h1', {
@@ -1424,8 +1327,8 @@ const ShowSessionScreen = ()=>{
     }, session.title()), _tortieCore.e('div', null, _tortieCore.e('span', null, `Profit: $${session.profit()}`)), _tortieCore.e('div', null, _tortieCore.e('span', null, `Start time: ${session.startTime()}`)), _selectors.appSelectors.currentSession.startTime && _tortieCore.e('div', null, _tortieCore.e('span', null, 'Time elapsed: ', _tortieCore.e(_components.Timer, {
         startTime: _selectors.appSelectors.currentSession.startTime
     }))), _tortieCore.e('form', {
-        id: 'rebuy-form',
-        className: 'section'
+        className: 'section',
+        onSubmit: handleSubmitRebuyForm
     }, _tortieCore.e(_components.NumberInput, {
         placeholder: _selectors.appSelectors.currentSession.attributes.maxBuyin.toString(),
         value: _state.state.app.showSessionScreen.rebuyAmount,
@@ -1447,8 +1350,8 @@ const ShowSessionScreen = ()=>{
         value: session.drinkTips(),
         onUpdateTip: (change)=>_selectors.appSelectors.currentSession?.updateDrinkTip(change)
     }), _tortieCore.e('form', {
-        id: 'end-session-form',
-        className: 'section'
+        className: 'section',
+        onSubmit: handleSubmitEndSessionForm
     }, _tortieCore.e('input', {
         className: 'hidden',
         type: 'text',
@@ -1476,7 +1379,7 @@ const ShowSessionScreen = ()=>{
     })));
 };
 
-},{"tortie-core":"bNMI3","./styles.css":"ddS5y","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../../components":"dHnah","../../decorators":"7km9a","../../selectors":"2OUoq","../../state":"6GBqf"}],"ddS5y":[function() {},{}],"7km9a":[function(require,module,exports) {
+},{"tortie-core":"bNMI3","./styles.css":"ddS5y","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../../components":"dHnah","../../decorators":"7km9a","../../selectors":"2OUoq","../../state":"6GBqf","../../types":"38MWl","../../services":"f5PO7"}],"ddS5y":[function() {},{}],"7km9a":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Session", ()=>_session.Session
@@ -1520,7 +1423,69 @@ class Session {
     }
 }
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"kNF34":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"f5PO7":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Api", ()=>_api.Api
+);
+var _api = require("./api");
+
+},{"./api":"8wVyB","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"8wVyB":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Api", ()=>Api
+);
+var _types = require("../types");
+var _constants = require("../constants");
+class Api {
+    origin() {
+        if (_constants.environment === _types.Environments.Development) return 'http://localhost:3000';
+        else return 'https://blackjack-trainer-api.herokuapp.com';
+    }
+    request(path, body, requestOptions) {
+        const url = `${this.origin()}/api/v1${path}`;
+        return window.fetch(url, {
+            method: requestOptions.method,
+            headers: {
+                ...requestOptions.headers,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+        });
+    }
+    post(path, body, requestOptions) {
+        return this.request(path, body, {
+            method: 'POST',
+            ...requestOptions
+        });
+    }
+    saveSession(session, adminPassword) {
+        return this.post('/poker_sessions', {
+            data: {
+                type: 'poker_session',
+                attributes: session.attributes
+            }
+        }, {
+            headers: {
+                'Poker-Sessions-Admin-Password': adminPassword
+            }
+        });
+    }
+}
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../types":"38MWl","../constants":"45DZp"}],"45DZp":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "environment", ()=>environment
+);
+var _types = require("./types");
+const getEnvironment = ()=>{
+    if (window.location.hostname === 'localhost') return _types.Environments.Development;
+    else return _types.Environments.Production;
+};
+const environment = getEnvironment();
+
+},{"./types":"38MWl","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"kNF34":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "TipsSection", ()=>TipsSection
