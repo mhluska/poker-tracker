@@ -725,7 +725,7 @@ function $parcel$export(e, n, v, s) {
 }
 $parcel$export(module.exports, "render", ()=>$6282e142bf746237$export$b3890eb0ae9dca99
 );
-$parcel$export(module.exports, "createVirtualElement", ()=>$6282e142bf746237$export$e1e7a9dd34b01909
+$parcel$export(module.exports, "createElement", ()=>$6282e142bf746237$export$c8a8987d4410bf2d
 );
 $parcel$export(module.exports, "e", ()=>$6282e142bf746237$export$f1e1789686576879
 );
@@ -762,10 +762,8 @@ const $9ba0f9a5c47c04f2$export$234180f8206db11b = (arr1, arr2)=>{
 };
 let $a8eda090f2a27456$var$currentComponent;
 let $a8eda090f2a27456$var$currentForceRender;
-// TODO: Since hooks should always fire in the same order, we could just push
-// all hook data onto a single array with an index that increments per call.
-// That way we don't keep in memory other hooks data when we don't need to.
 const $a8eda090f2a27456$var$hooks = {
+    useStateCallCount: 0,
     useState: new Map(),
     useEffect: new Map()
 };
@@ -779,17 +777,19 @@ const $a8eda090f2a27456$export$6d9c69b0de29b591 = (callback, dependencies)=>{
     $a8eda090f2a27456$var$hooks.useEffect.set($a8eda090f2a27456$var$currentComponent, componentEffects);
 };
 const $a8eda090f2a27456$export$60241385465d0a34 = (initialValue)=>{
-    let componentHookData = $a8eda090f2a27456$var$hooks.useState.get($a8eda090f2a27456$var$currentComponent);
-    if (!componentHookData) {
-        componentHookData = [
-            {
-                value: initialValue
-            }
-        ];
-        $a8eda090f2a27456$var$hooks.useState.set($a8eda090f2a27456$var$currentComponent, componentHookData);
+    let componentHookCalls = $a8eda090f2a27456$var$hooks.useState.get($a8eda090f2a27456$var$currentComponent);
+    if (!componentHookCalls) {
+        componentHookCalls = [];
+        $a8eda090f2a27456$var$hooks.useState.set($a8eda090f2a27456$var$currentComponent, componentHookCalls);
     }
-    // TODO: Make this work with multiple useState calls.
-    const hook = componentHookData[componentHookData.length - 1];
+    let hook = componentHookCalls[$a8eda090f2a27456$var$hooks.useStateCallCount];
+    if (!hook) {
+        hook = {
+            value: initialValue
+        };
+        componentHookCalls.push(hook);
+    }
+    $a8eda090f2a27456$var$hooks.useStateCallCount += 1;
     const setState = (value)=>{
         if (hook.value !== value) {
             hook.value = value;
@@ -801,14 +801,13 @@ const $a8eda090f2a27456$export$60241385465d0a34 = (initialValue)=>{
             requestIdleCallback($a8eda090f2a27456$var$currentForceRender);
         }
     };
-    // TODO: Can we avoid the cast here? Otherwise value would be `unknown`
-    // because of the `hooks.useState` definition above.
     return [
         hook.value,
         setState
     ];
 };
 const $a8eda090f2a27456$export$1f54128a3b72f976 = (virtualElement, forceRender)=>{
+    $a8eda090f2a27456$var$hooks.useStateCallCount = 0;
     $a8eda090f2a27456$var$currentComponent = virtualElement.type;
     $a8eda090f2a27456$var$currentForceRender = forceRender;
     const prevEffects = $a8eda090f2a27456$var$hooks.useEffect.get(virtualElement.type);
@@ -864,7 +863,7 @@ const $6282e142bf746237$var$createVirtualStringElement = (value)=>({
         value: value
     })
 ;
-function $6282e142bf746237$export$e1e7a9dd34b01909(type, props, ...children) {
+function $6282e142bf746237$export$c8a8987d4410bf2d(type, props, ...children) {
     return typeof type === 'function' ? {
         type: type,
         props: props || {},
@@ -879,7 +878,7 @@ function $6282e142bf746237$export$e1e7a9dd34b01909(type, props, ...children) {
         )
     };
 }
-const $6282e142bf746237$export$f1e1789686576879 = $6282e142bf746237$export$e1e7a9dd34b01909;
+const $6282e142bf746237$export$f1e1789686576879 = $6282e142bf746237$export$c8a8987d4410bf2d;
 const $6282e142bf746237$var$reconcileEventHandlerProps = (domNode, nativeEventName, prevValue, newValue)=>{
     if (prevValue === newValue) return;
     if (prevValue) domNode.removeEventListener(nativeEventName, prevValue);
@@ -944,8 +943,8 @@ const $6282e142bf746237$export$38319cad1f6d89e0 = (domNode, prevNode, newNode)=>
         $9ba0f9a5c47c04f2$export$5542201de9311ab2(domNode, $6282e142bf746237$var$createDomNode(newNode));
         return;
     }
-    // We needlessly have to repeatedly check the type of `prevNode` here even
-    // though we ensure that both types are the same above.
+    // We have to repeatedly check the type of `prevNode` even though we ensure
+    // that both types are the same above.
     // See https://stackoverflow.com/questions/71397541
     if (prevNode.type === 'String' && newNode.type === 'String') {
         $6282e142bf746237$var$reconcileStrings(domNode, prevNode, newNode);
@@ -973,7 +972,7 @@ const $6282e142bf746237$export$38319cad1f6d89e0 = (domNode, prevNode, newNode)=>
         });
     }
 };
-let $6282e142bf746237$var$prevVirtualElement = $6282e142bf746237$export$e1e7a9dd34b01909('div');
+let $6282e142bf746237$var$prevVirtualElement = $6282e142bf746237$export$c8a8987d4410bf2d('div');
 let $6282e142bf746237$var$forceRender;
 let $6282e142bf746237$var$appDocument;
 let $6282e142bf746237$var$polyfilled = false;
@@ -985,7 +984,7 @@ const $6282e142bf746237$export$b3890eb0ae9dca99 = (component, appRoot)=>{
         $de1f0c81d0bd7057$export$a4d8dbbf1b4206a6($6282e142bf746237$var$appDocument.defaultView);
         $6282e142bf746237$var$polyfilled = true;
     }
-    const virtualElement = $6282e142bf746237$export$e1e7a9dd34b01909('div', null, component);
+    const virtualElement = $6282e142bf746237$export$c8a8987d4410bf2d('div', null, component);
     // We cache this for use in `mountWithHooks` (the `useState` hook needs to be
     // able to trigger renders).
     // TODO: Add the ability to do a partial render. We'd need to stop comparing
