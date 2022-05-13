@@ -515,18 +515,18 @@ function hmrAcceptRun(bundle, id) {
 
 },{}],"h7u1C":[function(require,module,exports) {
 var _components = require("./components");
-var _tortieCore = require("tortie-core");
+var _recatCore = require("recat-core");
 var _state = require("./state");
 const SAVE_APP_STATE_INTERVAL_MS = 10000;
 const appRoot = document.getElementById('root');
-if (appRoot) _state.setupAppState(()=>_tortieCore.render(_tortieCore.e(_components.App), appRoot)
+if (appRoot) _state.setupAppState(()=>_recatCore.render(_recatCore.e(_components.App), appRoot)
 );
 // HACK: onbeforeunload doesn't seem to work on iOS so we save periodically.
 setInterval(_state.saveToLocalStorage, SAVE_APP_STATE_INTERVAL_MS);
 document.addEventListener('visibilitychange', _state.saveToLocalStorage);
 window.onbeforeunload = _state.saveToLocalStorage;
 
-},{"./state":"6GBqf","./components":"dHnah","tortie-core":"bNMI3"}],"6GBqf":[function(require,module,exports) {
+},{"./state":"6GBqf","./components":"dHnah","recat-core":"6cXLW"}],"6GBqf":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "state", ()=>_app.state
@@ -699,7 +699,7 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "BlindsButton", ()=>BlindsButton
 );
-var _tortieCore = require("tortie-core");
+var _recatCore = require("recat-core");
 var _state = require("../state");
 const BlindsButton = ({ smallBlind , bigBlind ,  })=>{
     const handleClickPrefillBlinds = ()=>{
@@ -707,14 +707,14 @@ const BlindsButton = ({ smallBlind , bigBlind ,  })=>{
         _state.state.app.newSessionScreen.bigBlind = bigBlind.toString();
         _state.state.app.newSessionScreen.maxBuyin = (bigBlind * 100).toString();
     };
-    return _tortieCore.e('button', {
+    return _recatCore.e('button', {
         type: 'button',
         className: 'prefill-blinds',
         onClick: handleClickPrefillBlinds
     }, `${smallBlind}/${bigBlind}`);
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","tortie-core":"bNMI3","../state":"6GBqf"}],"bNMI3":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","recat-core":"6cXLW"}],"6cXLW":[function(require,module,exports) {
 function $parcel$export(e, n, v, s) {
     Object.defineProperty(e, n, {
         get: v,
@@ -1001,7 +1001,7 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "IntroScreen", ()=>IntroScreen
 );
-var _tortieCore = require("tortie-core");
+var _recatCore = require("recat-core");
 var _types = require("../types");
 var _state = require("../state");
 const IntroScreen = ()=>{
@@ -1009,19 +1009,19 @@ const IntroScreen = ()=>{
         window.history.pushState({}, '', '#/sessions/new');
         _state.state.app.screen = _types.Screen.NewSession;
     };
-    return _tortieCore.e('div', {
+    return _recatCore.e('div', {
         className: 'screen'
-    }, _tortieCore.e('button', {
+    }, _recatCore.e('button', {
         onClick: navigateToNewSessionScreen
     }, 'Start Session'));
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","tortie-core":"bNMI3","../state":"6GBqf","../types":"38MWl"}],"iiQGi":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","../types":"38MWl","recat-core":"6cXLW"}],"iiQGi":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "NewSessionScreen", ()=>NewSessionScreen
 );
-var _tortieCore = require("tortie-core");
+var _recatCore = require("recat-core");
 var _components = require("../components");
 var _state = require("../state");
 var _selectors = require("../selectors");
@@ -1042,51 +1042,51 @@ const NewSessionScreen = ()=>{
         session.start();
         navigateToShowSessionScreen(session);
     };
-    return _tortieCore.e('div', {
+    return _recatCore.e('div', {
         className: 'screen'
-    }, _tortieCore.e(_components.SuggestedCasino, {
+    }, _recatCore.e(_components.SuggestedCasino, {
         onSelect: handleSelectSuggestedCasino
-    }), _tortieCore.e('form', {
+    }), _recatCore.e('form', {
         onSubmit: handleSubmit
-    }, _tortieCore.e('div', null, _tortieCore.e('label', null, _tortieCore.e('span', null, 'Casino Name'), _tortieCore.e('input', {
+    }, _recatCore.e('div', null, _recatCore.e('label', null, _recatCore.e('span', null, 'Casino Name'), _recatCore.e('input', {
         type: 'text',
         placeholder: _selectors.appSelectors.mostFrequentCasinoName ?? 'Bellagio',
         required: true,
         value: _state.state.app.newSessionScreen.casinoName,
         onInput: (event)=>_state.state.app.newSessionScreen.casinoName = event.target.value
-    }))), _tortieCore.e('div', null, _tortieCore.e('label', null, _tortieCore.e('span', null, 'Blinds'), _tortieCore.e(_components.NumberInput, {
+    }))), _recatCore.e('div', null, _recatCore.e('label', null, _recatCore.e('span', null, 'Blinds'), _recatCore.e(_components.NumberInput, {
         placeholder: '2',
         value: _state.state.app.newSessionScreen.smallBlind,
         max: 100,
         onInput: (event)=>_state.state.app.newSessionScreen.smallBlind = event.target.value
-    }), _tortieCore.e(_components.NumberInput, {
+    }), _recatCore.e(_components.NumberInput, {
         placeholder: '5',
         value: _state.state.app.newSessionScreen.bigBlind,
         max: 200,
         onInput: (event)=>_state.state.app.newSessionScreen.bigBlind = event.target.value
-    })), _tortieCore.e(_components.BlindsButton, {
+    })), _recatCore.e(_components.BlindsButton, {
         smallBlind: 1,
         bigBlind: 2
-    }), _tortieCore.e(_components.BlindsButton, {
+    }), _recatCore.e(_components.BlindsButton, {
         smallBlind: 1,
         bigBlind: 3
-    }), _tortieCore.e(_components.BlindsButton, {
+    }), _recatCore.e(_components.BlindsButton, {
         smallBlind: 2,
         bigBlind: 5
-    }), _tortieCore.e(_components.BlindsButton, {
+    }), _recatCore.e(_components.BlindsButton, {
         smallBlind: 5,
         bigBlind: 10
-    })), _tortieCore.e('div', null, _tortieCore.e('label', null, _tortieCore.e('span', null, 'Max Buyin'), _tortieCore.e(_components.NumberInput, {
+    })), _recatCore.e('div', null, _recatCore.e('label', null, _recatCore.e('span', null, 'Max Buyin'), _recatCore.e(_components.NumberInput, {
         placeholder: '500',
         value: _state.state.app.newSessionScreen.maxBuyin,
         onInput: (event)=>_state.state.app.newSessionScreen.maxBuyin = event.target.value
-    }))), _tortieCore.e('div', null, _tortieCore.e('input', {
+    }))), _recatCore.e('div', null, _recatCore.e('input', {
         type: 'submit',
         value: 'Start Session'
     }))));
 };
 
-},{"../components":"dHnah","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","../selectors":"2OUoq","tortie-core":"bNMI3","../models":"i6QPt","../types":"38MWl"}],"2OUoq":[function(require,module,exports) {
+},{"../components":"dHnah","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","../selectors":"2OUoq","../models":"i6QPt","../types":"38MWl","recat-core":"6cXLW"}],"2OUoq":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "appSelectors", ()=>_app.selectors
@@ -1248,8 +1248,8 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "NumberInput", ()=>NumberInput
 );
-var _tortieCore = require("tortie-core");
-const NumberInput = ({ id , placeholder , value , min =1 , max , onInput ,  })=>_tortieCore.e('input', {
+var _recatCore = require("recat-core");
+const NumberInput = ({ id , placeholder , value , min =1 , max , onInput ,  })=>_recatCore.e('input', {
         id,
         type: 'number',
         placeholder,
@@ -1262,12 +1262,12 @@ const NumberInput = ({ id , placeholder , value , min =1 , max , onInput ,  })=>
     })
 ;
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","tortie-core":"bNMI3"}],"cEjtd":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","recat-core":"6cXLW"}],"cEjtd":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "ShowSessionScreen", ()=>ShowSessionScreen
 );
-var _tortieCore = require("tortie-core");
+var _recatCore = require("recat-core");
 var _components = require("../../components");
 var _decorators = require("../../decorators");
 var _selectors = require("../../selectors");
@@ -1319,66 +1319,66 @@ const ShowSessionScreen = ()=>{
         event.preventDefault();
         saveToGoogleSheet();
     };
-    return _tortieCore.e('div', {
+    return _recatCore.e('div', {
         className: 'screen'
-    }, _tortieCore.e('h1', {
+    }, _recatCore.e('h1', {
         className: 'session-title'
-    }, session.title()), _tortieCore.e('div', null, _tortieCore.e('span', null, `Profit: $${session.profit()}`)), _tortieCore.e('div', null, _tortieCore.e('span', null, `Start time: ${session.startTime()}`)), _selectors.appSelectors.currentSession.startTime && _tortieCore.e('div', null, _tortieCore.e('span', null, 'Time elapsed: ', _tortieCore.e(_components.Timer, {
+    }, session.title()), _recatCore.e('div', null, _recatCore.e('span', null, `Profit: $${session.profit()}`)), _recatCore.e('div', null, _recatCore.e('span', null, `Start time: ${session.startTime()}`)), _selectors.appSelectors.currentSession.startTime && _recatCore.e('div', null, _recatCore.e('span', null, 'Time elapsed: ', _recatCore.e(_components.Timer, {
         startTime: _selectors.appSelectors.currentSession.startTime
-    }))), _tortieCore.e('form', {
+    }))), _recatCore.e('form', {
         className: 'section',
         onSubmit: handleSubmitRebuyForm
-    }, _tortieCore.e(_components.NumberInput, {
+    }, _recatCore.e(_components.NumberInput, {
         placeholder: _selectors.appSelectors.currentSession.attributes.maxBuyin.toString(),
         value: _state.state.app.showSessionScreen.rebuyAmount,
         onInput: (event)=>_state.state.app.showSessionScreen.rebuyAmount = event.target.value
-    }), _tortieCore.e('input', {
+    }), _recatCore.e('input', {
         type: 'submit',
         value: 'Rebuy'
-    }), _tortieCore.e('input', {
+    }), _recatCore.e('input', {
         onClick: ()=>_selectors.appSelectors.currentSession?.rebuyMax()
         ,
         type: 'button',
         value: 'Max'
-    })), _tortieCore.e(_components.TipsSection, {
+    })), _recatCore.e(_components.TipsSection, {
         type: 'dealer',
         value: session.dealerTips(),
         onUpdateTip: (change)=>_selectors.appSelectors.currentSession?.updateDealerTip(change)
-    }), _tortieCore.e(_components.TipsSection, {
+    }), _recatCore.e(_components.TipsSection, {
         type: 'drink',
         value: session.drinkTips(),
         onUpdateTip: (change)=>_selectors.appSelectors.currentSession?.updateDrinkTip(change)
-    }), _tortieCore.e('form', {
+    }), _recatCore.e('form', {
         className: 'section',
         onSubmit: handleSubmitEndSessionForm
-    }, _tortieCore.e('input', {
+    }, _recatCore.e('input', {
         className: 'hidden',
         type: 'text',
         autocomplete: 'username'
-    }), _tortieCore.e('label', {
+    }), _recatCore.e('label', {
         className: 'section'
-    }, _tortieCore.e('div', null, 'Notes'), _tortieCore.e('textarea', {
+    }, _recatCore.e('div', null, 'Notes'), _recatCore.e('textarea', {
         onInput: handleNotesInput
-    })), _tortieCore.e('label', {
+    })), _recatCore.e('label', {
         className: 'section'
-    }, _tortieCore.e('div', null, 'Cashout Amount'), _tortieCore.e(_components.NumberInput, {
+    }, _recatCore.e('div', null, 'Cashout Amount'), _recatCore.e(_components.NumberInput, {
         min: 0,
         value: _state.state.app.showSessionScreen.cashoutAmount,
         placeholder: (_selectors.appSelectors.currentSession.attributes.maxBuyin * 3).toString(),
         onInput: handleCashoutAmountInput
-    })), _state.state.app.cachedAdminPassword ? '' : _tortieCore.e('div', null, _tortieCore.e('label', null, _tortieCore.e('span', null, 'Password')), _tortieCore.e('input', {
+    })), _state.state.app.cachedAdminPassword ? '' : _recatCore.e('div', null, _recatCore.e('label', null, _recatCore.e('span', null, 'Password')), _recatCore.e('input', {
         type: 'password',
         autocomplete: 'current-password',
         required: true,
         onInput: (event)=>_state.state.app.showSessionScreen.adminPassword = event.target.value
-    })), _tortieCore.e('input', {
+    })), _recatCore.e('input', {
         type: 'submit',
         value: 'End Session',
         disabled: _state.state.app.showSessionScreen.isSavingSession
     })));
 };
 
-},{"tortie-core":"bNMI3","./styles.css":"ddS5y","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../../components":"dHnah","../../decorators":"7km9a","../../selectors":"2OUoq","../../state":"6GBqf","../../types":"38MWl","../../services":"f5PO7"}],"ddS5y":[function() {},{}],"7km9a":[function(require,module,exports) {
+},{"./styles.css":"ddS5y","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../../components":"dHnah","../../decorators":"7km9a","../../selectors":"2OUoq","../../state":"6GBqf","../../types":"38MWl","../../services":"f5PO7","recat-core":"6cXLW"}],"ddS5y":[function() {},{}],"7km9a":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Session", ()=>_session.Session
@@ -1489,26 +1489,26 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "TipsSection", ()=>TipsSection
 );
-var _tortieCore = require("tortie-core");
+var _recatCore = require("recat-core");
 var _utils = require("../../utils");
 var _stylesCss = require("./styles.css");
-const TipsSection = ({ type , value , onUpdateTip ,  })=>_tortieCore.e('div', {
+const TipsSection = ({ type , value , onUpdateTip ,  })=>_recatCore.e('div', {
         className: 'section'
-    }, _tortieCore.e('span', null, `${_utils.capitalize(type)} tips: ${value}`), _tortieCore.e('div', null, _tortieCore.e('button', {
+    }, _recatCore.e('span', null, `${_utils.capitalize(type)} tips: ${value}`), _recatCore.e('div', null, _recatCore.e('button', {
         className: 'tip-button',
         onClick: ()=>onUpdateTip(-1)
-    }, '-'), _tortieCore.e('button', {
+    }, '-'), _recatCore.e('button', {
         className: 'tip-button',
         onClick: ()=>onUpdateTip(1)
     }, '+')))
 ;
 
-},{"tortie-core":"bNMI3","./styles.css":"dvAXf","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../../utils":"dsXzW"}],"dvAXf":[function() {},{}],"69iFB":[function(require,module,exports) {
+},{"./styles.css":"dvAXf","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../../utils":"dsXzW","recat-core":"6cXLW"}],"dvAXf":[function() {},{}],"69iFB":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "App", ()=>App
 );
-var _tortieCore = require("tortie-core");
+var _recatCore = require("recat-core");
 var _ = require("..");
 var _types = require("../../types");
 var _state = require("../../state");
@@ -1527,70 +1527,70 @@ const selectScreen = (screen)=>{
 };
 const App = ()=>{
     const Screen = selectScreen(_state.state.app.screen);
-    return _tortieCore.e('div', {
+    return _recatCore.e('div', {
         className: 'app'
-    }, _tortieCore.e(Screen), _tortieCore.e(_.AppFooter));
+    }, _recatCore.e(Screen), _recatCore.e(_.AppFooter));
 };
 
-},{"tortie-core":"bNMI3","./styles.css":"14Ghk","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","..":"dHnah","../../types":"38MWl","../../state":"6GBqf"}],"14Ghk":[function() {},{}],"fQJh5":[function(require,module,exports) {
+},{"./styles.css":"14Ghk","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","..":"dHnah","../../types":"38MWl","../../state":"6GBqf","recat-core":"6cXLW"}],"14Ghk":[function() {},{}],"fQJh5":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "SuggestedCasino", ()=>SuggestedCasino
 );
-var _tortieCore = require("tortie-core");
+var _recatCore = require("recat-core");
 var _selectors = require("../selectors");
 const SuggestedCasino = ({ onSelect  })=>{
     const casinoName = _selectors.appSelectors.mostFrequentCasinoName;
     if (!casinoName) return null;
-    return _tortieCore.e('div', null, `Play at ${casinoName} again?`, _tortieCore.e('button', {
+    return _recatCore.e('div', null, `Play at ${casinoName} again?`, _recatCore.e('button', {
         onClick: ()=>onSelect(casinoName)
     }, 'OK'));
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../selectors":"2OUoq","tortie-core":"bNMI3"}],"cVbGh":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../selectors":"2OUoq","recat-core":"6cXLW"}],"cVbGh":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Timer", ()=>Timer
 );
-var _tortieCore = require("tortie-core");
+var _recatCore = require("recat-core");
 var _utils = require("../utils");
 const MILLISECONDS_IN_ONE_SECOND = 1000;
 const Timer = ({ startTime  })=>{
-    const [timeElaped, setTimeElapsed] = _tortieCore.useState('');
-    _tortieCore.useEffect(()=>{
+    const [timeElaped, setTimeElapsed] = _recatCore.useState('');
+    _recatCore.useEffect(()=>{
         const updateTimeElapsed = ()=>{
             setTimeElapsed(_utils.formatDuration(Date.now() - startTime.getTime()));
         };
         setInterval(updateTimeElapsed, MILLISECONDS_IN_ONE_SECOND);
         updateTimeElapsed();
     }, []);
-    return _tortieCore.e('span', null, timeElaped.toString());
+    return _recatCore.e('span', null, timeElaped.toString());
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../utils":"dsXzW","tortie-core":"bNMI3"}],"jeym2":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../utils":"dsXzW","recat-core":"6cXLW"}],"jeym2":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "AppFooter", ()=>AppFooter
 );
-var _tortieCore = require("tortie-core");
+var _recatCore = require("recat-core");
 var _stylesCss = require("./styles.css");
 const MILLISECONDS_IN_ONE_SECOND = 1000;
 const AppFooter = ()=>{
-    const [footerHidden, setFooterHidden] = _tortieCore.useState(false);
-    _tortieCore.useEffect(()=>{
+    const [footerHidden, setFooterHidden] = _recatCore.useState(false);
+    _recatCore.useEffect(()=>{
         setTimeout(()=>{
             setFooterHidden(true);
         }, 3 * MILLISECONDS_IN_ONE_SECOND);
     }, []);
-    return _tortieCore.e('div', {
+    return _recatCore.e('div', {
         className: `app-footer ${footerHidden ? 'app-footer--invisible' : ''}`
-    }, 'Powered by ', _tortieCore.e('a', {
-        href: 'https://github.com/mhluska/tortie',
+    }, 'Powered by ', _recatCore.e('a', {
+        href: 'https://github.com/mhluska/recat',
         target: '_blank',
         rel: 'noopener noreferrer'
-    }, 'tortie'));
+    }, 'recat'));
 };
 
-},{"tortie-core":"bNMI3","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./styles.css":"iYPF0"}],"iYPF0":[function() {},{}]},["8wcER","h7u1C"], "h7u1C", "parcelRequirefb1b")
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./styles.css":"iYPF0","recat-core":"6cXLW"}],"iYPF0":[function() {},{}]},["8wcER","h7u1C"], "h7u1C", "parcelRequirefb1b")
 
 //# sourceMappingURL=index.b71e74eb.js.map
