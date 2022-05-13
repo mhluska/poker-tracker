@@ -1,5 +1,5 @@
 import { App } from './components';
-import { render, e } from 'tortie-core';
+import { render, e } from 'recat-core';
 import { setupAppState } from './state';
 import { saveToLocalStorage } from './state';
 

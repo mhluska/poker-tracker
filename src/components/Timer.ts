@@ -1,4 +1,4 @@
-import { e, useState, useEffect, FunctionComponent } from 'tortie-core';
+import { e, useState, useEffect, FunctionComponent } from 'recat-core';
 import { formatDuration } from '../utils';
 
 type Props = {

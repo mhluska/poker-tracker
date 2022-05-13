@@ -1,4 +1,4 @@
-import { e, FunctionComponent } from 'tortie-core';
+import { e, FunctionComponent } from 'recat-core';
 
 import { IntroScreen, NewSessionScreen, ShowSessionScreen } from '..';
 import { AppFooter } from '..';

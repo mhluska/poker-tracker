@@ -1,4 +1,4 @@
-import { e, useEffect, useState } from 'tortie-core';
+import { e, useEffect, useState } from 'recat-core';
 import './styles.css';
 
 const MILLISECONDS_IN_ONE_SECOND = 1000;
@@ -21,11 +21,11 @@ export const AppFooter = () => {
     e(
       'a',
       {
-        href: 'https://github.com/mhluska/tortie',
+        href: 'https://github.com/mhluska/recat',
         target: '_blank',
         rel: 'noopener noreferrer',
       },
-      'tortie'
+      'recat'
     )
   );
 };

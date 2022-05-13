@@ -3,7 +3,7 @@
 Frontend for a Google Sheet used to track my poker sessions.
 
 To better understand how React works under the hood, I built my own [basic
-React-like library](https://github.com/mhluska/tortie) to power this.
+React-like library](https://github.com/mhluska/recat) to power this.
 
 ### Develop
 

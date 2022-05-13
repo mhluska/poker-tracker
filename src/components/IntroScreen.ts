@@ -1,4 +1,4 @@
-import { e } from 'tortie-core';
+import { e } from 'recat-core';
 
 import { Screen } from '../types';
 import { state } from '../state';
