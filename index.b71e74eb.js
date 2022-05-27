@@ -518,8 +518,10 @@ var _components = require("./components");
 var _recatCore = require("recat-core");
 var _state = require("./state");
 const SAVE_APP_STATE_INTERVAL_MS = 10000;
-const appRoot = document.getElementById('root');
-if (appRoot) _state.setupAppState(()=>_recatCore.render(_recatCore.e(_components.App), appRoot)
+const ROOT_ID = 'root';
+const appRoot = document.getElementById(ROOT_ID);
+if (!appRoot) throw new Error(`Missing root element with ID ${ROOT_ID}`);
+_state.setupAppState(()=>_recatCore.render(_recatCore.e(_components.App), appRoot)
 );
 // HACK: onbeforeunload doesn't seem to work on iOS so we save periodically.
 setInterval(_state.saveToLocalStorage, SAVE_APP_STATE_INTERVAL_MS);
@@ -1004,6 +1006,7 @@ parcelHelpers.export(exports, "IntroScreen", ()=>IntroScreen
 var _recatCore = require("recat-core");
 var _types = require("../types");
 var _state = require("../state");
+var _sessionsList = require("./SessionsList");
 const IntroScreen = ()=>{
     const navigateToNewSessionScreen = ()=>{
         window.history.pushState({}, '', '#/sessions/new');
@@ -1013,80 +1016,42 @@ const IntroScreen = ()=>{
         className: 'screen'
     }, _recatCore.e('button', {
         onClick: navigateToNewSessionScreen
-    }, 'Start Session'));
+    }, 'New Session'), _recatCore.e(_sessionsList.SessionsList));
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","../types":"38MWl","recat-core":"6cXLW"}],"iiQGi":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","../types":"38MWl","recat-core":"6cXLW","./SessionsList":"gRbyU"}],"gRbyU":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "NewSessionScreen", ()=>NewSessionScreen
+parcelHelpers.export(exports, "SessionsList", ()=>SessionsList
 );
 var _recatCore = require("recat-core");
-var _components = require("../components");
-var _state = require("../state");
 var _selectors = require("../selectors");
 var _types = require("../types");
-var _models = require("../models");
-const NewSessionScreen = ()=>{
-    const handleSelectSuggestedCasino = (casinoName)=>{
-        _state.state.app.newSessionScreen.casinoName = casinoName;
-    };
-    const navigateToShowSessionScreen = (session)=>{
-        window.history.pushState({}, '', `#/sessions/${session.id}`);
-        _state.state.app.currentSessionId = session.id;
+var _state = require("../state");
+const SessionsList = ()=>{
+    const navigateToSession = (sessionId)=>{
+        _state.state.app.currentSessionId = sessionId;
         _state.state.app.screen = _types.Screen.ShowSession;
     };
-    const handleSubmit = (event)=>{
+    const handleClickClearPastSessions = (event)=>{
         event.preventDefault();
-        const session = _models.Session.create(_state.state.app.newSessionScreen.casinoName, parseInt(_state.state.app.newSessionScreen.smallBlind), parseInt(_state.state.app.newSessionScreen.bigBlind), parseInt(_state.state.app.newSessionScreen.maxBuyin));
-        session.start();
-        navigateToShowSessionScreen(session);
+        _state.state.app.currentSessionId = '';
+        _state.state.app.sessions = {};
     };
-    return _recatCore.e('div', {
-        className: 'screen'
-    }, _recatCore.e(_components.SuggestedCasino, {
-        onSelect: handleSelectSuggestedCasino
-    }), _recatCore.e('form', {
-        onSubmit: handleSubmit
-    }, _recatCore.e('div', null, _recatCore.e('label', null, _recatCore.e('span', null, 'Casino Name'), _recatCore.e('input', {
-        type: 'text',
-        placeholder: _selectors.appSelectors.mostFrequentCasinoName ?? 'Bellagio',
-        required: true,
-        value: _state.state.app.newSessionScreen.casinoName,
-        onInput: (event)=>_state.state.app.newSessionScreen.casinoName = event.target.value
-    }))), _recatCore.e('div', null, _recatCore.e('label', null, _recatCore.e('span', null, 'Blinds'), _recatCore.e(_components.NumberInput, {
-        placeholder: '2',
-        value: _state.state.app.newSessionScreen.smallBlind,
-        max: 100,
-        onInput: (event)=>_state.state.app.newSessionScreen.smallBlind = event.target.value
-    }), _recatCore.e(_components.NumberInput, {
-        placeholder: '5',
-        value: _state.state.app.newSessionScreen.bigBlind,
-        max: 200,
-        onInput: (event)=>_state.state.app.newSessionScreen.bigBlind = event.target.value
-    })), _recatCore.e(_components.BlindsButton, {
-        smallBlind: 1,
-        bigBlind: 2
-    }), _recatCore.e(_components.BlindsButton, {
-        smallBlind: 1,
-        bigBlind: 3
-    }), _recatCore.e(_components.BlindsButton, {
-        smallBlind: 2,
-        bigBlind: 5
-    }), _recatCore.e(_components.BlindsButton, {
-        smallBlind: 5,
-        bigBlind: 10
-    })), _recatCore.e('div', null, _recatCore.e('label', null, _recatCore.e('span', null, 'Max Buyin'), _recatCore.e(_components.NumberInput, {
-        placeholder: '500',
-        value: _state.state.app.newSessionScreen.maxBuyin,
-        onInput: (event)=>_state.state.app.newSessionScreen.maxBuyin = event.target.value
-    }))), _recatCore.e('div', null, _recatCore.e('input', {
-        type: 'submit',
-        value: 'Start Session'
-    }))));
+    return _recatCore.e('div', null, _recatCore.e('ol', null, ..._selectors.appSelectors.recentSessions.map((session)=>_recatCore.e('li', null, _recatCore.e('a', {
+            href: `/#/sessions/${session.session.attributes.id}`,
+            // TODO: For links to work seamlessly, we'd need to add a router.
+            // Or in this case we should build one as `recat-router` since
+            // everything is intentionally custom-built.
+            onClick: ()=>navigateToSession(session.session.attributes.id)
+        }, session.title()), _recatCore.e('span', null, ` ${session.startTime()}`))
+    )), _selectors.appSelectors.recentSessions.length > 0 ? _recatCore.e('a', {
+        href: '#',
+        onClick: handleClickClearPastSessions
+    }, 'Clear sessions') : null);
 };
 
-},{"../components":"dHnah","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","../selectors":"2OUoq","../models":"i6QPt","../types":"38MWl","recat-core":"6cXLW"}],"2OUoq":[function(require,module,exports) {
+},{"recat-core":"6cXLW","../selectors":"2OUoq","../types":"38MWl","../state":"6GBqf","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"2OUoq":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "appSelectors", ()=>_app.selectors
@@ -1099,31 +1064,29 @@ parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "selectors", ()=>selectors
 );
 var _models = require("../models");
+var _decorators = require("../decorators");
 var _state = require("../state");
-// TODO: Add automatic caching.
+// TODO: Add caching. Could use Proxy with a dependency array.
 class Selectors {
     constructor(appState){
         this.appState = appState;
     }
     get currentSession() {
-        if (this.appState.currentSessionId && this._cachedCurrentSessionId !== this.appState.currentSessionId) {
-            this._cachedCurrentSessionId = this.appState.currentSessionId;
-            this._cachedCurrentSession = new _models.Session(this.appState.currentSessionId);
-        }
-        return this._cachedCurrentSession;
+        if (this.appState.currentSessionId) return new _models.Session(this.appState.currentSessionId);
+    }
+    get recentSessions() {
+        return Object.values(this.appState.sessions).sort((a, b)=>a.startTime && b.startTime ? Date.parse(b.startTime) - Date.parse(a.startTime) : -1
+        ).map((attrs)=>new _decorators.Session(new _models.Session(attrs.id))
+        );
     }
     // TODO: Get this using a frecency algorithm.
     get mostFrequentCasinoName() {
-        if (this._cachedMostFrequentCasinoName) return this._cachedMostFrequentCasinoName;
-        const casinoName = Object.values(this.appState.sessions).sort((a, b)=>a.endTime && b.endTime ? Date.parse(b.endTime) - Date.parse(a.endTime) : 1
-        )[0]?.casinoName;
-        if (casinoName) this._cachedMostFrequentCasinoName = casinoName;
-        return casinoName;
+        return this.recentSessions[0]?.session.attributes.casinoName;
     }
 }
 const selectors = new Selectors(_state.state.app);
 
-},{"../models":"i6QPt","../state":"6GBqf","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"i6QPt":[function(require,module,exports) {
+},{"../models":"i6QPt","../state":"6GBqf","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../decorators":"7km9a"}],"i6QPt":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Session", ()=>_session.Session
@@ -1141,7 +1104,7 @@ class Session {
     static create(casinoName, smallBlind, bigBlind, maxBuyin) {
         const id = _utils.uuid();
         _state.state.app.sessions[id] = {
-            id: _utils.uuid(),
+            id,
             casinoName,
             smallBlind,
             bigBlind,
@@ -1243,7 +1206,121 @@ const toISOString = (date)=>{
     return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + 'T' + pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds()) + dif + pad(Math.floor(Math.abs(tzo) / 60)) + ':' + pad(Math.abs(tzo) % 60);
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"cCow8":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7km9a":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Session", ()=>_session.Session
+);
+var _session = require("./session");
+
+},{"./session":"01jmO","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"01jmO":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Session", ()=>Session
+);
+class Session {
+    constructor(session){
+        this.session = session;
+    }
+    drinkTips() {
+        return `$${this.session.attributes.drinkTips ?? 0}`;
+    }
+    dealerTips() {
+        return `$${this.session.attributes.dealerTips ?? 0}`;
+    }
+    blinds() {
+        return `${this.session.attributes.smallBlind}/${this.session.attributes.bigBlind}`;
+    }
+    maxBuyin() {
+        return `$${this.session.attributes.maxBuyin} max`;
+    }
+    title() {
+        return [
+            this.session.attributes.casinoName,
+            this.blinds(),
+            this.maxBuyin(), 
+        ].join(' ');
+    }
+    startTime() {
+        return this.session.startTime?.toLocaleString() ?? '';
+    }
+    profit() {
+        const cashoutAmount = this.session.attributes.cashoutAmount ?? 0;
+        return (cashoutAmount - this.session.buyinsTotal()).toString();
+    }
+}
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"iiQGi":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "NewSessionScreen", ()=>NewSessionScreen
+);
+var _recatCore = require("recat-core");
+var _components = require("../components");
+var _state = require("../state");
+var _selectors = require("../selectors");
+var _types = require("../types");
+var _models = require("../models");
+const NewSessionScreen = ()=>{
+    const handleSelectSuggestedCasino = (casinoName)=>{
+        _state.state.app.newSessionScreen.casinoName = casinoName;
+    };
+    const navigateToShowSessionScreen = (session)=>{
+        window.history.pushState({}, '', `#/sessions/${session.id}`);
+        _state.state.app.currentSessionId = session.id;
+        _state.state.app.screen = _types.Screen.ShowSession;
+    };
+    const handleSubmit = (event)=>{
+        event.preventDefault();
+        const session = _models.Session.create(_state.state.app.newSessionScreen.casinoName, parseInt(_state.state.app.newSessionScreen.smallBlind), parseInt(_state.state.app.newSessionScreen.bigBlind), parseInt(_state.state.app.newSessionScreen.maxBuyin));
+        session.start();
+        navigateToShowSessionScreen(session);
+    };
+    return _recatCore.e('div', {
+        className: 'screen'
+    }, _recatCore.e(_components.SuggestedCasino, {
+        onSelect: handleSelectSuggestedCasino
+    }), _recatCore.e('form', {
+        onSubmit: handleSubmit
+    }, _recatCore.e('div', null, _recatCore.e('label', null, _recatCore.e('span', null, 'Casino Name'), _recatCore.e('input', {
+        type: 'text',
+        placeholder: _selectors.appSelectors.mostFrequentCasinoName ?? 'Bellagio',
+        required: true,
+        value: _state.state.app.newSessionScreen.casinoName,
+        onInput: (event)=>_state.state.app.newSessionScreen.casinoName = event.target.value
+    }))), _recatCore.e('div', null, _recatCore.e('label', null, _recatCore.e('span', null, 'Blinds'), _recatCore.e(_components.NumberInput, {
+        placeholder: '2',
+        value: _state.state.app.newSessionScreen.smallBlind,
+        max: 100,
+        onInput: (event)=>_state.state.app.newSessionScreen.smallBlind = event.target.value
+    }), _recatCore.e(_components.NumberInput, {
+        placeholder: '5',
+        value: _state.state.app.newSessionScreen.bigBlind,
+        max: 200,
+        onInput: (event)=>_state.state.app.newSessionScreen.bigBlind = event.target.value
+    })), _recatCore.e(_components.BlindsButton, {
+        smallBlind: 1,
+        bigBlind: 2
+    }), _recatCore.e(_components.BlindsButton, {
+        smallBlind: 1,
+        bigBlind: 3
+    }), _recatCore.e(_components.BlindsButton, {
+        smallBlind: 2,
+        bigBlind: 5
+    }), _recatCore.e(_components.BlindsButton, {
+        smallBlind: 5,
+        bigBlind: 10
+    })), _recatCore.e('div', null, _recatCore.e('label', null, _recatCore.e('span', null, 'Max Buyin'), _recatCore.e(_components.NumberInput, {
+        placeholder: '500',
+        value: _state.state.app.newSessionScreen.maxBuyin,
+        onInput: (event)=>_state.state.app.newSessionScreen.maxBuyin = event.target.value
+    }))), _recatCore.e('div', null, _recatCore.e('input', {
+        type: 'submit',
+        value: 'Start Session'
+    }))));
+};
+
+},{"../components":"dHnah","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../state":"6GBqf","../selectors":"2OUoq","../models":"i6QPt","../types":"38MWl","recat-core":"6cXLW"}],"cCow8":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "NumberInput", ()=>NumberInput
@@ -1378,51 +1455,7 @@ const ShowSessionScreen = ()=>{
     })));
 };
 
-},{"./styles.css":"ddS5y","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../../components":"dHnah","../../decorators":"7km9a","../../selectors":"2OUoq","../../state":"6GBqf","../../types":"38MWl","../../services":"f5PO7","recat-core":"6cXLW"}],"ddS5y":[function() {},{}],"7km9a":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "Session", ()=>_session.Session
-);
-var _session = require("./session");
-
-},{"./session":"01jmO","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"01jmO":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "Session", ()=>Session
-);
-class Session {
-    constructor(session){
-        this.session = session;
-    }
-    drinkTips() {
-        return `$${this.session.attributes.drinkTips ?? 0}`;
-    }
-    dealerTips() {
-        return `$${this.session.attributes.dealerTips ?? 0}`;
-    }
-    blinds() {
-        return `${this.session.attributes.smallBlind}/${this.session.attributes.bigBlind}`;
-    }
-    maxBuyin() {
-        return `$${this.session.attributes.maxBuyin} max`;
-    }
-    title() {
-        return [
-            this.session.attributes.casinoName,
-            this.blinds(),
-            this.maxBuyin(), 
-        ].join(' ');
-    }
-    startTime() {
-        return this.session.startTime?.toLocaleString() ?? '';
-    }
-    profit() {
-        const cashoutAmount = this.session.attributes.cashoutAmount ?? 0;
-        return (cashoutAmount - this.session.buyinsTotal()).toString();
-    }
-}
-
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"f5PO7":[function(require,module,exports) {
+},{"./styles.css":"ddS5y","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../../components":"dHnah","../../decorators":"7km9a","../../selectors":"2OUoq","../../state":"6GBqf","../../types":"38MWl","../../services":"f5PO7","recat-core":"6cXLW"}],"ddS5y":[function() {},{}],"f5PO7":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Api", ()=>_api.Api
