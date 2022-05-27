@@ -13,7 +13,7 @@ export class Session {
     const id = uuid();
 
     state.app.sessions[id] = {
-      id: uuid(),
+      id,
       casinoName,
       smallBlind,
       bigBlind,
