@@ -755,6 +755,10 @@ const $9ba0f9a5c47c04f2$export$5542201de9311ab2 = (node, newNode)=>{
     if (!newNode) return;
     node.parentElement?.replaceChild(newNode, node);
 };
+const $9ba0f9a5c47c04f2$export$13970129ca912f06 = (node, newNode)=>{
+    if (!newNode) return;
+    node.appendChild(newNode);
+};
 const $9ba0f9a5c47c04f2$export$234180f8206db11b = (arr1, arr2)=>{
     if (arr1.length !== arr2.length) return false;
     for(let i = 0; i < arr1.length; i += 1){
@@ -964,14 +968,14 @@ const $6282e142bf746237$export$38319cad1f6d89e0 = (domNode, prevNode, newNode)=>
         $6282e142bf746237$var$reconcileProps(domNode, prevNode, newNode);
         const domNodeChildren = Array.from(domNode.childNodes).filter((node)=>node.nodeType === $faefaad95e5fcca0$export$2ed9472effad1b70.Element || node.nodeType === $faefaad95e5fcca0$export$2ed9472effad1b70.Text
         );
-        newNode.children.forEach((newNodeChild, index)=>{
+        const maxChildren = Math.max(prevNode.children.length, newNode.children.length);
+        for(let index = 0; index < maxChildren; index += 1){
             const domNodeChild = domNodeChildren[index];
-            if (domNodeChild) $6282e142bf746237$export$38319cad1f6d89e0(domNodeChild, prevNode.children[index], newNodeChild);
-            else if (newNodeChild) {
-                const node = $6282e142bf746237$var$createDomNode(newNodeChild);
-                if (node) domNode.appendChild(node);
-            }
-        });
+            const prevNodeChild = prevNode.children[index];
+            const newNodeChild = newNode.children[index];
+            if (domNodeChild) $6282e142bf746237$export$38319cad1f6d89e0(domNodeChild, prevNodeChild, newNodeChild);
+            else if (newNodeChild) $9ba0f9a5c47c04f2$export$13970129ca912f06(domNode, $6282e142bf746237$var$createDomNode(newNodeChild));
+        }
     }
 };
 let $6282e142bf746237$var$prevVirtualElement = $6282e142bf746237$export$c8a8987d4410bf2d('div');
@@ -989,9 +993,7 @@ const $6282e142bf746237$export$b3890eb0ae9dca99 = (component, appRoot)=>{
     const virtualElement = $6282e142bf746237$export$c8a8987d4410bf2d('div', null, component);
     // We cache this for use in `mountWithHooks` (the `useState` hook needs to be
     // able to trigger renders).
-    // TODO: Add the ability to do a partial render. We'd need to stop comparing
-    // the prev virtual DOM against current and instead just compare the real DOM
-    // against the current.
+    // TODO: Add the ability to do a partial render.
     $6282e142bf746237$var$forceRender = ()=>$6282e142bf746237$export$b3890eb0ae9dca99(component, appRoot)
     ;
     $6282e142bf746237$export$38319cad1f6d89e0(appRoot, $6282e142bf746237$var$prevVirtualElement, virtualElement);
