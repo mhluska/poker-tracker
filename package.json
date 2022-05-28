@@ -37,6 +37,6 @@
     "typescript": "^4.6.3"
   },
   "dependencies": {
-    "recat-core": "^0.0.5"
+    "recat-core": "^0.0.6"
   }
 }
